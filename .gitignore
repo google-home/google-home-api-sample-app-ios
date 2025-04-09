@@ -1,0 +1,6 @@
+**/.DS_Store
+Development.xconfig
+Frameworks/*
+GoogleHomeAPISampleIOS.xcodeproj/project.xcworkspace/
+GoogleHomeAPISampleIOS.xcodeproj/xcuserdata/
+GoogleHomeAPISampleIOS.xcodeproj/xcshareddata/
