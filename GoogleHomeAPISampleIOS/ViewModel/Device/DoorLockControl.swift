@@ -35,7 +35,8 @@ final class DoorLockControl: DeviceControl {
     }
     try super.init(device: device)
 
-    self.tileInfo = DeviceTileInfo.makeLoading(title: device.name, imageName: "lock_lock_symbol")
+    self.tileInfo = DeviceTileInfo.makeLoading(
+      title: device.name, imageName: "lock_lock_symbol")
 
     self.cancellable = self.device.types.subscribe(DoorLockDeviceType.self)
       .receive(on: DispatchQueue.main)
@@ -44,15 +45,23 @@ final class DoorLockControl: DeviceControl {
         return Empty<DoorLockDeviceType, Never>().eraseToAnyPublisher()
       }
       .sink { [weak self] doorLockDeviceType in
-        self?.doorLockDeviceType = doorLockDeviceType
-        self?.updateTileInfo()
+        guard let self = self else { return }
+        self.doorLockDeviceType = doorLockDeviceType
+        self.updateTileInfo()
+        self.toggleControl = ToggleControl(
+          isOn: self.tileInfo.isActive,
+          label: "Lock state",
+          description: self.tileInfo.isActive ? "Locked" : "Unlocked"
+        ) {
+          self.toggleAction()
+        }
       }
   }
 
   // MARK: - `DeviceControl`
 
   // Toggles the locked / unlocked state; usually provided as the `action` callback on a Button.
-  public override func primaryAction() {
+  private func toggleAction() {
     self.updateTileInfo(isBusy: true)
     Task { @MainActor [weak self] in
       guard let self = self,
@@ -65,7 +74,7 @@ final class DoorLockControl: DeviceControl {
           let userEnteredPINCode,
           let userEnteredPINCodeData = userEnteredPINCode.data(using: .utf8)
         else {
-          Logger().error("PIN code expected to be set before primaryAction is called.")
+          Logger().error("PIN code expected to be set before toggleAction is called.")
           return
         }
         do {Logger().info("pin code: \(userEnteredPINCode)")
@@ -97,7 +106,9 @@ final class DoorLockControl: DeviceControl {
 
   public override var requiresPINCode: Bool { isRequiresPinCode() }
 
-  public override func setPINCode(_ code: String) { self.userEnteredPINCode = code }
+  public override func setPINCode(_ code: String) {
+    self.userEnteredPINCode = code
+  }
 
   // MARK: - Private
 
@@ -123,20 +134,46 @@ final class DoorLockControl: DeviceControl {
     }
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Door lock",
       imageName: imageName,
       isActive: isLocked,
       isBusy: isBusy,
       statusLabel: statusLabel,
+      attributes: [["Door state": doorState(trait.attributes.doorState)]],
       error: nil
     )
   }
 
-  private func isRequiresPinCode()  -> Bool {
+  private func doorState(_ doorState: Matter.DoorLockTrait.DoorStateEnum?)
+    -> String
+  {
+    guard let doorState = doorState else {
+      return "Unknown"
+    }
+    switch doorState {
+    case .doorAjar:
+      return "Door Ajar"
+    case .doorClosed:
+      return "Door Closed"
+    case .doorForcedOpen:
+      return "Door Forced Open"
+    case .doorJammed:
+      return "Door Jammed"
+    case .doorOpen:
+      return "Open"
+    case .doorUnspecifiedError:
+      return "Unspecified Error"
+    default:
+      return "Unknown"
+    }
+  }
+
+  private func isRequiresPinCode() -> Bool {
     guard
       let doorLockDeviceType = self.doorLockDeviceType,
       let trait = doorLockDeviceType.matterTraits.doorLockTrait,
       let isPin = trait.attributes.requirePinforRemoteOperation
-    else { return false}
+    else { return false }
     Logger().info("requires pin: \(isPin)")
     return isPin
   }

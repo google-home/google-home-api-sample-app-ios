@@ -27,7 +27,7 @@ extension OnOffLightDeviceType: LightDeviceType {
   var onOffTrait: GoogleHomeTypes.Matter.OnOffTrait? {
     self.matterTraits.onOffTrait
   }
-  
+
   var levelControlTrait: GoogleHomeTypes.Matter.LevelControlTrait? {
     nil
   }
@@ -37,7 +37,7 @@ extension DimmableLightDeviceType: LightDeviceType {
   var onOffTrait: GoogleHomeTypes.Matter.OnOffTrait? {
     self.matterTraits.onOffTrait
   }
-  
+
   var levelControlTrait: GoogleHomeTypes.Matter.LevelControlTrait? {
     self.matterTraits.levelControlTrait
   }
@@ -47,7 +47,7 @@ extension ColorTemperatureLightDeviceType: LightDeviceType {
   var onOffTrait: GoogleHomeTypes.Matter.OnOffTrait? {
     self.matterTraits.onOffTrait
   }
-  
+
   var levelControlTrait: GoogleHomeTypes.Matter.LevelControlTrait? {
     self.matterTraits.levelControlTrait
   }
@@ -77,11 +77,13 @@ class LightControl<LightType: LightDeviceType>: DeviceControl {
 
   override init(device: HomeDevice) throws {
     guard device.types.contains(LightType.self) else {
-      throw HomeSampleError.unableToCreateControlForDeviceType(deviceType: LightType.identifier)
+      throw HomeSampleError.unableToCreateControlForDeviceType(
+        deviceType: LightType.identifier)
     }
     try super.init(device: device)
 
-    self.tileInfo = DeviceTileInfo.makeLoading(title: device.name, imageName: "lightbulb_symbol")
+    self.tileInfo = DeviceTileInfo.makeLoading(
+      title: device.name, imageName: "lightbulb_symbol")
 
     self.typeCancellable = self.device.types.subscribe(LightType.self)
       .receive(on: DispatchQueue.main)
@@ -92,14 +94,27 @@ class LightControl<LightType: LightDeviceType>: DeviceControl {
       .sink { [weak self] lightDeviceType in
         guard let self = self else { return }
         self.lightDeviceType = lightDeviceType
-        self.rangeControl = lightDeviceType.levelControlTrait?.makeRangeControl()
+        self.rangeControl = lightDeviceType.levelControlTrait?
+          .makeRangeControl()
         self.updateTileInfo()
         self.startRangeSubscription()
+
+        if lightDeviceType.onOffTrait != nil {
+          self.toggleControl = ToggleControl(
+            isOn: self.tileInfo.isActive,
+            label: "Switch",
+            description: self.tileInfo.isActive ? "On" : "Off"
+          ) {
+            self.toggleAction()
+          }
+        } else {
+          self.toggleControl = nil
+        }
       }
   }
 
   /// Toggles the light; usually provided as the `action` callback on a Button.
-  override func primaryAction() {
+  private func toggleAction() {
     self.updateTileInfo(isBusy: true)
     Task { @MainActor [weak self] in
       guard
@@ -131,7 +146,8 @@ class LightControl<LightType: LightDeviceType>: DeviceControl {
     if isOn {
       statusLabel = "On"
       if let rangeControl = self.rangeControl {
-        let percent = NSNumber(value: rangeControl.rangeValue).percentFormatted() ?? ""
+        let percent =
+          NSNumber(value: rangeControl.rangeValue).percentFormatted() ?? ""
         statusLabel += " • \(percent)"
       }
     } else {
@@ -139,11 +155,13 @@ class LightControl<LightType: LightDeviceType>: DeviceControl {
     }
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Light",
       imageName: isOn
         ? "lightbulb_fill_symbol" : "lightbulb_symbol",
       isActive: isOn,
       isBusy: isBusy,
       statusLabel: statusLabel,
+      attributes: [],
       error: nil
     )
   }
@@ -154,7 +172,8 @@ class LightControl<LightType: LightDeviceType>: DeviceControl {
     guard let rangeControl = self.rangeControl else { return }
     self.rangeCancellable?.cancel()
     self.rangeCancellable = rangeControl.$rangeValue.sink { [weak self] value in
-      guard let levelControlTrait = self?.lightDeviceType?.levelControlTrait else { return }
+      guard let levelControlTrait = self?.lightDeviceType?.levelControlTrait
+      else { return }
 
       let level = levelControlTrait.currentLevelFromPercentage(value)
       guard level != levelControlTrait.attributes.currentLevel else { return }

@@ -22,6 +22,7 @@ import OSLog
 final class TVControl: DeviceControl {
   private var tvDeviceType: GoogleTVDeviceType?
   private var cancellables: Set<AnyCancellable> = []
+  private var rangeCancellable: AnyCancellable?
 
   // MARK: - Initialization
 
@@ -40,16 +41,28 @@ final class TVControl: DeviceControl {
         return Empty<GoogleTVDeviceType, Never>().eraseToAnyPublisher()
       }
       .sink { [weak self] tvDeviceType in
-        self?.tvDeviceType = tvDeviceType
-        self?.updateTileInfo()
+        guard let self = self else { return }
+        self.tvDeviceType = tvDeviceType
+        self.updateTileInfo()
+        if tvDeviceType.matterTraits.onOffTrait != nil {
+          self.toggleControl = ToggleControl(
+            isOn: self.tileInfo.isActive,
+            label: "Switch",
+            description: self.tileInfo.isActive ? "On" : "Off"
+          ) {
+            self.toggleAction()
+          }
+        } else {
+          self.toggleControl = nil
+        }
       }
       .store(in: &self.cancellables)
   }
 
   // MARK: - `DeviceControl`
 
-  /// Toggles the fan; usually provided as the `action` callback on a Button.
-  public override func primaryAction() {
+  /// Toggles the TV; usually provided as the `action` callback on a Button.
+  private func toggleAction() {
     self.updateTileInfo(isBusy: true)
     Task { @MainActor [weak self] in
       guard
@@ -81,10 +94,12 @@ final class TVControl: DeviceControl {
 
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "TV",
       imageName: imageName,
       isActive: isOn,
       isBusy: isBusy,
       statusLabel: statusLabel,
+      attributes: [],
       error: nil
     )
   }

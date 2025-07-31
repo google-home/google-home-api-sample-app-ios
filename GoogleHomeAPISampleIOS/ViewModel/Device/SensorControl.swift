@@ -27,10 +27,12 @@ class SensorControl<T: DeviceType>: DeviceControl {
 
     self.tileInfo = DeviceTileInfo(
       title: device.name,
+      typeName: "Sensor",
       imageName: "sensors_symbol",
       isActive: false,
       isBusy: true,
       statusLabel: "Loading",
+      attributes: [],
       error: nil
     )
 
@@ -41,14 +43,12 @@ class SensorControl<T: DeviceType>: DeviceControl {
         return Empty<T, Never>()
       }
       .sink { [weak self] deviceType in
-        self?.sensorDeviceType = deviceType
-        self?.updateTileInfo()
+        guard let self = self else { return }
+        self.sensorDeviceType = deviceType
+        self.updateTileInfo()
       }
   }
   // MARK: - DeviceControl
-  public override func primaryAction() {
-    // Intentionally empty, no actions are supported by sensors.
-  }
 
   /// Provided to the generic publisher to convert from an event to the `DeviceTileInfo` state.
   func updateTileInfo() {

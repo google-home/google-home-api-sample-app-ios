@@ -29,10 +29,12 @@ final class OccupancySensorControl: SensorControl<OccupancySensorDeviceType> {
       deviceType.matterTraits.occupancySensingTrait?.attributes.occupancy == .occupied
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Occupancy sensor",
       imageName: "sensors_symbol",
       isActive: isOccupied,
       isBusy: false,
       statusLabel: isOccupied ? "Occupied" : "Unoccupied",
+      attributes: [["Occupancy": isOccupied ? "Occupied" : "Unoccupied"]],
       error: nil
     )
   }

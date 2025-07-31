@@ -18,7 +18,7 @@ import Foundation
 import GoogleHomeSDK
 import OSLog
 
-class DeviceControl: ObservableObject {
+class DeviceControl: ObservableObject, Identifiable {
   /// Unique identifier to tag the device in collection views
   let id: String
 
@@ -31,26 +31,29 @@ class DeviceControl: ObservableObject {
   /// Whether the device requires a PIN code for the primary action.
   var requiresPINCode: Bool { false }
 
+  /// An optional binding to a boolean value representing the state of the device.
+  /// If nil, the device does not have a toggle control.
+  @Published var toggleControl: ToggleControl?
+
   /// Range information for the device. Used for devices with a level control.
   @Published var rangeControl: RangeControl?
+
+  /// Dropdown information for the device. Used for devices with a mode control.
+  @Published var dropdownControl: DropdownControl?
 
   /// Represents the device's current state that should be presented in the UI.
   @Published var tileInfo: DeviceTileInfo =
     DeviceTileInfo(
       title: "Loading",
+      typeName: "Loading",
       imageName: "",
       isActive: false,
       isBusy: true,
       statusLabel: "Loading",
+      attributes: [],
       error: nil)
 
   // MARK: - Abstract Methods
-
-  /// Performs the action associated with a simple tap on the device view's main button, e.g.
-  /// toggling lights. Should be implemented by subclasses.
-  func primaryAction() {
-    fatalError("Must be implemented by subclass")
-  }
 
   /// Set the PIN code. Only applicable if `requiresPINCode` is `true`.
   open func setPINCode(_ code: String) {
@@ -61,5 +64,4 @@ class DeviceControl: ObservableObject {
     self.device = device
     self.id = device.id
   }
-
 }

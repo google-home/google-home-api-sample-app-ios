@@ -29,7 +29,8 @@ final class OnOffPlugInUnitControl: DeviceControl {
 
   public override init(device: HomeDevice) throws {
     guard device.types.contains(OnOffPluginUnitDeviceType.self) else {
-      throw HomeError.notFound("Device does not support OnOffPluginUnitDeviceType")
+      throw HomeError.notFound(
+        "Device does not support OnOffPluginUnitDeviceType")
     }
     try super.init(device: device)
 
@@ -42,16 +43,29 @@ final class OnOffPlugInUnitControl: DeviceControl {
         return Empty<OnOffPluginUnitDeviceType, Never>().eraseToAnyPublisher()
       }
       .sink { [weak self] onOffPluginUnitDeviceType in
-        self?.onOffPluginUnitDeviceType = onOffPluginUnitDeviceType
-        self?.updateTileInfo()
+        guard let self = self else { return }
+        self.onOffPluginUnitDeviceType = onOffPluginUnitDeviceType
+        self.updateTileInfo()
+
+        if onOffPluginUnitDeviceType.matterTraits.onOffTrait != nil {
+          self.toggleControl = ToggleControl(
+            isOn: self.tileInfo.isActive,
+            label: "Switch",
+            description: self.tileInfo.isActive ? "On" : "Off"
+          ) {
+            self.toggleAction()
+          }
+        } else {
+          self.toggleControl = nil
+        }
       }
       .store(in: &self.cancellables)
   }
 
   // MARK: - `DeviceControl`
 
-  /// Toggles the fan; usually provided as the `action` callback on a Button.
-  public override func primaryAction() {
+  /// Toggles the plugin; usually provided as the `action` callback on toggle.
+  private func toggleAction() {
     self.updateTileInfo(isBusy: true)
     Task { @MainActor [weak self] in
       guard
@@ -63,7 +77,8 @@ final class OnOffPlugInUnitControl: DeviceControl {
       do {
         try await onOffTrait.toggle()
       } catch {
-        Logger().error("Failed to to toggle OnOffPluginUnit on/off trait: \(error)")
+        Logger().error(
+          "Failed to to toggle OnOffPluginUnit on/off trait: \(error)")
         self.updateTileInfo(isBusy: false)
       }
     }
@@ -81,16 +96,20 @@ final class OnOffPlugInUnitControl: DeviceControl {
       return
     }
 
-    let isOn = onOffPluginUnitDeviceType.matterTraits.onOffTrait?.attributes.onOff ?? false
+    let isOn =
+      onOffPluginUnitDeviceType.matterTraits.onOffTrait?.attributes.onOff
+      ?? false
     let imageName = isOn ? "outlet_fill_symbol" : "outlet_symbol"
     let statusLabel = isOn ? "On" : "Off"
 
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "OnOff plugin unit",
       imageName: imageName,
       isActive: isOn,
       isBusy: isBusy,
       statusLabel: statusLabel,
+      attributes: [],
       error: nil
     )
   }

@@ -28,10 +28,14 @@ final class TemperatureSensorControl: SensorControl<TemperatureSensorDeviceType>
     let degrees = Self.hundredthsToCelsius(hundredths: hundredths)
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Temperature sensor",
       imageName: "sensors_symbol",
       isActive: true,
       isBusy: false,
       statusLabel: "\(degrees) °C",
+      attributes: [
+        ["Temperature": "\(degrees) °C"]
+      ],
       error: nil
     )
   }

@@ -26,19 +26,17 @@ final class GenericDeviceControl: DeviceControl {
     try super.init(device: device)
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Generic device",
       imageName: self.imageName,
       isActive: false,
       isBusy: false,
       statusLabel: "Unsupported",
+      attributes: [],
       error: nil
     )
   }
 
   // MARK: - DeviceControl
-
-  override func primaryAction() {
-    // Intentionally empty, no actions are supported by generic control.
-  }
 
   // MARK: - Private
 

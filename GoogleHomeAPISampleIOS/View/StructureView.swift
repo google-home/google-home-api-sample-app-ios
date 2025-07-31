@@ -21,11 +21,11 @@ struct StructureView: View {
   private enum Tab {
     case devices
     case automations
+    case settings
   }
 
   static let columns = [
-    GridItem(.flexible(), alignment: .leading),
-    GridItem(.flexible(), alignment: .leading),
+    GridItem(.flexible(), alignment: .leading)
   ]
 
   @EnvironmentObject private var mainViewModel: MainViewModel
@@ -52,7 +52,7 @@ struct StructureView: View {
     TabView(selection: $selectedTab) {
       deviceGrid(structure: structure)
         .tabItem {
-          Label("Devices", image: "devices_symbol")
+          Label("Devices", image: "devices_other_symbol")
             .font(.title)
         }
         .tag(Tab.devices)
@@ -64,6 +64,14 @@ struct StructureView: View {
           Label("Automations", image: "astrophotography_mode_symbol")
         }
         .tag(Tab.automations)
+      SettingsView(structure: structure)
+        .environmentObject(viewModel)
+        .tabItem {
+          Label("Settings", systemImage: "gearshape")
+            // make the icon un-filled
+            .environment(\.symbolVariants, .none)
+        }
+        .tag(Tab.settings)
     }
     .toolbar {
       ToolbarItemGroup(placement: .navigationBarLeading) {
@@ -83,34 +91,16 @@ struct StructureView: View {
       }
     }
     .alert("Enter Room Name", isPresented: self.$viewModel.showRoomNameInput) {
-      let roomToBeRenamed = self.viewModel.roomToBeRenamed
       TextField("Room Name...", text: self.$viewModel.roomNameInput)
-      Button("Cancel", role: .cancel) {
-        self.viewModel.roomToBeRenamed = nil
-      }
-
-      /// If `roomToBeRenamed` is not nil, the button label is "Rename Room"; otherwise, it's "Create Room".
-      Button(roomToBeRenamed != nil ? "Rename Room" : "Create Room") {
+      Button("Cancel", role: .cancel) {}
+      Button("Create Room") {
         guard !self.viewModel.roomNameInput.isEmpty else {
           return
         }
         let roomName = self.viewModel.roomNameInput
         self.viewModel.roomNameInput = ""
-        if let roomToBeRenamed {
-          self.renameRoom(room: roomToBeRenamed, name: roomName)
-          self.viewModel.roomToBeRenamed = nil
-          return
-        }
         self.addRoom(name: roomName, structure: structure)
       }
-    }
-    .confirmationDialog(
-      "", isPresented: self.$viewModel.isConfirmingRoomDeletion
-    ) {
-      Button("Delete", role: .destructive) {
-        removeRoom(id: self.viewModel.roomIDToBeDeleted!, structure: structure)
-      }
-      Button("Cancel", role: .cancel) {}
     }
   }
 
@@ -131,63 +121,37 @@ struct StructureView: View {
                   .padding(.vertical)
               } else {
                 ForEach(entry.deviceControls, id: \.id) { deviceControl in
-                  DeviceView(
-                    deviceControl: deviceControl,
-                    roomID: entry.roomID,
-                    structure: structure,
-                    structureViewModel: self.viewModel
-                  )
+                  NavigationLink(destination: {
+                    if let home = self.mainViewModel.home {
+                      DeviceDetailView(
+                        deviceControl: deviceControl,
+                        structure: structure,
+                        home: home,
+                        deviceID: deviceControl.id,
+                        structureViewModel: self.viewModel,
+                        entry: entry
+                      )
+                    } else {
+                      Text("Home object is missing. Please try again later.")
+                    }
+                  }) {
+                    DeviceRow(
+                      deviceControl: deviceControl
+                    )
+                  }
                 }
               }
             } header: {
               HStack {
                 Text(entry.roomName)
                   .foregroundColor(Color("fontColor"))
-                  .font(.subheadline)
+                  .font(.headline)
                 Spacer()
-                Button {
-                  self.viewModel.roomToBeRenamed = entry.room
-                  self.viewModel.showRoomNameInput = true
-                } label: {
-                  Image(systemName: "rectangle.and.pencil.and.ellipsis")
-                    .padding(4)
-                }
-                if entry.deviceControls.isEmpty {
-                  Button(role: .destructive) {
-                    self.viewModel.roomIDToBeDeleted = entry.roomID
-                  } label: {
-                    Image(systemName: "trash")
-                      .padding(4)
-                  }
-                }
               }
             }
-
           }
         }
         .padding()
-      }
-    }
-  }
-
-  private func renameRoom(room: Room, name: String) {
-    Task {
-      do {
-        // The view will be updated with the values from the devices publisher.
-        _ = try await room.setName(name)
-      } catch {
-        Logger().error("Failed to rename room: \(error)")
-      }
-    }
-  }
-
-  private func removeRoom(id: String, structure: Structure) {
-    Task {
-      do {
-        // The view will be updated with the values from the devices publisher.
-        _ = try await structure.deleteRoom(id: id)
-      } catch {
-        Logger().error("Failed to remove room: \(error)")
       }
     }
   }

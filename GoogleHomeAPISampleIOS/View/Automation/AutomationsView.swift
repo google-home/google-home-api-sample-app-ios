@@ -103,22 +103,26 @@ struct AutomationsView: View {
       .navigationDestination(for: Destination.self) { destination in
         switch destination {
         case .AutomationSuggestionsView:
-          /// Pop up AutomationSuggestionsView when clicking on the 'Add' button
-          AutomationSuggestionsView(
-            viewModel: AutomationSuggestionsViewModel(
-              home: automationList.structure.context,
-              structure: automationList.structure
-            ),
-            navigationPath: $navigationPath
-          )
-          .environmentObject(automationList)
+          if let home = mainViewModel.home {
+            /// Pop up AutomationSuggestionsView when clicking on the 'Add' button
+            AutomationSuggestionsView(
+              viewModel: AutomationSuggestionsViewModel(
+                home: home,
+                structure: automationList.structure
+              ),
+              navigationPath: $navigationPath
+            )
+            .environmentObject(automationList)
+          }
         case .GenericEditorView:
-          if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel() {
+          if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel(),
+            let home = mainViewModel.home
+          {
             GenericEditorView(
               viewModel: GenericEditorViewModel(automationList: automationList),
               candidatesViewModel: candidatesViewModel,
               automationRepository: AutomationsRepository(
-                home: automationList.structure.context,
+                home: home,
                 structure: automationList.structure
               ),
               navigationPath: $navigationPath

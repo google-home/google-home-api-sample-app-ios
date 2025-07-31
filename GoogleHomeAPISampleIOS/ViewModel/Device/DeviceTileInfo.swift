@@ -17,27 +17,33 @@ import Foundation
 struct DeviceTileInfo {
 
   var title: String
+  var typeName: String
   var imageName: String
   var isActive: Bool
   var isBusy: Bool
   var statusLabel: String
+  var attributes: [[String: String]]
   var error: (any Error)?
 
   // MARK: - Initialization
 
   init(
     title: String,
+    typeName: String,
     imageName: String,
     isActive: Bool,
     isBusy: Bool,
     statusLabel: String,
+    attributes: [[String: String]],
     error: (any Error)?
   ) {
     self.title = title
+    self.typeName = typeName
     self.imageName = imageName
     self.isActive = isActive
     self.isBusy = isBusy
     self.statusLabel = statusLabel
+    self.attributes = attributes
     self.error = error
   }
 
@@ -48,10 +54,12 @@ struct DeviceTileInfo {
   static func make(forError error: any Error) -> DeviceTileInfo {
     return DeviceTileInfo(
       title: "Error: " + error.localizedDescription,
+      typeName: "Unkonwn device type",
       imageName: "error_symbol",
       isActive: false,
       isBusy: false,
       statusLabel: "Disabled",
+      attributes: [],
       error: error
     )
   }
@@ -59,10 +67,12 @@ struct DeviceTileInfo {
   public static func makeLoading(title: String, imageName: String) -> DeviceTileInfo {
     return DeviceTileInfo(
       title: title,
+      typeName: "Loading...",
       imageName: "imageName",
       isActive: false,
       isBusy: true,
       statusLabel: "Loading...",
+      attributes: [],
       error: nil
     )
   }

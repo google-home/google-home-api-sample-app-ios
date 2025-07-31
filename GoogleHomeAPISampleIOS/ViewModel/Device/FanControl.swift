@@ -23,16 +23,34 @@ final class FanControl: DeviceControl {
   private var fanDeviceType: FanDeviceType?
   private var cancellable: AnyCancellable?
   private var rangeCancellable: AnyCancellable?
+  private var dropdownCancellable: AnyCancellable?
+
+  private var fanModesStringToEnumMap:
+    [String: GoogleHomeTypes.Matter.FanControlTrait.FanModeEnum] = [
+      "Off": .off,
+      "Low": .low,
+      "Medium": .medium,
+      "High": .high,
+    ]
 
   // MARK: - Initialization
 
   override init(device: HomeDevice) throws {
     guard device.types.contains(FanDeviceType.self) else {
-      throw HomeSampleError.unableToCreateControlForDeviceType(deviceType: "FanControl")
+      throw HomeSampleError.unableToCreateControlForDeviceType(
+        deviceType: "FanControl")
     }
     try super.init(device: device)
 
-    self.tileInfo = DeviceTileInfo.makeLoading(title: device.name, imageName: "mode_fan_symbol")
+    self.tileInfo = DeviceTileInfo.makeLoading(
+      title: device.name, imageName: "mode_fan_symbol")
+
+    let fanModesEnumToStringMap = self.fanModesStringToEnumMap
+      .reduce(
+        into: [GoogleHomeTypes.Matter.FanControlTrait.FanModeEnum: String]()
+      ) { result, element in
+        result[element.value] = element.key
+      }
 
     self.cancellable = self.device.types.subscribe(FanDeviceType.self)
       .receive(on: DispatchQueue.main)
@@ -42,27 +60,24 @@ final class FanControl: DeviceControl {
       }
       .sink { [weak self] fanDeviceType in
         guard let self = self else { return }
+        let fanMode = fanDeviceType.matterTraits.fanControlTrait?.attributes
+          .fanMode
         self.fanDeviceType = fanDeviceType
-        self.rangeControl = fanDeviceType.matterTraits.fanControlTrait?.makeRangeControl()
+        self.rangeControl = fanDeviceType.matterTraits.fanControlTrait?
+          .makeRangeControl()
+        self.dropdownControl = fanDeviceType.matterTraits.fanControlTrait?
+          .makeDropdownControl(
+            options: Array(self.fanModesStringToEnumMap.keys),
+            selection: fanModesEnumToStringMap[fanMode ?? .unrecognized_]
+              ?? "Unknown"
+          )
         self.updateTileInfo()
         self.startRangeSubscription()
+        self.startDropdownSubscription()
       }
   }
 
   // MARK: - `DeviceControl`
-
-  /// Toggles the fan; usually provided as the `action` callback on a Button.
-  override func primaryAction() {
-    self.updateTileInfo(isBusy: true)
-    Task { @MainActor [weak self] in
-      do {
-        try await self?.toggleFan()
-      } catch {
-        Logger().error("Failed to to toggle fan mode: \(error)")
-        self?.updateTileInfo(isBusy: false)
-      }
-    }
-  }
 
   // MARK: - Private
 
@@ -74,7 +89,8 @@ final class FanControl: DeviceControl {
     let isOn = self.fanIsOn()
     var statusLabel = isOn ? "On" : "Off"
     if isOn {
-      if let percentValue = fanDeviceType.matterTraits.fanControlTrait?.calculateRangeValue(),
+      if let percentValue = fanDeviceType.matterTraits.fanControlTrait?
+        .calculateRangeValue(),
         let percentFormatted = NSNumber(value: percentValue).percentFormatted()
       {
         statusLabel += " • \(percentFormatted)"
@@ -82,11 +98,13 @@ final class FanControl: DeviceControl {
     }
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
+      typeName: "Fan",
       imageName: isOn
         ? "mode_fan_fill_symbol" : "mode_fan_symbol",
       isActive: isOn,
       isBusy: isBusy,
       statusLabel: statusLabel,
+      attributes: [],
       error: nil
     )
   }
@@ -115,8 +133,35 @@ final class FanControl: DeviceControl {
             $0.setPercentSetting(UInt8(value * 100))
           }
         } catch {
-          Logger().error("Failed to adjust brightness: \(error)")
+          Logger().error("Failed to adjust percent setting: \(error)")
           self.updateTileInfo(isBusy: false)
+        }
+      }
+    }
+  }
+
+  private func startDropdownSubscription() {
+    guard let dropdownControl = self.dropdownControl else { return }
+    self.dropdownCancellable?.cancel()
+    self.dropdownCancellable = dropdownControl.$selection.sink {
+      [weak self] value in
+      guard
+        let self = self,
+        let fanControlTrait = self.fanDeviceType?.matterTraits.fanControlTrait,
+        let selection = self.fanModesStringToEnumMap[value],
+        selection != fanControlTrait.attributes.fanMode
+      else {
+        return
+      }
+      self.updateTileInfo(isBusy: true)
+      Task {
+        do {
+          _ = try await fanControlTrait.update {
+            $0.setFanMode(selection)
+          }
+
+        } catch {
+          Logger().error("Cannot set fan mode. \(error)")
         }
       }
     }
@@ -149,12 +194,15 @@ final class FanControl: DeviceControl {
     } else if let fanControlTrait = fanDeviceType.matterTraits.fanControlTrait {
       // Otherwise, use the FanControlTrait.
       let fanMode = fanControlTrait.attributes.fanMode
-      let newFanMode: Matter.FanControlTrait.FanModeEnum = fanMode == .off ? .high : .off
+      let newFanMode: Matter.FanControlTrait.FanModeEnum =
+        fanMode == .off ? .high : .off
       _ = try await fanControlTrait.update {
         $0.setFanMode(newFanMode)
       }
     } else {
-      Logger().error("Cannot toggle fan. Device does not support OnOffTrait or FanControlTrait.")
+      Logger().error(
+        "Cannot toggle fan. Device does not support OnOffTrait or FanControlTrait."
+      )
     }
   }
 }

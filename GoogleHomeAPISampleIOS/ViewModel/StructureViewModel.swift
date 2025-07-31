@@ -31,7 +31,6 @@ final class StructureViewModel: ObservableObject {
   @Published var showRoomNameInput = false
   @Published var roomNameInput = ""
   @Published var roomIDToBeDeleted: String?
-  @Published var roomToBeRenamed: Room?
 
   var isConfirmingRoomDeletion: Bool {
     get { return roomIDToBeDeleted != nil }
