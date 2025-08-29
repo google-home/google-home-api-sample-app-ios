@@ -19,9 +19,12 @@ import GoogleHomeTypes
 import OSLog
 
 // An 'add-on' to the DeviceControl that handles range functions like brightness.
-class RangeControl: ObservableObject {
+class RangeControl: ObservableObject, Identifiable {
+  let id = UUID()
   // A label displayed in DeviceDetailView
   let label: String
+  let validate: (Int16) -> Bool
+
 
   // A static range for the slider.
   @Published var range: ClosedRange<Float>
@@ -31,12 +34,15 @@ class RangeControl: ObservableObject {
   @Published var rangeValue: Float
 
   init(
-    range: ClosedRange<Float> = 0.0...1.0, rangeValue: Float = 0.0,
-    label: String
+    range: ClosedRange<Float> = 0.0...1.0,
+    rangeValue: Float = 0.0,
+    label: String,
+    validate: @escaping (Int16) -> Bool = { _ in true}
   ) {
     self.range = range
     self.rangeValue = rangeValue
     self.label = label
+    self.validate = validate
   }
 }
 
@@ -77,5 +83,39 @@ extension Matter.FanControlTrait {
     }
 
     return Float(percentSetting) / 100.0
+  }
+}
+
+extension Matter.ThermostatTrait {
+  func makeCoolRangeControl() -> RangeControl? {
+    if self.systemMode == .cool || self.systemMode == .auto {
+      let min = Float(self.minCoolSetpointLimit)
+      let max = Float(self.maxCoolSetpointLimit)
+      let rangeValue = Float(self.coolingSetpoint ?? 0)
+      return RangeControl(
+        range: min...max,
+        rangeValue: rangeValue,
+        label: "Cooling Setpoint",
+        validate: self.isValidCoolingSetpointUpdate
+      )
+    } else {
+      return nil
+    }
+  }
+
+  func makeHeatRangeControl() -> RangeControl? {
+    if self.systemMode == .heat || self.systemMode == .auto {
+      let min = Float(self.minHeatSetpointLimit)
+      let max = Float(self.maxHeatSetpointLimit)
+      let rangeValue = Float(self.heatingSetpoint ?? 0)
+      return RangeControl(
+        range: min...max,
+        rangeValue: rangeValue,
+        label: "Heat Setpoint",
+        validate: self.isValidHeatingSetpointUpdate
+      )
+    } else {
+      return nil
+    }
   }
 }

@@ -38,8 +38,14 @@ class DeviceControl: ObservableObject, Identifiable {
   /// Range information for the device. Used for devices with a level control.
   @Published var rangeControl: RangeControl?
 
+  /// Additional RangeControl.
+  @Published var rangeControl2: RangeControl?
+
   /// Dropdown information for the device. Used for devices with a mode control.
   @Published var dropdownControl: DropdownControl?
+
+  /// Button group information for the device.
+  @Published var buttonGroupControl: ButtonGroupControl?
 
   /// Represents the device's current state that should be presented in the UI.
   @Published var tileInfo: DeviceTileInfo =

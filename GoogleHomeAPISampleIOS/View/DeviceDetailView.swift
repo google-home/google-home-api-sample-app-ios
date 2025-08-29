@@ -51,149 +51,180 @@ struct DeviceDetailView: View {
 
   var body: some View {
     // The main container for the entire screen.
-    VStack(alignment: .leading, spacing: 20) {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 20) {
 
-      // Title and Edit Button
-      HStack(alignment: .center) {
-        Text(self.deviceControl.tileInfo.title)
-          .font(.title)
-          .fontWeight(.bold)
+        self.titleSection
+
+        VStack(alignment: .leading, spacing: 30) {
+          Text("General")
+            .font(.headline)
+
+          self.controlSection
+          self.attributeSection
+          self.locationSection
+        }
+        .padding(.top)
+
+        Section("Decommission") {
+          self.decommissionSection
+        }
+
+        // Pushes all the content to the top of the screen.
         Spacer()
-
-        NavigationLink(
-          destination: RenameView(
-            viewModel: RenameViewModel(
-              renameType: .Device,
-              name: self.deviceControl.device.name,
-              setName: self.deviceControl.device.setName
-            )
-          )
-        ) {
-          Image(systemName: "pencil.circle.fill")
-            .font(.title)
-            .foregroundStyle(.gray, Color(.systemGray5))
-        }
       }
-      Divider()
-        .padding(.bottom, 10)
-
-      VStack(alignment: .leading, spacing: 30) {
-        Text("General")
-          .font(.headline)
-
-        // Device Controls
-        // Toggle Control
-        if let toggleControl = self.deviceControl.toggleControl {
-          Toggle(
-            isOn: Binding(
-              get: { toggleControl.isOn },
-              set: {
-                _ in
-                if self.deviceControl.requiresPINCode {
-                  self.showingPinEntry = true
-                } else {
-                  toggleControl.action()
-                }
-              }
-            )
-          ) {
-            VStack(alignment: .leading, spacing: 4) {
-              Text(toggleControl.label)
-                .font(.body)
-              Text(toggleControl.description)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            }
-          }
-          .disabled(self.deviceControl.tileInfo.isBusy)
-          .toggleStyle(SwitchToggleStyle(tint: .blue))
+      // Adds padding around the entire screen content.
+      .padding()
+      .alert("Enter PIN", isPresented: $showingPinEntry) {
+        SecureField("PIN Code", text: $pinCode)
+          .keyboardType(.numberPad)
+        Button("Submit") {
+          self.deviceControl.setPINCode(self.pinCode)
+          self.deviceControl.toggleControl?.action()
+          self.pinCode = ""
         }
-
-        // Dropdown Control
-        if let dropdownControl = deviceControl.dropdownControl {
-          DropdownView(dropdownControl: dropdownControl)
-            .disabled(self.deviceControl.tileInfo.isBusy)
+        Button("Cancel", role: .cancel) {
+          self.pinCode = ""
         }
-
-        // Range Control
-        if let rangeControl = deviceControl.rangeControl {
-          RangeSlider(
-            rangeControl: rangeControl
-          )
-          .disabled(self.deviceControl.tileInfo.isBusy)
-        }
-
-        /// Display the value of attributes, used for read only value like temeperature, occupied status.
-        ForEach(self.deviceControl.tileInfo.attributes, id: \.self) {
-          attribute in
-          if let (key, value) = attribute.first {
-            VStack(alignment: .leading, spacing: 4) {
-              Text(key)
-                .font(.body)
-              Text(value)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            }
-          }
-        }
-
-        // Device location
-        NavigationLink(
-          destination: RoomsView(
-            deviceID: self.deviceControl.device.id,
-            structure: self.structure,
-            structureViewModel: self.structureViewModel,
-            originalRoomID: self.entry.roomID
-          )
-        ) {
-          VStack(alignment: .leading, spacing: 4) {
-            Text("Location")
-              .font(.body)
-              .foregroundColor(.black)
-            Text(self.entry.roomName)
-              .font(.subheadline)
-              .foregroundColor(.gray)
-          }
-        }
+      } message: {
+        Text("PIN is required to operate this lock.")
       }
-      .padding(.top)
-
-      Section("Decommission") {
-        AnyView(self.decommissionSection)
+      .confirmationDialog(
+        "Are you sure you want to decommission this device? This action cannot be undone.",
+        isPresented: self.$isShowingDecommissionConfirmation,
+        titleVisibility: .visible
+      ) {
+        Button("Decommission", role: .destructive) {
+          self.decommissionDevice()
+        }
+        Button("Cancel", role: .cancel) {}
       }
+    }
+  }
 
-      // Pushes all the content to the top of the screen.
+  /// Display device name and entry of name editing.
+  @ViewBuilder
+  var titleSection: some View {
+    HStack(alignment: .center) {
+      // Device name
+      Text(self.deviceControl.tileInfo.title)
+        .font(.title)
+        .fontWeight(.bold)
       Spacer()
+      // Edit button
+      NavigationLink(
+        destination: RenameView(
+          viewModel: RenameViewModel(
+            renameType: .Device,
+            name: self.deviceControl.device.name,
+            setName: self.deviceControl.device.setName
+          )
+        )
+      ) {
+        Image(systemName: "pencil.circle.fill")
+          .font(.title)
+          .foregroundStyle(.gray, Color(.systemGray5))
+      }
     }
     .onAppear {
       // Only check the decommission eligibility when user open DeviceDetailView
       viewModel.checkDecommissionEligibility()
     }
-    // Adds padding around the entire screen content.
-    .padding()
-    .alert("Enter PIN", isPresented: $showingPinEntry) {
-      SecureField("PIN Code", text: $pinCode)
-        .keyboardType(.numberPad)
-      Button("Submit") {
-        self.deviceControl.setPINCode(self.pinCode)
-        self.deviceControl.toggleControl?.action()
-        self.pinCode = ""
+    Divider()
+      .padding(.bottom, 10)
+  }
+
+  /// Display controls of device.
+  @ViewBuilder
+  var controlSection: some View {
+    // Toggle Control
+    if let toggleControl = self.deviceControl.toggleControl {
+      Toggle(
+        isOn: Binding(
+          get: { toggleControl.isOn },
+          set: {
+            _ in
+            if self.deviceControl.requiresPINCode {
+              self.showingPinEntry = true
+            } else {
+              toggleControl.action()
+            }
+          }
+        )
+      ) {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(toggleControl.label)
+            .font(.body)
+          Text(toggleControl.description)
+            .font(.subheadline)
+            .foregroundColor(.gray)
+        }
       }
-      Button("Cancel", role: .cancel) {
-        self.pinCode = ""
-      }
-    } message: {
-      Text("PIN is required to operate this lock.")
+      .disabled(self.deviceControl.tileInfo.isBusy)
+      .toggleStyle(SwitchToggleStyle(tint: .blue))
     }
-    .confirmationDialog(
-      "Are you sure you want to decommission this device? This action cannot be undone.",
-      isPresented: self.$isShowingDecommissionConfirmation,
-      titleVisibility: .visible
-    ) {
-      Button("Decommission", role: .destructive) {
-        self.decommissionDevice()
+
+    // Dropdown Control
+    if let dropdownControl = deviceControl.dropdownControl {
+      DropdownView(dropdownControl: dropdownControl)
+        .disabled(self.deviceControl.tileInfo.isBusy)
+    }
+
+    // Range Control
+    if let rangeControl = deviceControl.rangeControl {
+      RangeSlider(rangeControl: rangeControl)
+        .disabled(self.deviceControl.tileInfo.isBusy)
+    }
+
+    // Range Control 2
+    if let rangeControl = deviceControl.rangeControl2 {
+      RangeSlider(rangeControl: rangeControl)
+        .disabled(self.deviceControl.tileInfo.isBusy)
+    }
+
+    // Button Group Control
+    if let buttonGroupControl = deviceControl.buttonGroupControl {
+      ButtonGroupView(buttonGroupControl: buttonGroupControl)
+        .disabled(self.deviceControl.tileInfo.isBusy)
+    }
+  }
+
+  /// Display attributes' name and value.
+  @ViewBuilder
+  var attributeSection: some View {
+    ForEach(self.deviceControl.tileInfo.attributes, id: \.self) {
+      attribute in
+      if let (key, value) = attribute.first {
+        VStack(alignment: .leading, spacing: 4) {
+          Text(key)
+            .font(.body)
+          Text(value)
+            .font(.subheadline)
+            .foregroundColor(.gray)
+        }
       }
-      Button("Cancel", role: .cancel) {}
+    }
+  }
+
+  /// Display which room the device located and entry of moving to other room.
+  @ViewBuilder
+  var locationSection: some View {
+    NavigationLink(
+      destination: RoomsView(
+        deviceID: self.deviceControl.device.id,
+        structure: self.structure,
+        structureViewModel: self.structureViewModel,
+        originalRoomID: self.entry.roomID
+      )
+    ) {
+      VStack(alignment: .leading, spacing: 4) {
+        Text("Location")
+          .font(.body)
+          .foregroundColor(.black)
+        Text(self.entry.roomName)
+          .font(.subheadline)
+          .foregroundColor(.gray)
+      }
     }
   }
 
@@ -202,7 +233,7 @@ struct DeviceDetailView: View {
   /// This view shows the user whether the device can be decommissioned, and if so, what the
   /// side effects of decommissioning are.
   @ViewBuilder
-  private var decommissionSection: any View {
+  private var decommissionSection: some View {
     switch self.viewModel.decommissionEligibility {
     case .ineligible(let reason):
       Text("This device cannot be decommissioned.")
@@ -316,7 +347,10 @@ private struct RangeSlider: View {
       Text(rangeControl.label)
         .font(.body)
       Slider(
-        value: $sliderValue,
+        value: Binding(
+          get: { sliderValue },
+          set: { if rangeControl.validate(Int16($0)) { sliderValue = $0 } }
+        ),
         in: rangeControl.range,
         onEditingChanged: { editing in
           isEditing = editing
@@ -324,13 +358,40 @@ private struct RangeSlider: View {
             rangeControl.rangeValue = sliderValue
           }
         }
-      ) {
-        Text(rangeControl.label)
-      }
+      )
     }
     .onChange(of: rangeControl.rangeValue) { oldValue, newValue in
       if !isEditing {
         sliderValue = newValue
+      }
+    }
+  }
+}
+
+private struct ButtonGroupView: View {
+  @ObservedObject var buttonGroupControl: ButtonGroupControl
+
+  var body: some View {
+    let displayedButtons = buttonGroupControl.buttons.filter({ $0.isDisplayed })
+    let columnCount = 2
+    let rowCount = (displayedButtons.count + columnCount - 1) / columnCount
+    VStack {
+      ForEach(0..<rowCount, id: \.self) { rowIndex in
+        HStack {
+          ForEach(0..<columnCount) { colIndex in
+            if colIndex == 1 {
+              Spacer()
+            }
+            let buttonIndex = rowIndex * 2 + colIndex
+            if buttonIndex < displayedButtons.count {
+              let button = displayedButtons[buttonIndex]
+              Button(action: button.action) {
+                Text(button.label)
+              } .disabled(button.disabled)
+              .buttonStyle(.bordered)
+            }
+          }
+        }
       }
     }
   }

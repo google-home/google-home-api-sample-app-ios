@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,6 +17,8 @@
 		9C8553BA2E24AF8400529E4C /* DeviceDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */; };
 		9C9E5ACB2E1524250049884A /* DeviceRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9E5ACA2E1523B40049884A /* DeviceRow.swift */; };
 		9C9E5ACD2E1653640049884A /* DeviceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9E5ACC2E16535F0049884A /* DeviceDetailView.swift */; };
+		9CC6939F2E307602003A5069 /* ThermostatTraitExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC6939E2E3075F9003A5069 /* ThermostatTraitExtension.swift */; };
+		9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC693A12E308296003A5069 /* ButtonGroupControl.swift */; };
 		9CF09EF02DBA115900D0B495 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF09EEF2DBA115700D0B495 /* AboutView.swift */; };
 		9D174DB42CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D174DB32CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift */; };
 		9D174DB52CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D174DB32CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift */; };
@@ -132,6 +134,8 @@
 		9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailViewModel.swift; sourceTree = "<group>"; };
 		9C9E5ACA2E1523B40049884A /* DeviceRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceRow.swift; sourceTree = "<group>"; };
 		9C9E5ACC2E16535F0049884A /* DeviceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceDetailView.swift; sourceTree = "<group>"; };
+		9CC6939E2E3075F9003A5069 /* ThermostatTraitExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermostatTraitExtension.swift; sourceTree = "<group>"; };
+		9CC693A12E308296003A5069 /* ButtonGroupControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonGroupControl.swift; sourceTree = "<group>"; };
 		9CF09EEF2DBA115700D0B495 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		9D174DB32CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommissioningUserDefaultsKeys.swift; sourceTree = "<group>"; };
 		9D174DB62CEF31030020561B /* AttestationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttestationDelegate.swift; sourceTree = "<group>"; };
@@ -145,8 +149,8 @@
 		9D4749482D548761006A54F4 /* AutomationsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationsRepository.swift; sourceTree = "<group>"; };
 		9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidatesView.swift; sourceTree = "<group>"; };
 		9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidateDetailView.swift; sourceTree = "<group>"; };
-		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
-		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
+		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
+		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
 		9DB21DBE2D797AFA0004570D /* GenericEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorView.swift; sourceTree = "<group>"; };
 		9DB21DC02D79863B0004570D /* GenericEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorViewModel.swift; sourceTree = "<group>"; };
 		9DB83A162D13E53C00F826B8 /* SensorControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorControl.swift; sourceTree = "<group>"; };
@@ -225,6 +229,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9CC6939B2E3075D1003A5069 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				9CC6939E2E3075F9003A5069 /* ThermostatTraitExtension.swift */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
 		9DBD77442D2B876600924F71 /* Automation */ = {
 			isa = PBXGroup;
 			children = (
@@ -289,6 +301,7 @@
 		E60DB6A52CC032CC009DAD9D /* GoogleHomeAPISampleIOS */ = {
 			isa = PBXGroup;
 			children = (
+				9CC6939B2E3075D1003A5069 /* Extension */,
 				E6EBFC242CC09A2B00273859 /* Info.plist */,
 				E60A14CA2CCC7E0D0006A28B /* Commissioning */,
 				E6E3CB542CC07E7200E99423 /* Accounts */,
@@ -403,6 +416,7 @@
 		E6E3CB682CC07E7200E99423 /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				9CC693A12E308296003A5069 /* ButtonGroupControl.swift */,
 				9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */,
 				9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */,
 				E6E3CB5F2CC07E7200E99423 /* DeviceControl.swift */,
@@ -576,6 +590,7 @@
 				9D4749492D548766006A54F4 /* AutomationsRepository.swift in Sources */,
 				E6E3CB6C2CC07E7200E99423 /* CGFloat+UX.swift in Sources */,
 				9D4749372D547A1D006A54F4 /* AutomationSuggestionsView.swift in Sources */,
+				9CC6939F2E307602003A5069 /* ThermostatTraitExtension.swift in Sources */,
 				9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */,
 				9D83C2D72DB787B800BF5AF4 /* ActionCandidatesView.swift in Sources */,
 				9DB83A192D13E57000F826B8 /* TemperatureSensorControl.swift in Sources */,
@@ -600,6 +615,7 @@
 				E6E3CB7F2CC07E7200E99423 /* FanControl.swift in Sources */,
 				E6E3CB862CC07E7200E99423 /* StructureViewModel.swift in Sources */,
 				9DB21DBF2D797B010004570D /* GenericEditorView.swift in Sources */,
+				9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */,
 				E6E3CB852CC07E7200E99423 /* MainViewModel.swift in Sources */,
 				E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */,
 			);
@@ -718,7 +734,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.2;
+				MARKETING_VERSION = 1.4.3;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
