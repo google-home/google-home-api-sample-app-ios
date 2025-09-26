@@ -65,8 +65,11 @@ public class CandidatesViewModel: ObservableObject {
         .reduce(into: [String: [DeviceEntry]]()) { table, keyValue in
           let device = keyValue.key
           let nodeEntries = keyValue.value
+          let deviceEntry = DeviceEntry(device: device, nodes: nodeEntries)
           guard let roomID = device.roomID else { return }
-          table[roomID, default: []].append(DeviceEntry(device: device, nodes: nodeEntries))
+          if deviceEntry.deviceType != UnknownDeviceType.self {
+            table[roomID, default: []].append(deviceEntry)
+          }
         }
       // Map to RoomEntries
       self.roomEntries = rooms.compactMap { room in

@@ -28,14 +28,14 @@ struct AutomationsView: View {
       VStack {
         HStack {
           Text("Automation")
-            .font(.system(size: 14, weight: .bold, design: .default))
-            .padding(.leading, 5)
+            .font(.body)
+            .padding(.leading, .xs)
           Spacer()
         }
         if automationList.automationsUIModels.isEmpty {
           Spacer()
           Text("Add an automation to get started.")
-            .font(.system(size: 14, weight: .bold, design: .default))
+            .font(.body)
           Spacer()
         } else {
           List {
@@ -65,7 +65,7 @@ struct AutomationsView: View {
                   }
                 }
               )
-              .padding(.bottom, 8)
+              .padding(.bottom, .sm)
             }
             .listRowInsets(EdgeInsets())
             .listRowSeparator(.hidden)
@@ -84,7 +84,7 @@ struct AutomationsView: View {
               )
               .background(Color.blue)
               .foregroundColor(.white)
-              .cornerRadius(Dimensions.cornerRadius)
+              .cornerRadius(.md)
           }
         }
       }
@@ -174,5 +174,4 @@ enum Destination {
 enum Dimensions {
   static let buttonHeight = 40.0
   static let buttonWidth = 80.0
-  static let cornerRadius = 18.0
 }

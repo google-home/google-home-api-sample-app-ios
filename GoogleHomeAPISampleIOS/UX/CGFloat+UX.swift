@@ -15,11 +15,7 @@
 import CoreFoundation
 
 extension CGFloat {
-  static let deviceTileHorizontalPadding = 12.0
-  static let deviceTileVerticalPadding = 16.0
   static let deviceTileIconDimension = 24.0
   static let connectivityStatusIconDimension = 16.0
-  static let deviceTileHorizontalSpacing = 12.0
-  static let deviceTileCornerRadius = 28.0
   static let deviceTileHeight = 88.0
 }

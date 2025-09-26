@@ -40,12 +40,12 @@ struct ActionCandidateDetailView: View {
           deviceNodeSection(selectedActionDevice: selectedActionDevice)
         }
         else {
-          Text("No devcie selected. Please back to previous page.")
+          Text("No device selected. Please back to previous page.")
         }
       }
       .listStyle(.inset)
       .listRowSeparator(.hidden)
-      .padding(.top, 20)
+      .padding(.top, .lg)
     }
     .sheet(item: $selectedEntryForSheet) { currentEntry in
       AnyView(self.constraintSheet(for: currentEntry))
@@ -56,7 +56,7 @@ struct ActionCandidateDetailView: View {
   private func deviceInfoSection(selectedActionDevice: CandidatesViewModel.DeviceEntry) -> some View {
     Section("Device") {
       CreateButtonView(imageName: selectedActionDevice.iconName, text1: selectedActionDevice.device.name, text2: "") {}
-      .padding(.bottom, 8)
+            .padding(.bottom, .sm)
     }.listRowSeparator(.hidden)
   }
 
@@ -68,7 +68,7 @@ struct ActionCandidateDetailView: View {
         CreateButtonView(imageName: entry.iconName, text1: entry.description, text2: "") {
           selectedEntryForSheet = entry
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, .sm)
       }
       .listRowSeparator(.hidden)
     }
@@ -83,7 +83,7 @@ struct ActionCandidateDetailView: View {
         Text("No device selected")
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     }
     if trait == Matter.OnOffTrait.self || trait == Google.SimplifiedOnOffTrait.self {
       return VStack {
@@ -91,26 +91,26 @@ struct ActionCandidateDetailView: View {
         HStack {
           Text(entry.description).foregroundColor(Color("fontColor"))
           Spacer()
-        }.padding(.horizontal, 50)
+        }.padding(.horizontal, .xxxl)
         Spacer()
         CreateToggleButtonView(isOn: $toggleValue, leftText: "On", rightText: "Off")
         Spacer()
         doneButtonView(for: entry, selectedActionDevice: selectedActionDevice)
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
       return VStack {
         Text("Level Control not supported as action in this sample app")
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     } else {
       return VStack {
         Text("No supported trait")
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     }
   }
 
@@ -127,9 +127,9 @@ struct ActionCandidateDetailView: View {
           .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
           .background(Color.blue)
           .foregroundColor(.white)
-          .cornerRadius(Dimensions.cornerRadius)
-          .padding(.bottom, 20)
-          .padding(.trailing, 10)
+          .cornerRadius(.md)
+          .padding(.bottom, .lg)
+          .padding(.trailing, .smd)
       }
       .alignmentGuide(.bottom) { $0[.bottom] }
       .background(Color.clear)

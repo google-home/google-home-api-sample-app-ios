@@ -52,11 +52,11 @@ struct DeviceDetailView: View {
   var body: some View {
     // The main container for the entire screen.
     ScrollView {
-      VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: .md) {
 
         self.titleSection
 
-        VStack(alignment: .leading, spacing: 30) {
+          VStack(alignment: .leading, spacing: .xl) {
           Text("General")
             .font(.headline)
 
@@ -131,7 +131,7 @@ struct DeviceDetailView: View {
       viewModel.checkDecommissionEligibility()
     }
     Divider()
-      .padding(.bottom, 10)
+          .padding(.bottom, .smd)
   }
 
   /// Display controls of device.
@@ -152,7 +152,7 @@ struct DeviceDetailView: View {
           }
         )
       ) {
-        VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .leading, spacing: .xs) {
           Text(toggleControl.label)
             .font(.body)
           Text(toggleControl.description)
@@ -195,7 +195,7 @@ struct DeviceDetailView: View {
     ForEach(self.deviceControl.tileInfo.attributes, id: \.self) {
       attribute in
       if let (key, value) = attribute.first {
-        VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .leading, spacing: .xs) {
           Text(key)
             .font(.body)
           Text(value)
@@ -217,7 +217,7 @@ struct DeviceDetailView: View {
         originalRoomID: self.entry.roomID
       )
     ) {
-      VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: .xs) {
         Text("Location")
           .font(.body)
           .foregroundColor(.black)
@@ -320,7 +320,7 @@ private struct DropdownView: View {
   @ObservedObject var dropdownControl: DropdownControl
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: .xs) {
       Text(dropdownControl.label)
         .font(.body)
       Picker(dropdownControl.label, selection: $dropdownControl.selection) {
@@ -343,7 +343,7 @@ private struct RangeSlider: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: .xs) {
       Text(rangeControl.label)
         .font(.body)
       Slider(

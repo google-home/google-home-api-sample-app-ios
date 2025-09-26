@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import SwiftUI
 import GoogleHomeSDK
 import GoogleHomeTypes
 import OSLog
+import SwiftUI
 
 @main
 struct GoogleHomeAPISampleIOS: App {
@@ -29,6 +29,8 @@ struct GoogleHomeAPISampleIOS: App {
           TemperatureSensorDeviceType.self,
           WindowCoveringDeviceType.self,
           GoogleTVDeviceType.self,
+          GoogleCameraDeviceType.self,
+          GoogleDoorbellDeviceType.self,
         ],
         traits: [
           Google.TimeTrait.self,
@@ -42,6 +44,8 @@ struct GoogleHomeAPISampleIOS: App {
           Google.SimplifiedThermostatTrait.self,
           Google.AreaPresenceStateTrait.self,
           Google.AreaAttendanceStateTrait.self,
+          Google.WebRtcLiveViewTrait.self,
+          Google.PushAvStreamTransportTrait.self,
           Matter.LevelControlTrait.self,
           Matter.OnOffTrait.self,
           Matter.TemperatureMeasurementTrait.self,
@@ -65,8 +69,8 @@ struct GoogleHomeAPISampleIOS: App {
   }
 
   var body: some Scene {
-        WindowGroup {
-            MainView()
-        }
+    WindowGroup {
+      MainView()
     }
+  }
 }

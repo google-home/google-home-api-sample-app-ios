@@ -49,7 +49,7 @@ struct RangeView: View {
             self.rangeControl.rangeValue = self.currentRangeValue
           }
       )
-      .clipShape(RoundedRectangle(cornerRadius: .deviceTileCornerRadius))
+      .clipShape(RoundedRectangle(cornerRadius: .xxl))
     }
   }
 

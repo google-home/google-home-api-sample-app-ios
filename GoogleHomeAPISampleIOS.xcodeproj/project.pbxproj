@@ -3,10 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		99A8F5122E65884000DBC00D /* AppPadding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5112E65884000DBC00D /* AppPadding.swift */; };
+		99A8F5142E66CC3900DBC00D /* StackSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5132E66CC3200DBC00D /* StackSpacing.swift */; };
+		99A8F5162E66D66000DBC00D /* AppCornerRadius.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */; };
 		9C54B8D52E1B9DCC008DE522 /* DropdownControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */; };
 		9C54B8D72E1BC5AC008DE522 /* ToggleControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */; };
 		9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C54B8D82E1E0380008DE522 /* RoomsView.swift */; };
@@ -56,6 +59,12 @@
 		9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE32D822BAA004957F6 /* StarterCandidatesView.swift */; };
 		9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */; };
 		9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD60D192D59C539006F489F /* TVControl.swift */; };
+		B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */; };
+		B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */; };
+		B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */; };
+		B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00E2E77B34B00839F73 /* SignalingService.swift */; };
+		B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF0132E77B36900839F73 /* CameraControl.swift */; };
+		B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */; };
 		E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */; };
 		E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */; };
 		E666F74A2CCC4627005A4A6F /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E666F7492CCC4627005A4A6F /* RequestHandler.swift */; };
@@ -124,6 +133,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		99A8F5112E65884000DBC00D /* AppPadding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPadding.swift; sourceTree = "<group>"; };
+		99A8F5132E66CC3200DBC00D /* StackSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackSpacing.swift; sourceTree = "<group>"; };
+		99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCornerRadius.swift; sourceTree = "<group>"; };
 		9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropdownControl.swift; sourceTree = "<group>"; };
 		9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleControl.swift; sourceTree = "<group>"; };
 		9C54B8D82E1E0380008DE522 /* RoomsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomsView.swift; sourceTree = "<group>"; };
@@ -149,8 +161,8 @@
 		9D4749482D548761006A54F4 /* AutomationsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationsRepository.swift; sourceTree = "<group>"; };
 		9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidatesView.swift; sourceTree = "<group>"; };
 		9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidateDetailView.swift; sourceTree = "<group>"; };
-		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
-		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
+		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
+		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
 		9DB21DBE2D797AFA0004570D /* GenericEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorView.swift; sourceTree = "<group>"; };
 		9DB21DC02D79863B0004570D /* GenericEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorViewModel.swift; sourceTree = "<group>"; };
 		9DB83A162D13E53C00F826B8 /* SensorControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorControl.swift; sourceTree = "<group>"; };
@@ -170,6 +182,12 @@
 		9DD53BE32D822BAA004957F6 /* StarterCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarterCandidatesView.swift; sourceTree = "<group>"; };
 		9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CandidatesViewModel.swift; sourceTree = "<group>"; };
 		9DD60D192D59C539006F489F /* TVControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVControl.swift; sourceTree = "<group>"; };
+		B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraDetailView.swift; sourceTree = "<group>"; };
+		B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraLiveViewModel.swift; sourceTree = "<group>"; };
+		B11BF00E2E77B34B00839F73 /* SignalingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingService.swift; sourceTree = "<group>"; };
+		B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRtcPlayer.swift; sourceTree = "<group>"; };
+		B11BF0132E77B36900839F73 /* CameraControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControl.swift; sourceTree = "<group>"; };
+		B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorbellControl.swift; sourceTree = "<group>"; };
 		E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommissioningManager.swift; sourceTree = "<group>"; };
 		E60DB6A32CC032CC009DAD9D /* GoogleHomeAPISampleIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoogleHomeAPISampleIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MatterAddDeviceExtension.entitlements; sourceTree = "<group>"; };
@@ -270,6 +288,16 @@
 			path = Automation;
 			sourceTree = "<group>";
 		};
+		B11BF00C2E77B34300839F73 /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */,
+				B11BF00E2E77B34B00839F73 /* SignalingService.swift */,
+				B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
 		E60A14CA2CCC7E0D0006A28B /* Commissioning */ = {
 			isa = PBXGroup;
 			children = (
@@ -345,6 +373,9 @@
 		E6E3CB4A2CC07E7200E99423 /* UX */ = {
 			isa = PBXGroup;
 			children = (
+				99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */,
+				99A8F5132E66CC3200DBC00D /* StackSpacing.swift */,
+				99A8F5112E65884000DBC00D /* AppPadding.swift */,
 				E6E3CB472CC07E7200E99423 /* CGFloat+UX.swift */,
 				E6E3CB482CC07E7200E99423 /* Color+UX.swift */,
 				E6E3CB492CC07E7200E99423 /* ColorPalette.swift */,
@@ -397,6 +428,7 @@
 		E6E3CB5E2CC07E7200E99423 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */,
 				9C54B8E62E1F55BB008DE522 /* RenameView.swift */,
 				9C54B8DC2E1E66F9008DE522 /* RoomSettingsView.swift */,
 				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
@@ -416,6 +448,8 @@
 		E6E3CB682CC07E7200E99423 /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */,
+				B11BF0132E77B36900839F73 /* CameraControl.swift */,
 				9CC693A12E308296003A5069 /* ButtonGroupControl.swift */,
 				9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */,
 				9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */,
@@ -442,6 +476,7 @@
 		E6E3CB6B2CC07E7200E99423 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				B11BF00C2E77B34300839F73 /* Camera */,
 				9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */,
 				9C54B8E42E1F55B5008DE522 /* RenameViewModel.swift */,
 				9DBD774B2D2B87DE00924F71 /* Automation */,
@@ -563,10 +598,15 @@
 				9C9E5ACD2E1653640049884A /* DeviceDetailView.swift in Sources */,
 				E6E3CB812CC07E7200E99423 /* LightControl.swift in Sources */,
 				E6E3CB7B2CC07E7200E99423 /* StructureView.swift in Sources */,
+				99A8F5162E66D66000DBC00D /* AppCornerRadius.swift in Sources */,
 				E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */,
 				E6E3CB7C2CC07E7200E99423 /* DeviceControl.swift in Sources */,
 				9DBD776B2D51ED6B00924F71 /* OnOffPlugInUnitControl.swift in Sources */,
+				B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */,
+				B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */,
+				B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */,
 				9D4749472D548675006A54F4 /* AutomationSuggestionsViewModel.swift in Sources */,
+				B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */,
 				9DBD776D2D51FFE200924F71 /* OccupancySensorControl.swift in Sources */,
 				9D83C2D92DB787C500BF5AF4 /* ActionCandidateDetailView.swift in Sources */,
 				9C9E5ACB2E1524250049884A /* DeviceRow.swift in Sources */,
@@ -586,7 +626,9 @@
 				E6E3CB832CC07E7200E99423 /* RangeControl.swift in Sources */,
 				9C54B8E72E1F55BD008DE522 /* RenameView.swift in Sources */,
 				E6E3CB7A2CC07E7200E99423 /* RangeView.swift in Sources */,
+				99A8F5122E65884000DBC00D /* AppPadding.swift in Sources */,
 				9DB21DC12D7986450004570D /* GenericEditorViewModel.swift in Sources */,
+				B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */,
 				9D4749492D548766006A54F4 /* AutomationsRepository.swift in Sources */,
 				E6E3CB6C2CC07E7200E99423 /* CGFloat+UX.swift in Sources */,
 				9D4749372D547A1D006A54F4 /* AutomationSuggestionsView.swift in Sources */,
@@ -594,6 +636,7 @@
 				9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */,
 				9D83C2D72DB787B800BF5AF4 /* ActionCandidatesView.swift in Sources */,
 				9DB83A192D13E57000F826B8 /* TemperatureSensorControl.swift in Sources */,
+				99A8F5142E66CC3900DBC00D /* StackSpacing.swift in Sources */,
 				9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */,
 				9DD537A42D91461D00452815 /* CreateToggleButtonView.swift in Sources */,
 				E6E3CB722CC07E7200E99423 /* GoogleHomeAPISampleIOS.swift in Sources */,
@@ -618,6 +661,7 @@
 				9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */,
 				E6E3CB852CC07E7200E99423 /* MainViewModel.swift in Sources */,
 				E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */,
+				B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,7 +778,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.5.0;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",

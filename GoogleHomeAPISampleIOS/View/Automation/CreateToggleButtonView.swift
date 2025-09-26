@@ -32,13 +32,13 @@ struct CreateToggleButtonView: View {
       HStack {
         Text(leftText)
           .foregroundColor(Color("fontColor"))
-          .padding(.horizontal, 16)
-          .padding(.vertical, 8)
+          .padding(.horizontal, .md)
+          .padding(.vertical, .sm)
         Spacer()
         Text(rightText)
           .foregroundColor(Color("fontColor"))
-          .padding(.horizontal, 16)
-          .padding(.vertical, 8)
+          .padding(.horizontal, .md)
+          .padding(.vertical, .sm)
       }
     }
     .frame(width: UIScreen.main.bounds.width - 80, height: 60)

@@ -21,13 +21,13 @@ struct RenameView: View {
 
   var body: some View {
     ZStack(alignment: .bottom) {
-      VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: .sm) {
         Text(viewModel.title)
           .font(.headline)
         Text(viewModel.subtitle)
           .font(.subheadline)
 
-        VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .xxs) {
           Text(viewModel.textFieldLabel)
             .font(.caption)
 
@@ -36,7 +36,7 @@ struct RenameView: View {
             .textFieldStyle(.roundedBorder)
             .padding()
         }
-        .padding(.top, 20)
+        .padding(.top, .lg)
 
         Spacer()
       }
@@ -50,7 +50,7 @@ struct RenameView: View {
             )
             .background(Color.blue)
             .foregroundColor(.white)
-            .cornerRadius(Dimensions.cornerRadius)
+            .cornerRadius(.md)
         }
       }
       .padding([.horizontal, .bottom])
