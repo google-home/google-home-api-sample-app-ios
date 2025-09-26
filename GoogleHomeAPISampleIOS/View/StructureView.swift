@@ -40,8 +40,8 @@ struct StructureView: View {
 
   var body: some View {
     if let structure = self.mainViewModel.structure(
-      structureID: self.structureID)
-    {
+      structureID: self.structureID
+    ) {
       actualStructureView(structure: structure)
     } else {
       Text("Structure not found.")
@@ -49,29 +49,38 @@ struct StructureView: View {
   }
 
   private func actualStructureView(structure: Structure) -> some View {
-    TabView(selection: $selectedTab) {
-      deviceGrid(structure: structure)
-        .tabItem {
-          Label("Devices", image: "devices_other_symbol")
-            .font(.title)
-        }
-        .tag(Tab.devices)
-      AutomationsView()
-        .environmentObject(mainViewModel)
-        .environmentObject(AutomationList(structure: structure))
-        .padding()
-        .tabItem {
-          Label("Automations", image: "astrophotography_mode_symbol")
-        }
-        .tag(Tab.automations)
-      SettingsView(structure: structure)
-        .environmentObject(viewModel)
-        .tabItem {
-          Label("Settings", systemImage: "gearshape")
-            // make the icon un-filled
-            .environment(\.symbolVariants, .none)
-        }
-        .tag(Tab.settings)
+    ZStack {
+      TabView(selection: $selectedTab) {
+        deviceGrid(structure: structure)
+          .tabItem {
+            Label("Devices", image: "devices_other_symbol")
+              .font(.title)
+          }
+          .tag(Tab.devices)
+        AutomationsView()
+          .environmentObject(mainViewModel)
+          .environmentObject(AutomationList(structure: structure))
+          .padding()
+          .tabItem {
+            Label("Automations", image: "astrophotography_mode_symbol")
+          }
+          .tag(Tab.automations)
+        SettingsView(structure: structure)
+          .environmentObject(viewModel)
+          .tabItem {
+            Label("Settings", systemImage: "gearshape")
+              // make the icon un-filled
+              .environment(\.symbolVariants, .none)
+          }
+          .tag(Tab.settings)
+      }
+      if self.viewModel.isDiscoveringHubs {
+        Color.black.opacity(0.4)
+          .ignoresSafeArea()
+        ProgressView("Discovering hubs...")
+          .progressViewStyle(CircularProgressViewStyle())
+          .foregroundColor(.white)
+      }
     }
     .toolbar {
       ToolbarItemGroup(placement: .navigationBarLeading) {
@@ -84,6 +93,11 @@ struct StructureView: View {
               self.addDevice(structure: structure, add3PFabricFirst: true)
             }
             Button("Add Room") { self.viewModel.showRoomNameInput = true }
+            Button("Setup Hub") {
+              Task {
+                await self.viewModel.discoverAvailableHubs()
+              }
+            }
           } label: {
             Image(systemName: "plus")
           }
@@ -101,6 +115,12 @@ struct StructureView: View {
         self.viewModel.roomNameInput = ""
         self.addRoom(name: roomName, structure: structure)
       }
+    }
+    .alert(
+      "No hub found.",
+      isPresented: self.$viewModel.showNoHubFoundDialog,
+    ) {
+      Button("Close", role: .cancel) {}
     }
   }
 
@@ -123,14 +143,19 @@ struct StructureView: View {
                 ForEach(entry.deviceControls, id: \.id) { deviceControl in
                   NavigationLink(destination: {
                     if let home = self.mainViewModel.home {
-                      DeviceDetailView(
-                        deviceControl: deviceControl,
-                        structure: structure,
-                        home: home,
-                        deviceID: deviceControl.id,
-                        structureViewModel: self.viewModel,
-                        entry: entry
-                      )
+                      switch deviceControl {
+                      case is CameraControl, is DoorbellControl:
+                        CameraDetailView(home: home, deviceControl: deviceControl)
+                      default:
+                        DeviceDetailView(
+                          deviceControl: deviceControl,
+                          structure: structure,
+                          home: home,
+                          deviceID: deviceControl.id,
+                          structureViewModel: self.viewModel,
+                          entry: entry
+                        )
+                      }
                     } else {
                       Text("Home object is missing. Please try again later.")
                     }
@@ -180,6 +205,8 @@ struct StructureView: View {
       }
     }
     self.viewModel.addMatterDevice(
-      to: structure, add3PFabricFirst: add3PFabricFirst)
+      to: structure,
+      add3PFabricFirst: add3PFabricFirst
+    )
   }
 }

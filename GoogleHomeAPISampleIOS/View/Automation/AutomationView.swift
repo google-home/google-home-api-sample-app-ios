@@ -169,7 +169,7 @@ public struct EditNameView: View {
         .textFieldStyle(.roundedBorder)
         .padding()
     }
-    .padding(.horizontal, 16)
-    .padding(.top, 16)
+    .padding(.horizontal, .md)
+    .padding(.top, .md)
   }
 }

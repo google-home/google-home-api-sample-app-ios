@@ -28,13 +28,13 @@ struct SettingsView: View {
 
   var body: some View {
     // The main container for the entire screen.
-    VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: .md) {
       // Title
       Text("Settings")
         .font(.title)
         .fontWeight(.bold)
       Divider()
-        .padding(.bottom, 10)
+            .padding(.bottom, .smd)
       // Section for the user's existing rooms.
       Section {
         Text("Rooms")
@@ -69,7 +69,7 @@ struct SettingsView: View {
 
     var body: some View {
       HStack {
-        VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .leading, spacing: .xs) {
           Text(roomName)
             .font(.body)
             .foregroundColor(.black)
@@ -79,8 +79,8 @@ struct SettingsView: View {
         }
         Spacer()
       }
-      .padding(.vertical, 8)
-      .padding(.horizontal, 16)
+      .padding(.vertical, .sm)
+      .padding(.horizontal, .md)
     }
   }
 }

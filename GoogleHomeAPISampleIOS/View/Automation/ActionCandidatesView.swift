@@ -57,7 +57,7 @@ struct ActionCandidatesView: View {
               /// Redirect to the ActionCandidateDetailView with selected device
               navigationPath.append(Destination.ActionCandidateDetailView)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, .sm)
           }.listRowSeparator(.hidden)
         } header: {
           HStack {

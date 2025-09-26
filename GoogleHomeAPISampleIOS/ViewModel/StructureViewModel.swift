@@ -25,12 +25,15 @@ final class StructureViewModel: ObservableObject {
   private var commissioningManager = CommissioningManager()
 
   @Published var entries = [StructureEntry]()
+  private var hub: Hub? = nil
 
   /// Indicates whether the initial load has completed
   @Published var hasLoaded = false
   @Published var showRoomNameInput = false
   @Published var roomNameInput = ""
   @Published var roomIDToBeDeleted: String?
+  @Published var showNoHubFoundDialog: Bool = false
+  @Published var isDiscoveringHubs = false
 
   var isConfirmingRoomDeletion: Bool {
     get { return roomIDToBeDeleted != nil }
@@ -59,7 +62,8 @@ final class StructureViewModel: ObservableObject {
             result[room.id] = StructureEntry(
               room: room,
               roomID: room.id,
-              roomName: room.name.isEmpty ? "<unassigned>" : room.name)
+              roomName: room.name.isEmpty ? "<unassigned>" : room.name
+            )
           }
         }
         /// Read devices in this structure then assign to corresponding rooms.
@@ -114,5 +118,37 @@ final class StructureViewModel: ObservableObject {
       self.deviceControls.append(deviceControl)
       self.deviceControls.sort(by: { $0.id < $1.id })
     }
+  }
+
+  // MARK: Hub Activation
+
+  /// Discovey the Google Home hub under the same local network.
+  @MainActor
+  public func discoverAvailableHubs() async {
+    await MainActor.run {
+      self.isDiscoveringHubs = true
+    }
+    do {
+      let hubs = try await self.home.discoverAvailableHubs()
+      Logger().info("hubs found: \(hubs)")
+      if let hub = hubs.first {
+        try await self.setupHub(hub)
+      } else {
+        self.showNoHubFoundDialog = true
+      }
+    } catch {
+      Logger().error("Failed to discover available hubs: \(error)")
+    }
+    self.isDiscoveringHubs = false
+  }
+
+  /// Start the hub activation flow to add the hub under user's structure and room.
+  /// - Parameters:
+  ///    - hub: The `Hub` object representing the Google Home hub to be activated.
+  private func setupHub(_ hub: Hub) async throws {
+    try await self.home.startHubActivation(
+      hub,
+      structureID: self.structureID
+    )
   }
 }

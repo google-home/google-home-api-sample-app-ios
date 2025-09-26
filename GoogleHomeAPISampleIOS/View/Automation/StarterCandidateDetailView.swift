@@ -40,12 +40,12 @@ struct StarterCandidateDetailView: View {
           deviceNodeSection(selectedStarterDevice: selectedStarterDevice)
         }
         else {
-          Text("No devcie selected. Please back to previous page.")
+          Text("No device selected. Please back to previous page.")
         }
       }
       .listStyle(.inset)
       .listRowSeparator(.hidden)
-      .padding(.top, 20)
+      .padding(.top, .lg)
     }
     .sheet(item: $selectedEntryForSheet) { currentEntry in
       AnyView(self.constraintSheet(for: currentEntry))
@@ -56,7 +56,7 @@ struct StarterCandidateDetailView: View {
   private func deviceInfoSection(selectedStarterDevice: CandidatesViewModel.DeviceEntry) -> some View {
     Section("Device") {
       CreateButtonView(imageName: selectedStarterDevice.iconName, text1: selectedStarterDevice.device.name, text2: "") {}
-      .padding(.bottom, 8)
+            .padding(.bottom, .sm)
     }.listRowSeparator(.hidden)
   }
 
@@ -68,22 +68,22 @@ struct StarterCandidateDetailView: View {
         CreateButtonView(imageName: entry.iconName, text1: entry.description, text2: "") {
           selectedEntryForSheet = entry
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, .sm)
       }
       .listRowSeparator(.hidden)
     }
   }
-  
+
   /// Display a sheet for trait condition selection
   private func constraintSheet(for entry: CandidatesViewModel.NodeEntry) -> any View {
     let trait = entry.node.trait
-    
+
     guard let selectedStarterDevice = viewModel.selectedStarterDevice else {
       return VStack {
         Text("No device selected")
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     }
     if trait == Matter.OnOffTrait.self || trait == Google.SimplifiedOnOffTrait.self {
       return VStack {
@@ -91,14 +91,14 @@ struct StarterCandidateDetailView: View {
         HStack {
           Text(entry.description).foregroundColor(Color("fontColor"))
           Spacer()
-        }.padding(.horizontal, 50)
+        }.padding(.horizontal, .xxxl)
         Spacer()
         CreateToggleButtonView(isOn: $toggleValue, leftText: "On", rightText: "Off")
         Spacer()
         doneButtonView(for: entry, selectedStarterDevice: selectedStarterDevice)
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
       return VStack {
         // Display operations and a slder for  selection
@@ -120,13 +120,13 @@ struct StarterCandidateDetailView: View {
         doneButtonView(for: entry, selectedStarterDevice: selectedStarterDevice)
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     } else {
       return VStack {
         Text("No supported trait")
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(20)
+      .presentationCornerRadius(.lg)
     }
   }
 
@@ -143,9 +143,9 @@ struct StarterCandidateDetailView: View {
           .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
           .background(Color.blue)
           .foregroundColor(.white)
-          .cornerRadius(Dimensions.cornerRadius)
-          .padding(.bottom, 20)
-          .padding(.trailing, 10)
+          .cornerRadius(.md)
+          .padding(.bottom, .lg)
+          .padding(.trailing, .smd)
       }
       .alignmentGuide(.bottom) { $0[.bottom] }
       .background(Color.clear)

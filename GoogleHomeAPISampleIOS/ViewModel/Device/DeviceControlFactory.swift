@@ -32,6 +32,8 @@ struct DeviceControlFactory {
     OnOffPluginUnitDeviceType.self,
     OccupancySensorDeviceType.self,
     GoogleTVDeviceType.self,
+    GoogleCameraDeviceType.self,
+    GoogleDoorbellDeviceType.self,
   ]
 
   private static let deviceControlBuilders: [String: (HomeDevice) throws -> DeviceControl] = [
@@ -47,6 +49,8 @@ struct DeviceControlFactory {
     OnOffPluginUnitDeviceType.identifier: OnOffPlugInUnitControl.init,
     OccupancySensorDeviceType.identifier: OccupancySensorControl.init,
     GoogleTVDeviceType.identifier: TVControl.init,
+    GoogleCameraDeviceType.identifier: CameraControl.init,
+    GoogleDoorbellDeviceType.identifier: DoorbellControl.init,
   ]
 
   /// Factory method that builds a `DeviceControl` based on the supported `DeviceType` of a

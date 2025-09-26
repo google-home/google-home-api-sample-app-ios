@@ -57,7 +57,7 @@ struct StarterCandidatesView: View {
               /// Redirect to the StarterCandidateDetailView with selected device
               navigationPath.append(Destination.StarterCandidateDetailView)
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, .sm)
           }.listRowSeparator(.hidden)
         } header: {
           HStack {

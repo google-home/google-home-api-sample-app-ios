@@ -124,7 +124,7 @@ extension Matter.ThermostatTrait {
 
 
     // Validate dead band distance.
-    if let heatSetpoint = self.heatingSetpoint {
+    if self.systemMode == .auto, let heatSetpoint = self.heatingSetpoint {
       return coolSetPointCentiDegrees >= (heatSetpoint + self.minSetpointDeadBand)
     }
 
@@ -147,7 +147,7 @@ extension Matter.ThermostatTrait {
 
 
     // Validate dead band distance.
-    if let coolSetpoint = self.coolingSetpoint {
+    if self.systemMode == .auto, let coolSetpoint = self.coolingSetpoint {
       return heatSetPointCentiDegrees <= (coolSetpoint - self.minSetpointDeadBand)
     }
 

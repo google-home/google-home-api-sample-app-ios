@@ -43,7 +43,7 @@ struct GenericEditorView: View {
       }
       .listStyle(.inset)
       .listRowSeparator(.hidden)
-      .padding(.top, 20)
+      .padding(.top, .lg)
 
       saveButtonView()
 
@@ -97,12 +97,12 @@ struct GenericEditorView: View {
           let valueOnOff = device.valueOnOff ? "On": "Off"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name,
                            text2: valueOnOff) {}
-          .padding(.bottom, 8)
+                .padding(.bottom, .sm)
         } else if device.traitType is Matter.LevelControlTrait.Type {
           let subTitle = "\(device.operation)  \(device.levelValue)"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name,
                            text2: subTitle) {}
-            .padding(.bottom, 8)
+            .padding(.bottom, .sm)
         }
       } else {
         /// If there's no selected one, display a button for selection
@@ -110,7 +110,7 @@ struct GenericEditorView: View {
                          text2: "") {
           navigationPath.append(Destination.StarterCandidatesView)
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, .sm)
       }
     }.listRowSeparator(.hidden)
   }
@@ -122,14 +122,14 @@ struct GenericEditorView: View {
         if device.traitType is Matter.OnOffTrait.Type {
           let valueOnOff = device.valueOnOff ? "On": "Off"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name, text2: valueOnOff) {}
-          .padding(.bottom, 8)
+          .padding(.bottom, .sm)
         }
       } else {
         /// If there's no selected one, display a button for selection
         CreateButtonView(imageName: "astrophotography_mode_symbol", text1: "Add Action", text2: "") {
           navigationPath.append(Destination.ActionCandidatesView)
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, .sm)
       }
     }.listRowSeparator(.hidden)
   }
@@ -154,9 +154,9 @@ struct GenericEditorView: View {
           .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
           .background(Color.blue)
           .foregroundColor(.white)
-          .cornerRadius(Dimensions.cornerRadius)
-          .padding(.bottom, 20)
-          .padding(.trailing, 10)
+          .cornerRadius(.md)
+          .padding(.bottom, .lg)
+          .padding(.trailing, .smd)
       }
       .disabled(candidatesViewModel.selectedStarters.isEmpty || candidatesViewModel.selectedActions.isEmpty)
       .alignmentGuide(.bottom) { $0[.bottom] }

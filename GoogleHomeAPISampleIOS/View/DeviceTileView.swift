@@ -53,7 +53,7 @@ struct DeviceTileView: View {
       if let rangeView {
         rangeView
       }
-      HStack(alignment: .center, spacing: .deviceTileHorizontalSpacing) {
+        HStack(alignment: .center, spacing: .smd) {
         if isBusy {
           ProgressView()
             .progressViewStyle(.circular)
@@ -88,20 +88,14 @@ struct DeviceTileView: View {
       .foregroundColor(
         containerColor
       )
-      .padding(
-        EdgeInsets(
-          top: .deviceTileVerticalPadding,
-          leading: .deviceTileHorizontalPadding,
-          bottom: .deviceTileVerticalPadding,
-          trailing: .deviceTileHorizontalPadding
-        )
-      )
+      .padding(.vertical, .md)
+      .padding(.horizontal, .mmd)
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .background(
       variantColor
     )
-    .clipShape(RoundedRectangle(cornerRadius: .deviceTileCornerRadius))
+    .clipShape(RoundedRectangle(cornerRadius: .xxl))
     .frame(height: .deviceTileHeight)
     .disabled(isBusy)
     .onTapGesture {

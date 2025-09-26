@@ -11,21 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import SwiftUI
 
-struct DeviceRow: View {
-  @ObservedObject var deviceControl: DeviceControl
+enum AppPadding: CGFloat {
+    case xxs = 4
+    case xs = 5
+    case sm = 8
+    case smd = 10
+    case mmd = 12
+    case md = 16
+    case lg = 20
+    case xl = 24
+    case xxl = 32
+    case xxxl = 50
+}
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: .xs) {
-      Text(deviceControl.tileInfo.title)
-        .font(.body)
-        .foregroundColor(.primary)
-      Text(deviceControl.tileInfo.statusLabel)
-        .font(.caption)
-        .foregroundColor(.secondary)
+extension View {
+
+    func padding(_ spacing: AppPadding) -> some View {
+        self.padding(spacing.rawValue)
     }
-    .padding(.vertical, .sm)
-  }
+
+    func padding(_ edges: Edge.Set, _ spacing: AppPadding) -> some View {
+        self.padding(edges, spacing.rawValue)
+    }
 }

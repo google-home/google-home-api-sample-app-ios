@@ -29,7 +29,7 @@ public struct AutomationSuggestionsView: View {
     CreateButtonView(imageName: "astrophotography_mode_symbol", text1: "Generic Automation", text2: "") {
       navigationPath.append(Destination.GenericEditorView)
     }
-    .padding(.bottom, 8)
+    .padding(.bottom, .sm)
 
     List {
       Section("Predefined Automations") {
@@ -40,7 +40,7 @@ public struct AutomationSuggestionsView: View {
             navigationPath.append(index)
             selectedAutomationIndex = index
           }
-          .padding(.bottom, 8)
+          .padding(.bottom, .sm)
         }
       }
       .listRowSeparator(.hidden)

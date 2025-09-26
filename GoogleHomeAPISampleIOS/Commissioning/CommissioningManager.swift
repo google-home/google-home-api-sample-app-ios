@@ -60,11 +60,11 @@ public class CommissioningManager: NSObject, ObservableObject {
         Logger().info("Starting MatterAddDeviceRequest.")
         try await request.perform()
         Logger().info("Completed MatterAddDeviceRequest.")
-        let commissionedDeviceIDs = try structure.completeMatterCommissioning()
+        let commissionedDeviceIDs = try await structure.completeMatterCommissioning()
         Logger().info("Commissioned device IDs: \(commissionedDeviceIDs).")
       } catch let error {
-        structure.markMatterCommissioningFailed(error: error)
-        Logger().error("Failed to complete MatterAddDeviceRequest: \(error).")
+        let result = structure.markMatterCommissioningFailed(error: error)
+        Logger().error("Failed to complete MatterAddDeviceRequest: \(result.detailedError).")
       }
     }
   }

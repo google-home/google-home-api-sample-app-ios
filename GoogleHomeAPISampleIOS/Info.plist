@@ -33,9 +33,17 @@
 		<string>_matterd._udp</string>
 		<string>_googcrossdevice._tcp</string>
 		<string>_googlecrossdevice._tcp</string>
+		<string>_ghp._tcp</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Network usage is required for Matter discovery</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>To communicate with camera devices, allow Google Home Demo App to access your microphone</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

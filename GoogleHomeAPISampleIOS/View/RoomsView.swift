@@ -38,13 +38,13 @@ struct RoomsView: View {
   var body: some View {
     ZStack(alignment: .bottom) {
       // The main container for the entire screen.
-      VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: .md) {
         // Title
         Text("Room")
           .font(.title)
           .fontWeight(.bold)
         Divider()
-          .padding(.bottom, 10)
+              .padding(.bottom, .smd)
         // Section for the user's existing rooms.
         Section{
           Text("My rooms")
@@ -75,7 +75,7 @@ struct RoomsView: View {
             )
             .background(Color.blue)
             .foregroundColor(.white)
-            .cornerRadius(Dimensions.cornerRadius)
+            .cornerRadius(.md)
         }
       }
       .padding([.horizontal, .bottom])
@@ -113,8 +113,8 @@ struct RoomsView: View {
             .foregroundColor(.blue)
         }
       }
-      .padding(.vertical, 8)
-      .padding(.horizontal, 24)
+      .padding(.vertical, .sm)
+      .padding(.horizontal, .xl)
       .buttonStyle(.plain)  // Ensures the row looks like text, not a default styled button.
       .foregroundColor(.primary)
     }

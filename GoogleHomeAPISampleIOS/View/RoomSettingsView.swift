@@ -34,13 +34,13 @@ struct RoomSettingsView: View {
 
   var body: some View {
     // The main container for the entire screen.
-    VStack(alignment: .leading, spacing: 20) {
+      VStack(alignment: .leading, spacing: .md) {
       // Title
       Text("Room settings")
         .font(.title)
         .fontWeight(.bold)
       Divider()
-        .padding(.bottom, 10)
+            .padding(.bottom, .smd)
       // Section for the user's existing rooms.
       Text("General")
         .font(.headline)
@@ -53,7 +53,7 @@ struct RoomSettingsView: View {
           )
         )
       ) {
-        VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .leading, spacing: .xs) {
           Text("Name")
             .font(.body)
             .foregroundColor(.black)
@@ -84,7 +84,7 @@ struct RoomSettingsView: View {
           .font(.body)
           .foregroundColor(Color.red)
       }
-      .padding(.vertical, 16)
+      .padding(.vertical, .md)
       .alert(isPresented: $showDeleteConfirmation) {
         Alert(
           title: Text("Remove this room"),
@@ -110,7 +110,7 @@ struct RoomSettingsView: View {
 
     var body: some View {
       HStack {
-        VStack(alignment: .leading, spacing: 4) {
+          VStack(alignment: .leading, spacing: .xs) {
           Text(deviceName)
             .font(.body)
             .foregroundColor(.black)
@@ -120,8 +120,8 @@ struct RoomSettingsView: View {
         }
         Spacer()
       }
-      .padding(.vertical, 8)
-      .padding(.horizontal, 16)
+      .padding(.vertical, .sm)
+      .padding(.horizontal, .md)
     }
   }
 

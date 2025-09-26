@@ -254,14 +254,14 @@ public final class AutomationsRepository: Sendable {
          Turn on lights or turn off thermostat eco mode when you unlock the door.
          """
      ) {
-       let doorLockEvent = starter(
+       let doorLockTrait = starter(
          doorLock,
          DoorLockDeviceType.self,
-         DoorLockTrait.LockOperationEvent.self
+         DoorLockTrait.self
        )
-       doorLockEvent
+       doorLockTrait
        condition {
-         doorLockEvent.lockOperationType.equals(.unlock)
+         doorLockTrait.lockState.equals(.unlocked)
        }
        parallel {
          for light in lightDevices {

@@ -39,7 +39,7 @@ struct AutomationCreationView: View {
       }
       .listStyle(.inset)
       .listRowSeparator(.hidden)
-      .padding(.top, 20)
+      .padding(.top, .lg)
 
       saveButtonView()
     }
@@ -61,7 +61,7 @@ struct AutomationCreationView: View {
     Section {
       Text(viewModel.automationModel.name)
       Text(viewModel.automationModel.description)
-        .font(.system(size: 12, weight: .regular, design: .default))
+            .font(.footnote)
     }
     .listRowSeparator(.hidden)
   }
@@ -103,9 +103,9 @@ struct AutomationCreationView: View {
           .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
           .background(Color.blue)
           .foregroundColor(.white)
-          .cornerRadius(Dimensions.cornerRadius)
-          .padding(.bottom, 20)
-          .padding(.trailing, 10)
+          .cornerRadius(.md)
+          .padding(.bottom, .lg)
+          .padding(.trailing, .smd)
       }
       .alignmentGuide(.bottom) { $0[.bottom] }
       .background(Color.clear)
