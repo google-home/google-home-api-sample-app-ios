@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -161,8 +161,8 @@
 		9D4749482D548761006A54F4 /* AutomationsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationsRepository.swift; sourceTree = "<group>"; };
 		9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidatesView.swift; sourceTree = "<group>"; };
 		9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidateDetailView.swift; sourceTree = "<group>"; };
-		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
-		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
+		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
+		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
 		9DB21DBE2D797AFA0004570D /* GenericEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorView.swift; sourceTree = "<group>"; };
 		9DB21DC02D79863B0004570D /* GenericEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorViewModel.swift; sourceTree = "<group>"; };
 		9DB83A162D13E53C00F826B8 /* SensorControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorControl.swift; sourceTree = "<group>"; };
