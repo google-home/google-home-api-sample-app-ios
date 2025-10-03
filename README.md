@@ -19,3 +19,7 @@ For more info: https://developers.home.google.com/apis
 - Automation API: Create and schedule household routines that trigger device commands based on defined triggers and conditions.
 
 - Discovery API: Retrieve a list of automations that can be created on a structure given the set of devices.
+
+# Notice
+
+This project integrates the WebRTC functionality for camera streaming, using **[stasel/WebRTC](https://github.com/stasel/WebRTC)**.

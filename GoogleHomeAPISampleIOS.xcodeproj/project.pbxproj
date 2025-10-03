@@ -64,6 +64,7 @@
 		B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */; };
 		B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00E2E77B34B00839F73 /* SignalingService.swift */; };
 		B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF0132E77B36900839F73 /* CameraControl.swift */; };
+		B167EACB2E8F789E00EC8A9F /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = B167EACA2E8F789E00EC8A9F /* WebRTC */; };
 		B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */; };
 		E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */; };
 		E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */; };
@@ -231,6 +232,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E699C6992CC0916600B35E68 /* SafariServices.framework in Frameworks */,
+				B167EACB2E8F789E00EC8A9F /* WebRTC in Frameworks */,
 				9D83C2DF2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework in Frameworks */,
 				9D83C2E32DBD0AB800BF5AF4 /* GoogleHomeSDK.xcframework in Frameworks */,
 			);
@@ -554,6 +556,9 @@
 				Base,
 			);
 			mainGroup = E60DB69A2CC032CC009DAD9D;
+			packageReferences = (
+				B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */,
+			);
 			productRefGroup = E60DB6A42CC032CC009DAD9D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -849,6 +854,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 140.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B167EACA2E8F789E00EC8A9F /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E60DB69B2CC032CC009DAD9D /* Project object */;
 }
