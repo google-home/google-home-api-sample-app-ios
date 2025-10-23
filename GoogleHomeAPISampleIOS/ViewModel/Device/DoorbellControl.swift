@@ -61,7 +61,7 @@ final class DoorbellControl: DeviceControl {
       doorbellDeviceType.googleTraits.pushAvStreamTransportTrait?
       .attributes.currentConnections?.contains(where: { $0.transportStatus == .active }) ?? false
     let imageName = isOn ? "nest_hello_doorbell_fill1_symbol" : "nest_hello_doorbell_symbol"
-    let statusLabel = isOn ? "Online" : "Offline"
+    let statusLabel = isOn ? "On" : "Off"
 
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,
