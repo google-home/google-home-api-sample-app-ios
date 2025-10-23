@@ -61,7 +61,7 @@ final class CameraControl: DeviceControl {
       cameraDeviceType.googleTraits.pushAvStreamTransportTrait?
       .attributes.currentConnections?.contains(where: { $0.transportStatus == .active }) ?? false
     let imageName = isOn ? "videocam_fill1_symbol" : "videocam_symbol"
-    let statusLabel = isOn ? "Online" : "Offline"
+    let statusLabel = isOn ? "On" : "Off"
 
     self.tileInfo = DeviceTileInfo(
       title: self.device.name,

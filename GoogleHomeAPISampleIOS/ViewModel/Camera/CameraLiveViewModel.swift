@@ -47,6 +47,12 @@ class CameraLiveViewModel {
 
   private var cancellables = Set<AnyCancellable>()
 
+  /// Initializes the camera live view model.
+  ///
+  /// - Parameters:
+  ///   - home: The user's home to which the camera device belongs.
+  ///   - deviceID: The device id of the camera device.
+  ///   - renderer: The `RTCVideoRenderer` to display the video stream.
   init(home: Home, deviceID: String, renderer: RTCVideoRenderer) {
     Logger().info("Init CameraLiveViewModel")
 
@@ -64,9 +70,7 @@ class CameraLiveViewModel {
           case .finished:
             Logger().info("Received unexpected device finished unexpectedly")
           case .failure(let error):
-            Logger().info(
-              "Received unexpected device subscription completion: \(String(describing: error))"
-            )
+            Logger().info("Received unexpected device subscription completion: \(String(describing: error))")
           }
         },
         receiveValue: { [weak self] device in
@@ -97,55 +101,34 @@ class CameraLiveViewModel {
             }
             self.pushAvStreamTransportTrait = pushAvStreamTransportTrait
             await self.initializePlayer()
+            // Case where the player has been turned on by another controller.
+            if self.uiState == .off && self.isDeviceRecording() {
+              await self.initializePlayer()
+            }
           }
         }
       )
       .store(in: &self.cancellables)
   }
 
-  private func initializePlayer() async {
-    self.uiState = .loading
-
-    guard self.player == nil else {
-      Logger().info("Player already initialized.")
-      return
-    }
-    guard let liveViewTrait else {
-      Logger().error("LiveViewTrait not found.")
-      return
-    }
-
-    if self.isDeviceRecording() {
-      self.player = WebRtcPlayer(
-        liveViewTrait: liveViewTrait,
-        renderer: self.renderer,
-        onStreamDidDisconnect: { self.streamDidDisconnect() }
-      )
-      await self.player?.initialize()
-      self.uiState = .live
-    } else {
-      self.uiState = .off
-    }
-  }
-
-  /// To toggle the camera's recording state by setting the `PushAvStreamTransportTrait`.
+  /// Checks for an active livestream connection.
   public func isDeviceRecording() -> Bool {
     guard let pushAvStreamTransportTrait else {
       Logger().error("PushAvStreamTransportTrait not found.")
       return false
     }
-    guard
-      let hasActiveConnection =
-        pushAvStreamTransportTrait
-        .attributes
-        .currentConnections?
-        .contains(where: { $0.transportStatus == .active })
-    else {
-      return false
-    }
+    let hasActiveConnection =
+      pushAvStreamTransportTrait
+      .attributes
+      .currentConnections?
+      .contains(where: { $0.transportStatus == .active }) ?? false
     return hasActiveConnection
   }
 
+  /// Toggles the camera's recording state by setting the `PushAvStreamTransportTrait`.
+  ///
+  /// - Parameters:
+  ///   - isOn: A Boolean value indicating whether to enable (`true`) or disable (`false`) recording.
   public func toggleIsRecording(isOn: Bool) {
     self.uiState = .loading
 
@@ -160,17 +143,19 @@ class CameraLiveViewModel {
           transportStatus: isOn ? .active : .inactive
         )
         if isOn {
-          guard let liveViewTrait else {
-            Logger().error("LiveViewTrait not found.")
+          do {
+            self.player = try self.createWebRtcPlayer()
+          } catch {
+            Logger().error("Failed to create WebRtcPlayer: \(error)")
+            self.uiState = .disconnected
             return
           }
-          self.player = WebRtcPlayer(
-            liveViewTrait: liveViewTrait,
-            renderer: self.renderer,
-            onStreamDidDisconnect: { self.streamDidDisconnect() }
-          )
-          await self.player?.initialize()
-          self.uiState = .live
+          if await self.player?.initialize() ?? false {
+            self.uiState = .live
+          } else {
+            Logger().error("Failed to initialize WebRtcPlayer.")
+            self.uiState = .disconnected
+          }
         } else {
           self.player = nil
           self.uiState = .off
@@ -181,6 +166,10 @@ class CameraLiveViewModel {
     }
   }
 
+  /// Toggles the two-way talk feature.
+  ///
+  /// - Parameters:
+  ///   - isOn: A Boolean value indicating whether to enable (`true`) or disable (`false`) two-way talk.
   public func toggleTwoWayTalk(isOn: Bool) {
     Task { @MainActor in
       try await self.player?.toggleTwoWayTalk(isOn: isOn)
@@ -188,27 +177,69 @@ class CameraLiveViewModel {
     }
   }
 
+  /// Leaves the livestream view and disposes of the player.
   public func leaveStreamView() {
-    cancellables.forEach { $0.cancel() }
-    streamDidDisconnect()
+    Logger().info("Left livestream view.")
+    self.player = nil
+  }
+
+  /// Reconnects to the livestream.
+  public func reconnectStream() {
+    self.uiState = .loading
+    Task {
+      await self.initializePlayer()
+    }
+  }
+
+  private func initializePlayer() async {
+
+    guard self.player == nil else {
+      Logger().info("Player already initialized.")
+      return
+    }
+    guard liveViewTrait != nil else {
+      Logger().error("LiveViewTrait not found.")
+      return
+    }
+
+    if self.isDeviceRecording() {
+      self.uiState = .loading
+      do {
+        self.player = try self.createWebRtcPlayer()
+      } catch {
+        Logger().error("Failed to initialize WebRtcPlayer: \(error)")
+        self.uiState = .disconnected
+        return
+      }
+      await self.player?.initialize()
+      self.uiState = .live
+    } else {
+      self.uiState = .off
+    }
+  }
+
+  private func createWebRtcPlayer() throws -> WebRtcPlayer {
+    guard let liveViewTrait else {
+      throw HomeError.failedPrecondition("LiveViewTrait not found.")
+    }
+    do {
+      return try WebRtcPlayer(
+        liveViewTrait: liveViewTrait,
+        renderer: self.renderer,
+        onStreamDidDisconnect: { @MainActor @Sendable [weak self] in
+          self?.streamDidDisconnect()
+        }
+      )
+    } catch {
+      self.uiState = .disconnected
+      throw error
+    }
   }
 
   private func streamDidDisconnect() {
     Logger().info("Stream disconnected.")
-    self.uiState = .disconnected
     self.player = nil
-  }
-
-  public func reconnectStream() {
-    self.uiState = .loading
-    Task {
-      if self.isDeviceRecording() {
-        await self.initializePlayer()
-        self.uiState = .live
-      } else {
-        self.uiState = .off
-      }
-    }
+    self.reconnectStream()
   }
 
 }
