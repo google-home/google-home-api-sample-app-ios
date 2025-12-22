@@ -36,7 +36,7 @@ struct AboutView: View {
         HStack {
           Text("SDK Version")
           Spacer()
-          Text(Home.sdkVersion)
+          Text("\(Home.version)")
         }
       }
 

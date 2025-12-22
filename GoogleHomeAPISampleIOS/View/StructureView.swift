@@ -14,6 +14,7 @@
 
 import Foundation
 import GoogleHomeSDK
+import GoogleHomeTypes
 import OSLog
 import SwiftUI
 
@@ -31,6 +32,7 @@ struct StructureView: View {
   @EnvironmentObject private var mainViewModel: MainViewModel
   @ObservedObject private var viewModel: StructureViewModel
   @State private var selectedTab: Tab = .devices
+  @State private var oobeDevice: HomeDevice?
 
   var structureID: String { self.viewModel.structureID }
 
@@ -43,6 +45,19 @@ struct StructureView: View {
       structureID: self.structureID
     ) {
       actualStructureView(structure: structure)
+        .sheet(item: $oobeDevice) { device in
+          if device.types.contains(GoogleCameraDeviceType.self) {
+            NavigationStack {
+              CameraOOBEView<GoogleCameraDeviceType>(
+                home: self.viewModel.home, device: device)
+            }
+          } else if device.types.contains(GoogleDoorbellDeviceType.self) {
+            NavigationStack {
+              CameraOOBEView<GoogleDoorbellDeviceType>(
+                home: self.viewModel.home, device: device)
+            }
+          }
+        }
     } else {
       Text("Structure not found.")
     }
@@ -144,8 +159,12 @@ struct StructureView: View {
                   NavigationLink(destination: {
                     if let home = self.mainViewModel.home {
                       switch deviceControl {
-                      case is CameraControl, is DoorbellControl:
-                        CameraDetailView(home: home, deviceControl: deviceControl)
+                      case is CameraControl:
+                        CameraDetailView<GoogleCameraDeviceType>(
+                          home: home, deviceControl: deviceControl)
+                      case is DoorbellControl:
+                        CameraDetailView<GoogleDoorbellDeviceType>(
+                          home: home, deviceControl: deviceControl)
                       default:
                         DeviceDetailView(
                           deviceControl: deviceControl,
@@ -204,9 +223,29 @@ struct StructureView: View {
         return
       }
     }
-    self.viewModel.addMatterDevice(
-      to: structure,
-      add3PFabricFirst: add3PFabricFirst
-    )
+    Task {
+      do {
+        let devices = try await self.viewModel.addMatterDevice(
+          to: structure, add3PFabricFirst: add3PFabricFirst)
+        self.showCameraOOBEIfNeeded(devices: devices)
+      } catch {
+        Logger().error("Failed to add Matter device: \(error)")
+      }
+    }
+  }
+
+  /// Shows the Camera OOBE flow if the device is a camera / doorbell.
+  ///
+  /// - Parameters:
+  ///   - devices: The devices that were just commissioned.
+  private func showCameraOOBEIfNeeded(devices: Set<HomeDevice>) {
+    guard devices.count == 1, let device = devices.first else {
+      Logger().debug("Camera OOBE is only available when a single device is commissioned.")
+      return
+    }
+    if device.types.contains(GoogleCameraDeviceType.self) ||
+       device.types.contains(GoogleDoorbellDeviceType.self) {
+        self.oobeDevice = device
+    }
   }
 }

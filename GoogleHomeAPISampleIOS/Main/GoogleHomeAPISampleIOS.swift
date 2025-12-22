@@ -20,7 +20,7 @@ import SwiftUI
 @main
 struct GoogleHomeAPISampleIOS: App {
   init() {
-    Logger().info("Home API Version: \(Home.sdkVersion)")
+    Logger().info("Home API Version: \(Home.version)")
     Home.configure {
       $0.sharedAppGroup = "HOME_API_TODO_ADD_APP_GROUP"
       $0.referencedAutomationTypes = ReferencedAutomationTypes(

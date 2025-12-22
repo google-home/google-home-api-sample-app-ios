@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import GoogleHomeSDK
-import SwiftUICore
+import SwiftUI
 import Combine
 
 public class GenericEditorViewModel: ObservableObject {

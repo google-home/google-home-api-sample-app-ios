@@ -36,10 +36,6 @@
 		9D4749492D548766006A54F4 /* AutomationsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D4749482D548761006A54F4 /* AutomationsRepository.swift */; };
 		9D83C2D72DB787B800BF5AF4 /* ActionCandidatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */; };
 		9D83C2D92DB787C500BF5AF4 /* ActionCandidateDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */; };
-		9D83C2DF2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */; };
-		9D83C2E02DBD0AB000BF5AF4 /* GoogleHomeSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */; };
-		9D83C2E32DBD0AB800BF5AF4 /* GoogleHomeSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */; };
-		9D83C2E42DBD0AB800BF5AF4 /* GoogleHomeSDK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		9DB21DBF2D797B010004570D /* GenericEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB21DBE2D797AFA0004570D /* GenericEditorView.swift */; };
 		9DB21DC12D7986450004570D /* GenericEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB21DC02D79863B0004570D /* GenericEditorViewModel.swift */; };
 		9DB83A172D13E54000F826B8 /* SensorControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DB83A162D13E53C00F826B8 /* SensorControl.swift */; };
@@ -59,13 +55,20 @@
 		9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE32D822BAA004957F6 /* StarterCandidatesView.swift */; };
 		9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */; };
 		9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD60D192D59C539006F489F /* TVControl.swift */; };
+		B108B4412EC5886F00618E0A /* CameraOOBEView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4402EC5886F00618E0A /* CameraOOBEView.swift */; };
+		B108B4432EC5887B00618E0A /* CameraOOBEViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */; };
 		B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */; };
 		B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */; };
 		B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */; };
 		B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00E2E77B34B00839F73 /* SignalingService.swift */; };
 		B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF0132E77B36900839F73 /* CameraControl.swift */; };
+		B12AF3822EDD6FB0001CD481 /* GoogleHomeSDK in Frameworks */ = {isa = PBXBuildFile; productRef = B12AF3812EDD6FB0001CD481 /* GoogleHomeSDK */; };
+		B12AF3842EDD6FB0001CD481 /* GoogleHomeTypes in Frameworks */ = {isa = PBXBuildFile; productRef = B12AF3832EDD6FB0001CD481 /* GoogleHomeTypes */; };
 		B167EACB2E8F789E00EC8A9F /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = B167EACA2E8F789E00EC8A9F /* WebRTC */; };
 		B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */; };
+		B1B628EC2EE0187C002DDAA0 /* CameraSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */; };
+		B1B628EE2EE0187E002DDAA0 /* CameraSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */; };
+		B1B628F02EE01884002DDAA0 /* CameraSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */; };
 		E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */; };
 		E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */; };
 		E666F74A2CCC4627005A4A6F /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E666F7492CCC4627005A4A6F /* RequestHandler.swift */; };
@@ -115,14 +118,13 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				9D83C2E42DBD0AB800BF5AF4 /* GoogleHomeSDK.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		E666F7422CCC4369005A4A6F /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
@@ -162,8 +164,6 @@
 		9D4749482D548761006A54F4 /* AutomationsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationsRepository.swift; sourceTree = "<group>"; };
 		9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidatesView.swift; sourceTree = "<group>"; };
 		9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionCandidateDetailView.swift; sourceTree = "<group>"; };
-		9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeSDK.xcframework; sourceTree = "<group>"; };
-		9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:EQHXZ8M8AV:Google LLC"; lastKnownFileType = wrapper.xcframework; path = GoogleHomeTypes.xcframework; sourceTree = "<group>"; };
 		9DB21DBE2D797AFA0004570D /* GenericEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorView.swift; sourceTree = "<group>"; };
 		9DB21DC02D79863B0004570D /* GenericEditorViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericEditorViewModel.swift; sourceTree = "<group>"; };
 		9DB83A162D13E53C00F826B8 /* SensorControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorControl.swift; sourceTree = "<group>"; };
@@ -183,12 +183,17 @@
 		9DD53BE32D822BAA004957F6 /* StarterCandidatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarterCandidatesView.swift; sourceTree = "<group>"; };
 		9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CandidatesViewModel.swift; sourceTree = "<group>"; };
 		9DD60D192D59C539006F489F /* TVControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVControl.swift; sourceTree = "<group>"; };
+		B108B4402EC5886F00618E0A /* CameraOOBEView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraOOBEView.swift; sourceTree = "<group>"; };
+		B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraOOBEViewModel.swift; sourceTree = "<group>"; };
 		B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraDetailView.swift; sourceTree = "<group>"; };
 		B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraLiveViewModel.swift; sourceTree = "<group>"; };
 		B11BF00E2E77B34B00839F73 /* SignalingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingService.swift; sourceTree = "<group>"; };
 		B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRtcPlayer.swift; sourceTree = "<group>"; };
 		B11BF0132E77B36900839F73 /* CameraControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControl.swift; sourceTree = "<group>"; };
 		B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorbellControl.swift; sourceTree = "<group>"; };
+		B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettings.swift; sourceTree = "<group>"; };
+		B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettingsView.swift; sourceTree = "<group>"; };
+		B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettingsViewModel.swift; sourceTree = "<group>"; };
 		E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommissioningManager.swift; sourceTree = "<group>"; };
 		E60DB6A32CC032CC009DAD9D /* GoogleHomeAPISampleIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoogleHomeAPISampleIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MatterAddDeviceExtension.entitlements; sourceTree = "<group>"; };
@@ -231,10 +236,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B12AF3822EDD6FB0001CD481 /* GoogleHomeSDK in Frameworks */,
 				E699C6992CC0916600B35E68 /* SafariServices.framework in Frameworks */,
+				B12AF3842EDD6FB0001CD481 /* GoogleHomeTypes in Frameworks */,
 				B167EACB2E8F789E00EC8A9F /* WebRTC in Frameworks */,
-				9D83C2DF2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework in Frameworks */,
-				9D83C2E32DBD0AB800BF5AF4 /* GoogleHomeSDK.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,7 +247,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D83C2E02DBD0AB000BF5AF4 /* GoogleHomeSDK.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,12 +294,18 @@
 			path = Automation;
 			sourceTree = "<group>";
 		};
-		B11BF00C2E77B34300839F73 /* Camera */ = {
+		B108B43F2EC5883100618E0A /* Camera */ = {
 			isa = PBXGroup;
 			children = (
+				B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */,
+				B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */,
+				B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */,
 				B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */,
 				B11BF00E2E77B34B00839F73 /* SignalingService.swift */,
 				B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */,
+				B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */,
+				B108B4402EC5886F00618E0A /* CameraOOBEView.swift */,
+				B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */,
 			);
 			path = Camera;
 			sourceTree = "<group>";
@@ -331,6 +341,7 @@
 		E60DB6A52CC032CC009DAD9D /* GoogleHomeAPISampleIOS */ = {
 			isa = PBXGroup;
 			children = (
+				B108B43F2EC5883100618E0A /* Camera */,
 				9CC6939B2E3075D1003A5069 /* Extension */,
 				E6EBFC242CC09A2B00273859 /* Info.plist */,
 				E60A14CA2CCC7E0D0006A28B /* Commissioning */,
@@ -366,8 +377,6 @@
 			isa = PBXGroup;
 			children = (
 				E699C6982CC0916600B35E68 /* SafariServices.framework */,
-				9D83C2DC2DBD0AA800BF5AF4 /* GoogleHomeSDK.xcframework */,
-				9D83C2DD2DBD0AA800BF5AF4 /* GoogleHomeTypes.xcframework */,
 			);
 			path = Frameworks;
 			sourceTree = "<group>";
@@ -430,7 +439,6 @@
 		E6E3CB5E2CC07E7200E99423 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */,
 				9C54B8E62E1F55BB008DE522 /* RenameView.swift */,
 				9C54B8DC2E1E66F9008DE522 /* RoomSettingsView.swift */,
 				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
@@ -478,7 +486,6 @@
 		E6E3CB6B2CC07E7200E99423 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
-				B11BF00C2E77B34300839F73 /* Camera */,
 				9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */,
 				9C54B8E42E1F55B5008DE522 /* RenameViewModel.swift */,
 				9DBD774B2D2B87DE00924F71 /* Automation */,
@@ -501,6 +508,7 @@
 				E60DB6A12CC032CC009DAD9D /* Resources */,
 				E666F7422CCC4369005A4A6F /* Embed Foundation Extensions */,
 				E60EDEAF2CCCDF3A009BB2F7 /* Embed Frameworks */,
+				B12AF3852EDD6FBC001CD481 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -558,6 +566,7 @@
 			mainGroup = E60DB69A2CC032CC009DAD9D;
 			packageReferences = (
 				B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */,
+				B12AF3802EDD6FB0001CD481 /* XCLocalSwiftPackageReference "ThirdParty/GoogleHomeSDK" */,
 			);
 			productRefGroup = E60DB6A42CC032CC009DAD9D /* Products */;
 			projectDirPath = "";
@@ -588,11 +597,33 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		B12AF3852EDD6FBC001CD481 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Force remove the static framework from the built app bundle\n# This fixes the \"Missing Info.plist\" installation error\necho \"Removing wrongly embedded static framework...\"\nrm -rf \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleHomeTypes.framework\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E60DB69F2CC032CC009DAD9D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1B628F02EE01884002DDAA0 /* CameraSettingsViewModel.swift in Sources */,
 				9DBD774F2D2B880700924F71 /* AutomationList.swift in Sources */,
 				E6E3CB6F2CC07E7200E99423 /* SelectedStructureStorage.swift in Sources */,
 				9DBD77692D51DB7700924F71 /* ThermostatControl.swift in Sources */,
@@ -626,8 +657,11 @@
 				E6E3CB842CC07E7200E99423 /* WindowCoveringControl.swift in Sources */,
 				E6E3CB752CC07E7200E99423 /* Comparable+Utils.swift in Sources */,
 				E6E3CB762CC07E7200E99423 /* NumberFormatter+Utils.swift in Sources */,
+				B108B4412EC5886F00618E0A /* CameraOOBEView.swift in Sources */,
 				E6E3CB7E2CC07E7200E99423 /* DeviceTileInfo.swift in Sources */,
 				9C8553BA2E24AF8400529E4C /* DeviceDetailViewModel.swift in Sources */,
+				B1B628EC2EE0187C002DDAA0 /* CameraSettings.swift in Sources */,
+				B1B628EE2EE0187E002DDAA0 /* CameraSettingsView.swift in Sources */,
 				E6E3CB832CC07E7200E99423 /* RangeControl.swift in Sources */,
 				9C54B8E72E1F55BD008DE522 /* RenameView.swift in Sources */,
 				E6E3CB7A2CC07E7200E99423 /* RangeView.swift in Sources */,
@@ -666,6 +700,7 @@
 				9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */,
 				E6E3CB852CC07E7200E99423 /* MainViewModel.swift in Sources */,
 				E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */,
+				B108B4432EC5887B00618E0A /* CameraOOBEViewModel.swift in Sources */,
 				B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -760,7 +795,6 @@
 		E60DB6B22CC032CD009DAD9D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = GoogleHomeAPISampleIOS/GoogleHomeAPISampleIOS.entitlements;
@@ -770,6 +804,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"GoogleHomeAPISampleIOS/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GoogleHomeAPISampleIOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Google Home Platform iOS Sample App";
@@ -783,7 +818,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.1;
+				MARKETING_VERSION = 1.6;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -815,7 +850,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -855,6 +890,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		B12AF3802EDD6FB0001CD481 /* XCLocalSwiftPackageReference "ThirdParty/GoogleHomeSDK" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ThirdParty/GoogleHomeSDK;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -867,6 +909,14 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B12AF3812EDD6FB0001CD481 /* GoogleHomeSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GoogleHomeSDK;
+		};
+		B12AF3832EDD6FB0001CD481 /* GoogleHomeTypes */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GoogleHomeTypes;
+		};
 		B167EACA2E8F789E00EC8A9F /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B167EAC92E8F789E00EC8A9F /* XCRemoteSwiftPackageReference "WebRTC" */;

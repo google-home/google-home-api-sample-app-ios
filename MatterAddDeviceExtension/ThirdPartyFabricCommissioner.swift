@@ -109,7 +109,7 @@ class ThirdPartyFabricCommissioner: NSObject {
       setupPayload.productID = productID
     }
 
-    guard let qrCodeString = try? setupPayload.qrCodeString() else {
+    guard let qrCodeString = setupPayload.qrCodeString() else {
       throw Error.missingSetupPayload
     }
     return qrCodeString

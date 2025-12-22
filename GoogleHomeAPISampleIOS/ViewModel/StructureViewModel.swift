@@ -18,10 +18,11 @@ import Foundation
 import GoogleHomeSDK
 import OSLog
 
+/// A viewModel for managing the structure, rooms, and devices within them.
 final class StructureViewModel: ObservableObject {
 
-  private let home: Home
-  let structureID: String
+  public let home: Home
+  public let structureID: String
   private var commissioningManager = CommissioningManager()
 
   @Published var entries = [StructureEntry]()
@@ -88,12 +89,20 @@ final class StructureViewModel: ObservableObject {
 
   // MARK: - Commissioning
 
-  /// Adds a Matter device through the `CommissioningManager`.
+  /// Commissions Matter devices through the `CommissioningManager` and returns the corresponding
+  /// `HomeDevice` objects from `Home`.
   /// - Parameters:
   ///   - structure: The structure to add the device to.
   ///   - add3PFabricFirst: If `true` adds the device to a 3P fabric.
-  func addMatterDevice(to structure: Structure, add3PFabricFirst: Bool) {
-    self.commissioningManager.addMatterDevice(to: structure, add3PFabricFirst: add3PFabricFirst)
+  /// - Returns: The device objects of the commissioned devices.
+  /// - Throws: An error if the commissioning flow fails.
+  func addMatterDevice(
+    to structure: Structure, add3PFabricFirst: Bool
+  ) async throws -> Set<HomeDevice> {
+    let deviceIDs = try await self.commissioningManager.addMatterDevice(
+      to: structure, add3PFabricFirst: add3PFabricFirst
+    )
+    return try await self.home.devices().list().filter { deviceIDs.contains($0.id) }
   }
 
   // MARK: - `StructureViewModel.StructureEntry`
@@ -129,7 +138,7 @@ final class StructureViewModel: ObservableObject {
       self.isDiscoveringHubs = true
     }
     do {
-      let hubs = try await self.home.discoverAvailableHubs()
+      let hubs = await self.home.discoverAvailableHubs()
       Logger().info("hubs found: \(hubs)")
       if let hub = hubs.first {
         try await self.setupHub(hub)

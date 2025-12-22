@@ -18,8 +18,8 @@ import SwiftUI
 import UIKit
 import WebRTC
 
-/// A view of camera.
-public struct CameraDetailView: View {
+/// A view of the camera, its controls, and settings options.
+public struct CameraDetailView<T: DeviceType>: View {
   @ObservedObject private var deviceControl: DeviceControl
   private let home: Home
 
@@ -36,6 +36,13 @@ public struct CameraDetailView: View {
       Divider()
         .padding(.bottom, .smd)
       CameraLiveView(home: self.home, deviceControl: self.deviceControl)
+      Divider()
+        .padding(.bottom, .smd)
+      NavigationLink(
+        destination: CameraSettingsView<T>(home: self.home, deviceID: self.deviceControl.id)
+      ) {
+        Text("Settings")
+      }
     }
   }
 }
