@@ -74,7 +74,7 @@ class MatterKeypair: NSObject, MTRKeypair {
       &error
     )
 
-    if let error = error {
+    if error != nil {
       Logger().error("Failed to sign hash.")
       return Data()
     }
@@ -117,7 +117,7 @@ class MatterKeypair: NSObject, MTRKeypair {
 
     let secKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error)
 
-    if let error = error {
+    if error != nil {
       Logger().error("Failed to create new private key.")
       throw Error.generatePrivateKeyFailed
     }

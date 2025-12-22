@@ -33,39 +33,43 @@ public class CommissioningManager: NSObject, ObservableObject {
   /// - Parameters:
   ///   - structure: The structure to add the device to.
   ///   - add3PFabricFirst: Whether to add the device to a third party fabric first.
-  public func addMatterDevice(to structure: Structure, add3PFabricFirst: Bool) {
-
+  /// - Returns: The IDs of the commissioned devices. A set is returned because a single
+  ///   commissioned entity (e.g., a bridge) may expose multiple devices.
+  /// - Throws: An error if the commissioning flow fails.
+  public func addMatterDevice(
+    to structure: Structure, add3PFabricFirst: Bool
+  ) async throws -> Set<String> {
     /// pass if it's 1p or 3p commissioning
     let userDefaults = UserDefaults(
       suiteName: CommissioningManager.appGroup)
     userDefaults?.set(
     add3PFabricFirst, forKey: CommissioningUserDefaultsKeys.shouldPerform3PFabricCommissioning)
 
-    Task {
-      do {
-        try await structure.prepareForMatterCommissioning()
-      } catch {
-        Logger().error("Failed to prepare for Matter Commissioning: \(error).")
-        return
-      }
+    do {
+      try await structure.prepareForMatterCommissioning()
+    } catch {
+      Logger().error("Failed to prepare for Matter Commissioning: \(error).")
+      throw error
+    }
 
-      // Prepare the Matter request by providing the ecosystem name and home to be added to.
-      let topology = MatterAddDeviceRequest.Topology(
-        ecosystemName: "Google Home",
-        homes: [MatterAddDeviceRequest.Home(displayName: structure.name)]
-      )
-      let request = MatterAddDeviceRequest(topology: topology)
+    // Prepare the Matter request by providing the ecosystem name and home to be added to.
+    let topology = MatterAddDeviceRequest.Topology(
+      ecosystemName: "Google Home",
+      homes: [MatterAddDeviceRequest.Home(displayName: structure.name)]
+    )
+    let request = MatterAddDeviceRequest(topology: topology)
 
-      do {
-        Logger().info("Starting MatterAddDeviceRequest.")
-        try await request.perform()
-        Logger().info("Completed MatterAddDeviceRequest.")
-        let commissionedDeviceIDs = try await structure.completeMatterCommissioning()
-        Logger().info("Commissioned device IDs: \(commissionedDeviceIDs).")
-      } catch let error {
-        let result = structure.markMatterCommissioningFailed(error: error)
-        Logger().error("Failed to complete MatterAddDeviceRequest: \(result.detailedError).")
-      }
+    do {
+      Logger().info("Starting MatterAddDeviceRequest.")
+      try await request.perform()
+      Logger().info("Completed MatterAddDeviceRequest.")
+      let commissionedDeviceIDs = try await structure.completeMatterCommissioning()
+      Logger().info("Commissioned device IDs: \(commissionedDeviceIDs).")
+      return commissionedDeviceIDs
+    } catch let error {
+      let result = structure.markMatterCommissioningFailed(error: error)
+      Logger().error("Failed to complete MatterAddDeviceRequest: \(result.detailedError).")
+      throw error
     }
   }
 }

@@ -20,7 +20,7 @@ import OSLog
 import Observation
 import WebRTC
 
-/// The viewModel handling camera livestreaming and control.
+/// A viewModel handling camera livestreaming and control.
 @Observable
 @MainActor
 class CameraLiveViewModel {
@@ -211,7 +211,14 @@ class CameraLiveViewModel {
         self.uiState = .disconnected
         return
       }
-      await self.player?.initialize()
+      let success = await self.player?.initialize() ?? false
+
+      if success {
+          self.uiState = .live
+      } else {
+          Logger().error("Player failed to initialize")
+          self.uiState = .disconnected
+      }
       self.uiState = .live
     } else {
       self.uiState = .off

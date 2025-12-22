@@ -248,6 +248,10 @@ struct DeviceDetailView: View {
         )
       case .other(let message):
         Text("Reason: \(message ?? "Unknown")")
+      case .multiSourceDevice:
+        Text(
+          "The device is connected through multiple sources, to decommission the device, it needs to be disconnected from all non-matter sources."
+        )
       @unknown default:
         Text("Unknown reason.")
       }
@@ -378,7 +382,7 @@ private struct ButtonGroupView: View {
     VStack {
       ForEach(0..<rowCount, id: \.self) { rowIndex in
         HStack {
-          ForEach(0..<columnCount) { colIndex in
+          ForEach(0..<columnCount, id: \.self) { colIndex in
             if colIndex == 1 {
               Spacer()
             }
