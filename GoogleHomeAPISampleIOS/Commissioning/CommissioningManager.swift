@@ -15,6 +15,7 @@
 import Combine
 import Foundation
 import GoogleHomeSDK
+import Matter
 import MatterSupport
 import OSLog
 
@@ -33,11 +34,12 @@ public class CommissioningManager: NSObject, ObservableObject {
   /// - Parameters:
   ///   - structure: The structure to add the device to.
   ///   - add3PFabricFirst: Whether to add the device to a third party fabric first.
+  ///   - setupPayload: The custom payload to be used to bypass the QR code scanning process.
   /// - Returns: The IDs of the commissioned devices. A set is returned because a single
   ///   commissioned entity (e.g., a bridge) may expose multiple devices.
   /// - Throws: An error if the commissioning flow fails.
   public func addMatterDevice(
-    to structure: Structure, add3PFabricFirst: Bool
+    to structure: Structure, add3PFabricFirst: Bool, setupPayload: String? = nil
   ) async throws -> Set<String> {
     /// pass if it's 1p or 3p commissioning
     let userDefaults = UserDefaults(
@@ -57,7 +59,8 @@ public class CommissioningManager: NSObject, ObservableObject {
       ecosystemName: "Google Home",
       homes: [MatterAddDeviceRequest.Home(displayName: structure.name)]
     )
-    let request = MatterAddDeviceRequest(topology: topology)
+    let payload = self.createMatterSetupPayload(from: setupPayload)
+    let request = MatterAddDeviceRequest(topology: topology, setupPayload: payload)
 
     do {
       Logger().info("Starting MatterAddDeviceRequest.")
@@ -71,5 +74,12 @@ public class CommissioningManager: NSObject, ObservableObject {
       Logger().error("Failed to complete MatterAddDeviceRequest: \(result.detailedError).")
       throw error
     }
+  }
+
+  private func createMatterSetupPayload(from setupPayload: String?) -> MTRSetupPayload? {
+    guard let setupPayload = setupPayload else {
+      return nil
+    }
+    return MatterCommissioningUtils.matterSetupPayload(from: setupPayload)
   }
 }

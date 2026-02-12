@@ -62,6 +62,7 @@
 		B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */; };
 		B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00E2E77B34B00839F73 /* SignalingService.swift */; };
 		B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF0132E77B36900839F73 /* CameraControl.swift */; };
+		B12A7E362EF533AA004BCB62 /* CodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12A7E352EF533A7004BCB62 /* CodeScannerView.swift */; };
 		B12AF3822EDD6FB0001CD481 /* GoogleHomeSDK in Frameworks */ = {isa = PBXBuildFile; productRef = B12AF3812EDD6FB0001CD481 /* GoogleHomeSDK */; };
 		B12AF3842EDD6FB0001CD481 /* GoogleHomeTypes in Frameworks */ = {isa = PBXBuildFile; productRef = B12AF3832EDD6FB0001CD481 /* GoogleHomeTypes */; };
 		B167EACB2E8F789E00EC8A9F /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = B167EACA2E8F789E00EC8A9F /* WebRTC */; };
@@ -69,6 +70,9 @@
 		B1B628EC2EE0187C002DDAA0 /* CameraSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */; };
 		B1B628EE2EE0187E002DDAA0 /* CameraSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */; };
 		B1B628F02EE01884002DDAA0 /* CameraSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */; };
+		B1EBB3702F34F1960086C6F4 /* WebPImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */; };
+		B1EBB3712F34F1960086C6F4 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBB36D2F34F1960086C6F4 /* HistoryView.swift */; };
+		B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */; };
 		E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */; };
 		E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */; };
 		E666F74A2CCC4627005A4A6F /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E666F7492CCC4627005A4A6F /* RequestHandler.swift */; };
@@ -190,10 +194,14 @@
 		B11BF00E2E77B34B00839F73 /* SignalingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingService.swift; sourceTree = "<group>"; };
 		B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRtcPlayer.swift; sourceTree = "<group>"; };
 		B11BF0132E77B36900839F73 /* CameraControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControl.swift; sourceTree = "<group>"; };
+		B12A7E352EF533A7004BCB62 /* CodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeScannerView.swift; sourceTree = "<group>"; };
 		B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoorbellControl.swift; sourceTree = "<group>"; };
 		B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettings.swift; sourceTree = "<group>"; };
 		B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettingsView.swift; sourceTree = "<group>"; };
 		B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSettingsViewModel.swift; sourceTree = "<group>"; };
+		B1EBB36D2F34F1960086C6F4 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageView.swift; sourceTree = "<group>"; };
 		E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommissioningManager.swift; sourceTree = "<group>"; };
 		E60DB6A32CC032CC009DAD9D /* GoogleHomeAPISampleIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoogleHomeAPISampleIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MatterAddDeviceExtension.entitlements; sourceTree = "<group>"; };
@@ -297,6 +305,10 @@
 		B108B43F2EC5883100618E0A /* Camera */ = {
 			isa = PBXGroup;
 			children = (
+				B1EBB36D2F34F1960086C6F4 /* HistoryView.swift */,
+				B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */,
+				B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */,
+				B12A7E352EF533A7004BCB62 /* CodeScannerView.swift */,
 				B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */,
 				B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */,
 				B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */,
@@ -545,7 +557,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1530;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					E60DB6A22CC032CC009DAD9D = {
 						CreatedOnToolsVersion = 15.3;
@@ -650,6 +662,9 @@
 				9DBD774D2D2B87F300924F71 /* AutomationViewModel.swift in Sources */,
 				9DBD77482D2B878C00924F71 /* AutomationCreationView.swift in Sources */,
 				E6E3CB742CC07E7200E99423 /* AccountViewModel.swift in Sources */,
+				B1EBB3702F34F1960086C6F4 /* WebPImageView.swift in Sources */,
+				B1EBB3712F34F1960086C6F4 /* HistoryView.swift in Sources */,
+				B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */,
 				9C54B8DB2E1E5FA9008DE522 /* SettingsView.swift in Sources */,
 				9DB83A172D13E54000F826B8 /* SensorControl.swift in Sources */,
 				E6E3CB6D2CC07E7200E99423 /* Color+UX.swift in Sources */,
@@ -687,6 +702,7 @@
 				9C54B8D72E1BC5AC008DE522 /* ToggleControl.swift in Sources */,
 				9C54B8D52E1B9DCC008DE522 /* DropdownControl.swift in Sources */,
 				9DBD776F2D52029100924F71 /* CreateButtonView.swift in Sources */,
+				B12A7E362EF533AA004BCB62 /* CodeScannerView.swift in Sources */,
 				9DD53BE22D8226B9004957F6 /* StarterCandidateDetailView.swift in Sources */,
 				9DBD77462D2B877400924F71 /* AutomationView.swift in Sources */,
 				9C54B8DD2E1E6700008DE522 /* RoomSettingsView.swift in Sources */,
@@ -787,6 +803,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -803,8 +820,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"GoogleHomeAPISampleIOS/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = GoogleHomeAPISampleIOS/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Google Home Platform iOS Sample App";
@@ -818,7 +837,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.7;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -850,7 +869,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.7;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

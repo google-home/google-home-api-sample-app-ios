@@ -22,6 +22,7 @@ struct StructureView: View {
   private enum Tab {
     case devices
     case automations
+    case history
     case settings
   }
 
@@ -33,6 +34,7 @@ struct StructureView: View {
   @ObservedObject private var viewModel: StructureViewModel
   @State private var selectedTab: Tab = .devices
   @State private var oobeDevice: HomeDevice?
+  @State private var isShowingCodeScanner: Bool = false
 
   var structureID: String { self.viewModel.structureID }
 
@@ -58,6 +60,11 @@ struct StructureView: View {
             }
           }
         }
+        .sheet(isPresented: self.$isShowingCodeScanner) {
+          CodeScannerView(isPresented: self.$isShowingCodeScanner) { payload in
+            self.addDevice(structure: structure, add3PFabricFirst: false, setupPayload: payload)
+          }
+        }
     } else {
       Text("Structure not found.")
     }
@@ -80,6 +87,12 @@ struct StructureView: View {
             Label("Automations", image: "astrophotography_mode_symbol")
           }
           .tag(Tab.automations)
+        HistoryView(home: self.viewModel.home, structureID: self.structureID)
+          .tabItem {
+            Label("History", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+              .font(.title)
+          }
+          .tag(Tab.history)
         SettingsView(structure: structure)
           .environmentObject(viewModel)
           .tabItem {
@@ -106,6 +119,9 @@ struct StructureView: View {
             }
             Button("Add Device to Google & 3P Fabric") {
               self.addDevice(structure: structure, add3PFabricFirst: true)
+            }
+            Button("Add Camera Device") {
+              self.isShowingCodeScanner = true
             }
             Button("Add Room") { self.viewModel.showRoomNameInput = true }
             Button("Setup Hub") {
@@ -211,7 +227,9 @@ struct StructureView: View {
     }
   }
 
-  private func addDevice(structure: Structure, add3PFabricFirst: Bool) {
+  private func addDevice(
+    structure: Structure, add3PFabricFirst: Bool, setupPayload: String? = nil
+  ) {
     #if targetEnvironment(simulator)
       Logger().error("Cannot add device on simulator.")
       return
@@ -226,7 +244,7 @@ struct StructureView: View {
     Task {
       do {
         let devices = try await self.viewModel.addMatterDevice(
-          to: structure, add3PFabricFirst: add3PFabricFirst)
+          to: structure, add3PFabricFirst: add3PFabricFirst, setupPayload: setupPayload)
         self.showCameraOOBEIfNeeded(devices: devices)
       } catch {
         Logger().error("Failed to add Matter device: \(error)")
