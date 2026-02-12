@@ -94,13 +94,14 @@ final class StructureViewModel: ObservableObject {
   /// - Parameters:
   ///   - structure: The structure to add the device to.
   ///   - add3PFabricFirst: If `true` adds the device to a 3P fabric.
+  ///   - setupPayload: The custom payload to be used to bypass the QR code scanning process.
   /// - Returns: The device objects of the commissioned devices.
   /// - Throws: An error if the commissioning flow fails.
   func addMatterDevice(
-    to structure: Structure, add3PFabricFirst: Bool
+    to structure: Structure, add3PFabricFirst: Bool, setupPayload: String? = nil
   ) async throws -> Set<HomeDevice> {
     let deviceIDs = try await self.commissioningManager.addMatterDevice(
-      to: structure, add3PFabricFirst: add3PFabricFirst
+      to: structure, add3PFabricFirst: add3PFabricFirst, setupPayload: setupPayload
     )
     return try await self.home.devices().list().filter { deviceIDs.contains($0.id) }
   }

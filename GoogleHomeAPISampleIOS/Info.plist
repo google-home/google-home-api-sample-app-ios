@@ -18,14 +18,19 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>Cloud Project Number</key>
+	<string>HOME_API_TODO_ADD_CLOUD_PROJECT_NUMBER</string>
 	<key>GIDClientID</key>
 	<string>HOME_API_TODO_ADD_OAUTH_CLIENT_ID</string>
 	<key>GIDTeamID</key>
 	<string>HOME_API_TODO_ADD_APPLE_DEVELOPER_ID</string>
-	<key>Cloud Project Number</key>
-	<string>HOME_API_TODO_ADD_CLOUD_PROJECT_NUMBER</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_matter._tcp</string>
@@ -35,11 +40,8 @@
 		<string>_googlecrossdevice._tcp</string>
 		<string>_ghp._tcp</string>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>To use the QR code scanner, allow Google Home Demo App to access your camera</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Network usage is required for Matter discovery</string>
 	<key>NSMicrophoneUsageDescription</key>

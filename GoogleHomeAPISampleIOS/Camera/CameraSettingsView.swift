@@ -209,6 +209,31 @@ public struct CameraSettingsView<T: DeviceType>: View {
             Text("Battery Settings")
           }
         }
+
+        if viewModel.displayedSettings.contains(.information) {
+          Section {
+            HStack {
+              Text("Vendor Name")
+              Spacer()
+              Text("\(viewModel.vendorName ?? "N/A")")
+                .foregroundColor(.gray)
+            }
+            HStack {
+              Text("Model Name")
+              Spacer()
+              Text("\(viewModel.productName ?? "N/A")")
+                .foregroundColor(.gray)
+            }
+            HStack {
+              Text("Software Version")
+              Spacer()
+              Text("\(viewModel.softwareVersionString ?? "N/A")")
+                .foregroundColor(.gray)
+            }
+          } header: {
+            Text("Device Information")
+          }
+        }
       }
     )
   }

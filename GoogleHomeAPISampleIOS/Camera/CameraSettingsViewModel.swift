@@ -153,6 +153,13 @@ class CameraSettingsViewModel<T: DeviceType> {
     CameraSetting<Google.ChimeTrait.ExternalChimeType> =
       CameraSetting<Google.ChimeTrait.ExternalChimeType>(defaultValue: .none)
 
+  /// Vendor name for the device from the Matter BasicInformationTrait.
+  public private(set) var vendorName: String?
+  /// Product name for the device from the Matter BasicInformationTrait.
+  public private(set) var productName: String?
+  /// Software version string for the device from the Matter basicInformationTrait.
+  public private(set) var softwareVersionString: String?
+
   // End Settings Vars
 
   public private(set) var settingsInitialized: Bool = false
@@ -201,11 +208,11 @@ class CameraSettingsViewModel<T: DeviceType> {
     self.home.device(id: deviceID)
       .removeDuplicates()
       .receive(on: DispatchQueue.main)
-      .flatMap { [weak self] device -> AnyPublisher<T, HomeError> in
+      .flatMap { [weak self] device -> AnyPublisher<DeviceTypeCollection, HomeError> in
         guard let self = self else { return Empty().eraseToAnyPublisher() }
         Logger().info("Device: \(device.id)")
         self.device = device
-        return device.types.subscribe(T.self).eraseToAnyPublisher()
+        return device.types.subscribeAll().eraseToAnyPublisher()
       }
       .receive(on: DispatchQueue.main)
       .sink { completion in
@@ -215,12 +222,22 @@ class CameraSettingsViewModel<T: DeviceType> {
         case .failure(let error):
           Logger().error("Received unexpected device subscription error: \(error.localizedDescription)")
         }
-      } receiveValue: { [weak self] deviceType in
+      } receiveValue: { [weak self] deviceTypeCollection in
+        guard let deviceType = deviceTypeCollection.getAll(of: T.self).first else { return }
         Logger().info("Device type: \(deviceType.debugDescription)")
         guard let self = self else { return }
         self.streamManagementTrait = deviceType.traits[Google.CameraAvStreamManagementTrait.self]
         self.doorbellChimeTrait = deviceType.traits[Google.ChimeTrait.self]
         self.pushAvStreamTransportTrait = deviceType.traits[Google.PushAvStreamTransportTrait.self]
+
+        if deviceTypeCollection.contains(RootNodeDeviceType.self) {
+          let rootNodeDeviceType = deviceTypeCollection.getAll(of: RootNodeDeviceType.self).first
+          if let basicInformationTrait = rootNodeDeviceType?.traits[Matter.BasicInformationTrait.self] {
+            self.vendorName = basicInformationTrait.attributes.vendorName
+            self.productName = basicInformationTrait.attributes.productName
+            self.softwareVersionString = basicInformationTrait.attributes.softwareVersionString
+          }
+        }
 
         if !self.settingsInitialized {
 
@@ -237,6 +254,8 @@ class CameraSettingsViewModel<T: DeviceType> {
             if deviceType is GoogleDoorbellDeviceType {
               self.displayedSettings.insert(.doorbell)
             }
+
+            self.displayedSettings.insert(.information)
           }
         }
         self.settingsInitialized = true
@@ -604,4 +623,5 @@ struct SettingsDisplayed: OptionSet {
   public static let camera = SettingsDisplayed(rawValue: 1 << 1)
   public static let doorbell = SettingsDisplayed(rawValue: 1 << 2)
   public static let battery = SettingsDisplayed(rawValue: 1 << 3)
+  public static let information = SettingsDisplayed(rawValue: 1 << 4)
 }
