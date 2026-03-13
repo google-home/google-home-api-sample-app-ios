@@ -52,12 +52,14 @@ struct RoomsView: View {
           ScrollView {
             LazyVStack {
               ForEach(self.structureViewModel.entries) { entry in
-                RoomRow(
-                  title: entry.roomName,
-                  id: entry.roomID,
-                  isSelected: selectedRoomID == entry.roomID,
-                  action: { selectedRoomID = entry.roomID }
-                )
+                if (entry.roomID != "unassignedDevices") {
+                  RoomRow(
+                    title: entry.roomName,
+                    id: entry.roomID,
+                    isSelected: selectedRoomID == entry.roomID,
+                    action: { selectedRoomID = entry.roomID }
+                  )
+                }
               }
             }
           }

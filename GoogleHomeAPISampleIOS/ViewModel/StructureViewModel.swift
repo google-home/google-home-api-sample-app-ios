@@ -56,10 +56,10 @@ final class StructureViewModel: ObservableObject {
         return Just((Set<Room>(), Set<HomeDevice>()))
       }
       .map { [weak self] rooms, devices in
-        self?.hasLoaded = true
-        /// check structure ID to filter rooms under the strucutre
+        guard let self = self else { return [] }
+        self.hasLoaded = true
         let entriesByRoom = rooms.reduce(into: [String: StructureEntry]()) { result, room in
-          if room.structureID == structureID {
+          if room.structureID == self.structureID {
             result[room.id] = StructureEntry(
               room: room,
               roomID: room.id,
@@ -67,21 +67,34 @@ final class StructureViewModel: ObservableObject {
             )
           }
         }
-        /// Read devices in this structure then assign to corresponding rooms.
-        for device in devices where device.structureID == structureID {
-          /// Skip processing device with an invalid room.
-          guard let roomID = device.roomID, let entry = entriesByRoom[roomID] else { continue }
+        // Create a specific entry for "In your home" (Unassigned)
+        let unassignedEntry = StructureEntry(
+            room: nil,
+            roomID: "unassignedDevices",
+            roomName: "In your home"
+        )
+        var hasUnassignedDevices = false
+
+        for device in devices where device.structureID == self.structureID {
           do {
-            // Create DeviceControl.
             let control = try DeviceControlFactory.make(device: device)
-            entry.appendDeviceControl(control)
+
+            // Check if device belongs to a known room
+            if let roomID = device.roomID, let entry = entriesByRoom[roomID] {
+               entry.appendDeviceControl(control)
+            } else {
+               // If no room ID, or room not found, add to "In your home"
+               unassignedEntry.appendDeviceControl(control)
+               hasUnassignedDevices = true
+            }
           } catch {
             Logger().error("Failed to create device control: \(error)")
           }
         }
-        /// return to .map
-        return entriesByRoom.values
+
+        return Array(entriesByRoom.values)
           .sorted { $0.roomName < $1.roomName }
+          + (hasUnassignedDevices ? [unassignedEntry] : [])
       }
       /// receive from .map and .assign() to publisher entries
       .assign(to: &self.$entries)
@@ -109,14 +122,14 @@ final class StructureViewModel: ObservableObject {
   // MARK: - `StructureViewModel.StructureEntry`
 
   final class StructureEntry: Identifiable {
-    let room: Room
+    let room: Room?
     let roomID: String
     let roomName: String
     private(set) var deviceControls = [DeviceControl]()
 
     // MARK: Initialization
 
-    init(room: Room, roomID: String, roomName: String) {
+    init(room: Room?, roomID: String, roomName: String) {
       self.room = room
       self.roomID = roomID
       self.roomName = roomName
