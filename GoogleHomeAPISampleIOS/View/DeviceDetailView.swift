@@ -176,8 +176,14 @@ struct DeviceDetailView: View {
         .disabled(self.deviceControl.tileInfo.isBusy)
     }
 
-    // Range Control 2
-    if let rangeControl = deviceControl.rangeControl2 {
+    // Cool Range Control
+    if let rangeControl = deviceControl.coolRangeControl {
+      RangeSlider(rangeControl: rangeControl)
+        .disabled(self.deviceControl.tileInfo.isBusy)
+    }
+
+    // Heat Range Control
+    if let rangeControl = deviceControl.heatRangeControl {
       RangeSlider(rangeControl: rangeControl)
         .disabled(self.deviceControl.tileInfo.isBusy)
     }
@@ -209,19 +215,27 @@ struct DeviceDetailView: View {
   /// Display which room the device located and entry of moving to other room.
   @ViewBuilder
   var locationSection: some View {
+
+    let currentEntry = self.structureViewModel.entries.first {
+      $0.deviceControls.contains {
+        $0.device.id == self.deviceControl.device.id
+      }
+    }
+
     NavigationLink(
       destination: RoomsView(
         deviceID: self.deviceControl.device.id,
         structure: self.structure,
         structureViewModel: self.structureViewModel,
-        originalRoomID: self.entry.roomID
+        originalRoomID: currentEntry?.roomID ?? self.entry.roomID
       )
     ) {
       VStack(alignment: .leading, spacing: .xs) {
         Text("Location")
           .font(.body)
           .foregroundColor(.black)
-        Text(self.entry.roomName)
+        // Display the dynamically found name
+        Text(currentEntry?.roomName ?? self.entry.roomName)
           .font(.subheadline)
           .foregroundColor(.gray)
       }
@@ -350,19 +364,33 @@ private struct RangeSlider: View {
     VStack(alignment: .leading, spacing: .xs) {
       Text(rangeControl.label)
         .font(.body)
-      Slider(
-        value: Binding(
-          get: { sliderValue },
-          set: { if rangeControl.validate(Int16($0)) { sliderValue = $0 } }
-        ),
-        in: rangeControl.range,
-        onEditingChanged: { editing in
-          isEditing = editing
-          if !editing {
-            rangeControl.rangeValue = sliderValue
-          }
-        }
+
+      let binding = Binding(
+        get: { sliderValue },
+        set: { if rangeControl.validate(Int16($0)) { sliderValue = $0 } }
       )
+
+      let onEditing: (Bool) -> Void = { editing in
+        isEditing = editing
+        if !editing { rangeControl.rangeValue = sliderValue }
+      }
+
+      let span = rangeControl.range.upperBound - rangeControl.range.lowerBound
+
+      if span >= 50.0 {
+        Slider(
+          value: $rangeControl.rangeValue,
+          in: rangeControl.range,
+          step: 50.0,
+          onEditingChanged: onEditing
+        )
+      } else {
+        Slider(
+          value: binding,
+          in: rangeControl.range,
+          onEditingChanged: onEditing
+        )
+      }
     }
     .onChange(of: rangeControl.rangeValue) { oldValue, newValue in
       if !isEditing {

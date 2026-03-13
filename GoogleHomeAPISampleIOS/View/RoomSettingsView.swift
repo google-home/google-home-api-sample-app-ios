@@ -42,14 +42,15 @@ struct RoomSettingsView: View {
       Divider()
             .padding(.bottom, .smd)
       // Section for the user's existing rooms.
-      Text("General")
-        .font(.headline)
-      NavigationLink(
-        destination: RenameView(
-          viewModel: RenameViewModel(
-            renameType: .Room,
-            name: self.entry.roomName,
-            setName: self.entry.room.setName
+      if let room = self.entry.room {
+        Text("General")
+          .font(.headline)
+        NavigationLink(
+          destination: RenameView(
+            viewModel: RenameViewModel(
+              renameType: .Room,
+              name: self.entry.roomName,
+              setName: room.setName
           )
         )
       ) {
@@ -60,6 +61,7 @@ struct RoomSettingsView: View {
           Text(entry.roomName)
             .font(.subheadline)
             .foregroundColor(.gray)
+          }
         }
       }
 
@@ -77,25 +79,25 @@ struct RoomSettingsView: View {
       }
 
       // Button to delete room
-      Button(action: {
-        showDeleteConfirmation = true
-      }) {
-        Text("Delete room")
-          .font(.body)
-          .foregroundColor(Color.red)
-      }
-      .padding(.vertical, .md)
-      .alert(isPresented: $showDeleteConfirmation) {
-        Alert(
-          title: Text("Remove this room"),
-          message: Text(
-            "Devices will be removed from this room and the room will be deleted."
-          ),
-          primaryButton: .destructive(Text("Remove")) {
-            self.deleteRoom()
-          },
-          secondaryButton: .cancel(Text("Cancel"))
-        )
+      if self.entry.room != nil {
+        Button{
+          showDeleteConfirmation = true
+        } label: {
+          Text("Delete room")
+            .font(.body)
+            .foregroundColor(Color.red)
+        }
+        .padding(.vertical, .md)
+        .alert(isPresented: $showDeleteConfirmation) {
+          Alert(
+            title: Text("Remove this room"),
+            message: Text("Devices will be removed from this room and the room will be deleted."),
+            primaryButton: .destructive(Text("Remove")) {
+              self.deleteRoom()
+            },
+            secondaryButton: .cancel(Text("Cancel"))
+          )
+        }
       }
 
       Spacer()
@@ -129,8 +131,10 @@ struct RoomSettingsView: View {
   private func deleteRoom() {
     Task {
       do {
-        _ = try await self.structure.deleteRoom(self.entry.room)
-        self.dismiss()
+        if let room = self.entry.room {
+          _ = try await self.structure.deleteRoom(room)
+          self.dismiss()
+        }
       } catch {
         Logger().error("Failed to remove room: \(error)")
       }

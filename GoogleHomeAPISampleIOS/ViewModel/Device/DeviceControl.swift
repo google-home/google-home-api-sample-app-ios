@@ -38,8 +38,11 @@ class DeviceControl: ObservableObject, Identifiable {
   /// Range information for the device. Used for devices with a level control.
   @Published var rangeControl: RangeControl?
 
-  /// Additional RangeControl.
-  @Published var rangeControl2: RangeControl?
+  /// Cool RangeControl.
+  @Published var coolRangeControl: RangeControl?
+
+  /// Heat RangeControl.
+  @Published var heatRangeControl: RangeControl?
 
   /// Dropdown information for the device. Used for devices with a mode control.
   @Published var dropdownControl: DropdownControl?

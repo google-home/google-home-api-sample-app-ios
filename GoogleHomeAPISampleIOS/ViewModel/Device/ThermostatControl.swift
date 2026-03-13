@@ -77,18 +77,32 @@ final class ThermostatControl: DeviceControl {
         }
 
         self.thermostatDeviceType = thermostatDeviceType
-        self.dropdownControl = thermostatTrait.makeDropdownControl(
-          options: supportedModeStrings.sorted(),
-          selection: systemModeEnumToStringMap[systemMode ?? .unrecognized_]
-            ?? "Unknown"
+        if self.dropdownControl == nil {
+          self.dropdownControl = thermostatTrait.makeDropdownControl(
+            options: supportedModeStrings.sorted(),
+            selection: systemModeEnumToStringMap[systemMode ?? .unrecognized_] ?? "Unknown"
+          )
+          self.startDropdownSubscription()
+        }
+
+        self.setupRangeControl(
+          setpoint: thermostatTrait.coolingSetpoint,
+          control: &self.coolRangeControl,
+          cancellable: self.coolingRangeCancellable,
+          makeControl: { thermostatTrait.makeCoolRangeControl() },
+          subscriptionStarter: { self.startCoolingRangeSubscription() }
         )
-        self.rangeControl = thermostatTrait.makeCoolRangeControl()
-        self.rangeControl2 = thermostatTrait.makeHeatRangeControl()
+
+        self.setupRangeControl(
+          setpoint: thermostatTrait.heatingSetpoint,
+          control: &self.heatRangeControl,
+          cancellable: self.heatRangeCancellable,
+          makeControl: { thermostatTrait.makeHeatRangeControl() },
+          subscriptionStarter: { self.startHeatRangeSubscription() }
+        )
+
         self.updateTileInfo()
-        self.startDropdownSubscription()
         self.setupButtonGroup()
-        self.startCoolingRangeSubscription()
-        self.startHeatRangeSubscription()
       }
   }
 
@@ -221,15 +235,6 @@ final class ThermostatControl: DeviceControl {
     )
   }
 
-  private func formatTemperature(
-    _ value: Int16?
-  ) -> String? {
-    guard let value = value else { return nil }
-    let degrees = Float(value) / 100.0
-    let unit = "°C"
-    return String(format: "%.2f%@", degrees, unit)
-  }
-
   private func startDropdownSubscription() {
     guard let dropdownControl = self.dropdownControl else { return }
     self.dropdownCancellable?.cancel()
@@ -259,57 +264,98 @@ final class ThermostatControl: DeviceControl {
   }
 
   private func startCoolingRangeSubscription() {
-    guard let rangeControl = self.rangeControl else { return }
+    guard let control = self.coolRangeControl else { return }
     self.coolingRangeCancellable?.cancel()
-    self.coolingRangeCancellable = rangeControl.$rangeValue.sink { [weak self] value in
-      guard
-        let thermostatTrait = self?.thermostatDeviceType?.matterTraits.thermostatTrait,
-        let currentValue = thermostatTrait.coolingSetpoint,
-        value != Float(currentValue)
-      else {
-        return
-      }
 
-      self?.updateTileInfo(isBusy: true)
-      Task { @MainActor [weak self] in
-        guard let self = self else { return }
-
-        do {
-          Logger().info("Set cooling setpoint: \(value)")
-          _ = try await thermostatTrait.setOccupiedCoolingPoint(to: Int16(value))
-        } catch {
-          Logger().error("Failed to adjust cooling setpoint: \(error)")
-          self.updateTileInfo(isBusy: false)
-        }
-      }
-    }
+    self.coolingRangeCancellable = self.createRangePublisher(
+      for: control,
+      getCurrentSetpoint: { $0.coolingSetpoint },
+      setSetpointAction: { try await $0.setOccupiedCoolingPoint(to: $1) },
+      errorMessage: "Failed to set cool"
+    )
   }
 
   private func startHeatRangeSubscription() {
-    guard let rangeControl = self.rangeControl2 else { return }
+    guard let control = self.heatRangeControl else { return }
     self.heatRangeCancellable?.cancel()
-    self.heatRangeCancellable = rangeControl.$rangeValue.sink { [weak self] value in
-      guard
-        let thermostatTrait = self?.thermostatDeviceType?.matterTraits.thermostatTrait,
-        let currentValue = thermostatTrait.heatingSetpoint,
-        value != Float(currentValue)
-      else {
-        return
-      }
 
-      self?.updateTileInfo(isBusy: true)
-      Task { @MainActor [weak self] in
-        guard let self = self else { return }
+    self.heatRangeCancellable = self.createRangePublisher(
+      for: control,
+      getCurrentSetpoint: { $0.heatingSetpoint },
+      setSetpointAction: { try await $0.setOccupiedHeatingPoint(to: $1) },
+      errorMessage: "Failed to set heat"
+    )
+  }
 
-        do {
-          Logger().info("Set heat setpoint: \(value)")
-          _ = try await thermostatTrait.setOccupiedHeatingPoint(to: Int16(value))
-        } catch {
-          Logger().error("Failed to adjust heat setpoint: \(error)")
-          self.updateTileInfo(isBusy: false)
-        }
-      }
+  //  Mark: - Helper functions
+
+  private func toSafeInt16(_ value: Float) -> Int16 {
+    return value.isNaN ? 0 : Int16(max(Float(Int16.min), min(Float(Int16.max), value)))
+  }
+
+  private func formatTemperature(
+    _ value: Int16?
+  ) -> String? {
+    guard let value = value else { return nil }
+    let degrees = Float(value) / 100.0
+    let unit = "°C"
+    return String(format: "%.2f%@", degrees, unit)
+  }
+
+  private func setupRangeControl(
+    setpoint: Int16?,
+    control: inout RangeControl?,
+    cancellable: AnyCancellable?,
+    makeControl: () -> RangeControl?,
+    subscriptionStarter: () -> Void
+  ) {
+    guard let setpoint = setpoint else {
+      control = nil
+      return
+    }
+
+    let target = Float(setpoint)
+    if control == nil {
+      guard let newControl = makeControl() else { return }
+      control = newControl
+      subscriptionStarter()
+    } else if cancellable == nil {
+      subscriptionStarter()
+    }
+
+    // Only update UI if difference is significant (prevents jitter while dragging)
+    if abs((control?.rangeValue ?? target) - target) > 0.1 {
+      control?.rangeValue = target
     }
   }
 
+  private func createRangePublisher(
+    for control: RangeControl,
+    getCurrentSetpoint: @escaping (GoogleHomeTypes.Matter.ThermostatTrait) -> Int16?,
+    setSetpointAction: @escaping (GoogleHomeTypes.Matter.ThermostatTrait, Int16) async throws -> Void,
+    errorMessage: String
+  ) -> AnyCancellable {
+    return control.$rangeValue
+    // Debounce to limit updates to the device until the user pauses slider interaction.
+    // 150ms is a typical value to balance responsiveness and efficiency.
+      .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
+      .removeDuplicates()
+      .sink { [weak self] value in
+        guard let self = self,
+              let thermostatTrait = self.thermostatDeviceType?.matterTraits.thermostatTrait,
+              let current = getCurrentSetpoint(thermostatTrait) else { return }
+
+        let safeValue = self.toSafeInt16(value)
+
+        if safeValue != current {
+          Task { @MainActor in
+            do {
+              try await setSetpointAction(thermostatTrait, safeValue)
+            } catch {
+              Logger().error("\(errorMessage): \(error)")
+            }
+          }
+        }
+      }
+  }
 }
