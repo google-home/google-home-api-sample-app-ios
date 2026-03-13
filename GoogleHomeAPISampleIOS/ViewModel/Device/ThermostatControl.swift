@@ -78,28 +78,28 @@ final class ThermostatControl: DeviceControl {
 
         self.thermostatDeviceType = thermostatDeviceType
         if self.dropdownControl == nil {
-            self.dropdownControl = thermostatTrait.makeDropdownControl(
-              options: supportedModeStrings.sorted(),
-              selection: systemModeEnumToStringMap[systemMode ?? .unrecognized_] ?? "Unknown"
-            )
-            self.startDropdownSubscription()
+          self.dropdownControl = thermostatTrait.makeDropdownControl(
+            options: supportedModeStrings.sorted(),
+            selection: systemModeEnumToStringMap[systemMode ?? .unrecognized_] ?? "Unknown"
+          )
+          self.startDropdownSubscription()
         }
 
-    self.setupRangeControl(
-      setpoint: thermostatTrait.coolingSetpoint,
-      control: &self.coolRangeControl,
-      cancellable: self.coolingRangeCancellable,
-      makeControl: { thermostatTrait.makeCoolRangeControl() },
-      subscriptionStarter: { self.startCoolingRangeSubscription() }
-    )
+        self.setupRangeControl(
+          setpoint: thermostatTrait.coolingSetpoint,
+          control: &self.coolRangeControl,
+          cancellable: self.coolingRangeCancellable,
+          makeControl: { thermostatTrait.makeCoolRangeControl() },
+          subscriptionStarter: { self.startCoolingRangeSubscription() }
+        )
 
-    self.setupRangeControl(
-        setpoint: thermostatTrait.heatingSetpoint,
-        control: &self.heatRangeControl,
-        cancellable: self.heatRangeCancellable,
-        makeControl: { thermostatTrait.makeHeatRangeControl() },
-        subscriptionStarter: { self.startHeatRangeSubscription() }
-    )
+        self.setupRangeControl(
+          setpoint: thermostatTrait.heatingSetpoint,
+          control: &self.heatRangeControl,
+          cancellable: self.heatRangeCancellable,
+          makeControl: { thermostatTrait.makeHeatRangeControl() },
+          subscriptionStarter: { self.startHeatRangeSubscription() }
+        )
 
         self.updateTileInfo()
         self.setupButtonGroup()
@@ -264,27 +264,27 @@ final class ThermostatControl: DeviceControl {
   }
 
   private func startCoolingRangeSubscription() {
-      guard let control = self.coolRangeControl else { return }
-      self.coolingRangeCancellable?.cancel()
+    guard let control = self.coolRangeControl else { return }
+    self.coolingRangeCancellable?.cancel()
 
-      self.coolingRangeCancellable = self.createRangePublisher(
-          for: control,
-          getCurrentSetpoint: { $0.coolingSetpoint },
-          setSetpointAction: { try await $0.setOccupiedCoolingPoint(to: $1) },
-          errorMessage: "Failed to set cool"
-      )
+    self.coolingRangeCancellable = self.createRangePublisher(
+      for: control,
+      getCurrentSetpoint: { $0.coolingSetpoint },
+      setSetpointAction: { try await $0.setOccupiedCoolingPoint(to: $1) },
+      errorMessage: "Failed to set cool"
+    )
   }
 
   private func startHeatRangeSubscription() {
-      guard let control = self.heatRangeControl else { return }
-      self.heatRangeCancellable?.cancel()
+    guard let control = self.heatRangeControl else { return }
+    self.heatRangeCancellable?.cancel()
 
-      self.heatRangeCancellable = self.createRangePublisher(
-          for: control,
-          getCurrentSetpoint: { $0.heatingSetpoint },
-          setSetpointAction: { try await $0.setOccupiedHeatingPoint(to: $1) },
-          errorMessage: "Failed to set heat"
-      )
+    self.heatRangeCancellable = self.createRangePublisher(
+      for: control,
+      getCurrentSetpoint: { $0.heatingSetpoint },
+      setSetpointAction: { try await $0.setOccupiedHeatingPoint(to: $1) },
+      errorMessage: "Failed to set heat"
+    )
   }
 
   //  Mark: - Helper functions
@@ -336,26 +336,26 @@ final class ThermostatControl: DeviceControl {
     errorMessage: String
   ) -> AnyCancellable {
     return control.$rangeValue
-      // Debounce to limit updates to the device until the user pauses slider interaction.
-      // 150ms is a typical value to balance responsiveness and efficiency.
+    // Debounce to limit updates to the device until the user pauses slider interaction.
+    // 150ms is a typical value to balance responsiveness and efficiency.
       .debounce(for: .milliseconds(150), scheduler: DispatchQueue.main)
       .removeDuplicates()
       .sink { [weak self] value in
         guard let self = self,
-          let thermostatTrait = self.thermostatDeviceType?.matterTraits.thermostatTrait,
-          let current = getCurrentSetpoint(thermostatTrait) else { return }
+              let thermostatTrait = self.thermostatDeviceType?.matterTraits.thermostatTrait,
+              let current = getCurrentSetpoint(thermostatTrait) else { return }
 
-          let safeValue = self.toSafeInt16(value)
+        let safeValue = self.toSafeInt16(value)
 
-          if safeValue != current {
-            Task { @MainActor in
-              do {
-                try await setSetpointAction(thermostatTrait, safeValue)
-              } catch {
-                Logger().error("\(errorMessage): \(error)")
-              }
+        if safeValue != current {
+          Task { @MainActor in
+            do {
+              try await setSetpointAction(thermostatTrait, safeValue)
+            } catch {
+              Logger().error("\(errorMessage): \(error)")
             }
           }
+        }
       }
   }
 }

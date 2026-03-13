@@ -69,9 +69,9 @@ final class StructureViewModel: ObservableObject {
         }
         // Create a specific entry for "In your home" (Unassigned)
         let unassignedEntry = StructureEntry(
-            room: nil,
-            roomID: "unassignedDevices",
-            roomName: "In your home"
+          room: nil,
+          roomID: "unassignedDevices",
+          roomName: "In your home"
         )
         var hasUnassignedDevices = false
 
@@ -81,11 +81,11 @@ final class StructureViewModel: ObservableObject {
 
             // Check if device belongs to a known room
             if let roomID = device.roomID, let entry = entriesByRoom[roomID] {
-               entry.appendDeviceControl(control)
+              entry.appendDeviceControl(control)
             } else {
-               // If no room ID, or room not found, add to "In your home"
-               unassignedEntry.appendDeviceControl(control)
-               hasUnassignedDevices = true
+              // If no room ID, or room not found, add to "In your home"
+              unassignedEntry.appendDeviceControl(control)
+              hasUnassignedDevices = true
             }
           } catch {
             Logger().error("Failed to create device control: \(error)")
@@ -94,7 +94,7 @@ final class StructureViewModel: ObservableObject {
 
         return Array(entriesByRoom.values)
           .sorted { $0.roomName < $1.roomName }
-          + (hasUnassignedDevices ? [unassignedEntry] : [])
+        + (hasUnassignedDevices ? [unassignedEntry] : [])
       }
       /// receive from .map and .assign() to publisher entries
       .assign(to: &self.$entries)

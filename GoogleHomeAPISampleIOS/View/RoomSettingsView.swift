@@ -48,9 +48,9 @@ struct RoomSettingsView: View {
         NavigationLink(
           destination: RenameView(
             viewModel: RenameViewModel(
-            renameType: .Room,
-            name: self.entry.roomName,
-            setName: room.setName
+              renameType: .Room,
+              name: self.entry.roomName,
+              setName: room.setName
           )
         )
       ) {
