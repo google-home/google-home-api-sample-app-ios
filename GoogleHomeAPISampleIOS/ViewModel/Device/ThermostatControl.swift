@@ -77,10 +77,17 @@ final class ThermostatControl: DeviceControl {
         }
 
         self.thermostatDeviceType = thermostatDeviceType
-        if self.dropdownControl == nil {
+        let currentSelection = systemModeEnumToStringMap[systemMode ?? .unrecognized_] ?? "Unknown"
+        if let dropdownControl = self.dropdownControl {
+          // update dropdown control if current selected mode is different.
+          if dropdownControl.selection != currentSelection {
+            dropdownControl.selection = currentSelection
+          }
+        } else {
+          // self.dropdownControl is nil
           self.dropdownControl = thermostatTrait.makeDropdownControl(
             options: supportedModeStrings.sorted(),
-            selection: systemModeEnumToStringMap[systemMode ?? .unrecognized_] ?? "Unknown"
+            selection: currentSelection
           )
           self.startDropdownSubscription()
         }
@@ -90,7 +97,7 @@ final class ThermostatControl: DeviceControl {
           isVisible: systemMode?.isModeCoolingRelated ?? false,
           control: &self.coolRangeControl,
           makeControl: { thermostatTrait.makeCoolRangeControl() },
-          subscriptionStarter: { self.startCoolingRangeSubscription() }
+          subscriptionStarter: { control in self.startCoolingRangeSubscription(with: control) }
         )
 
         self.setupRangeControl(
@@ -98,7 +105,7 @@ final class ThermostatControl: DeviceControl {
           isVisible: systemMode?.isModeHeatingRelated ?? false,
           control: &self.heatRangeControl,
           makeControl: { thermostatTrait.makeHeatRangeControl() },
-          subscriptionStarter: { self.startHeatRangeSubscription() }
+          subscriptionStarter: { control in self.startHeatRangeSubscription(with: control) }
         )
 
         self.updateTileInfo()
@@ -263,8 +270,7 @@ final class ThermostatControl: DeviceControl {
     }
   }
 
-  private func startCoolingRangeSubscription() {
-    guard let control = self.coolRangeControl else { return }
+  private func startCoolingRangeSubscription(with control: RangeControl) {
     self.coolingRangeCancellable?.cancel()
 
     self.coolingRangeCancellable = self.createRangePublisher(
@@ -275,8 +281,7 @@ final class ThermostatControl: DeviceControl {
     )
   }
 
-  private func startHeatRangeSubscription() {
-    guard let control = self.heatRangeControl else { return }
+  private func startHeatRangeSubscription(with control: RangeControl) {
     self.heatRangeCancellable?.cancel()
 
     self.heatRangeCancellable = self.createRangePublisher(
@@ -307,9 +312,9 @@ final class ThermostatControl: DeviceControl {
     isVisible: Bool,
     control: inout RangeControl?,
     makeControl: () -> RangeControl?,
-    subscriptionStarter: () -> Void
+    subscriptionStarter: (RangeControl) -> Void
   ) {
-    guard isVisible,let setpoint = setpoint else {
+    guard isVisible, let setpoint = setpoint else {
       control = nil
       return
     }
@@ -319,7 +324,10 @@ final class ThermostatControl: DeviceControl {
       guard let newControl = makeControl() else { return }
       control = newControl
     }
-    subscriptionStarter()
+
+    if let control = control {
+      subscriptionStarter(control)
+    }
 
     // Only update UI if difference is significant (prevents jitter while dragging)
     if abs((control?.rangeValue ?? target) - target) > 0.1 {

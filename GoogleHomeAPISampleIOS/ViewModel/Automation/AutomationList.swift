@@ -61,6 +61,14 @@ public class AutomationList: ObservableObject {
       Logger().info("CreateCommand Response Automation name: \(newAutomation.name)")
       if newAutomation.validationIssues.count > 0 {
         Logger().error("Found issues in the automation: \(newAutomation.validationIssues)")
+        do {
+          try await structure.deleteAutomation(newAutomation)
+        } catch {
+          Logger().error("Failed to delete invalid automation during rollback: \(error)")
+        }
+        throw HomeError.invalidArgument(
+          "Automation has validation issues, new automation generation failed."
+        )
       }
     } catch {
       Logger().error("CreateCommand error: \(error)")

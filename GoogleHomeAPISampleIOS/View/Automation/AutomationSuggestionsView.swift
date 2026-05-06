@@ -16,46 +16,60 @@ import CoreFoundation
 import GoogleHomeSDK
 import SwiftUI
 
+/// A view that displays a list of suggested automations that the user can create.
 @MainActor
 public struct AutomationSuggestionsView: View {
   @EnvironmentObject var automationList: AutomationList
-  @StateObject var viewModel: AutomationSuggestionsViewModel
-  @State private var selectedAutomationIndex: Int? = nil
+  @ObservedObject var viewModel: AutomationSuggestionsViewModel
   @Binding var navigationPath: NavigationPath
 
   public var body: some View {
-
-    /// Generic editor button
-    CreateButtonView(imageName: "astrophotography_mode_symbol", text1: "Generic Automation", text2: "") {
-      navigationPath.append(Destination.GenericEditorView)
-    }
-    .padding(.bottom, .sm)
-
-    List {
-      Section("Predefined Automations") {
-        /// Display automations that are able to be created.
-        /// Note automations without sufficient devices prepared will not be displayed here.
-        ForEach(Array(viewModel.automations.enumerated()), id: \.offset) { index, automation in
-          CreateButtonView(imageName: "astrophotography_mode_symbol", text1: automation.name, text2: automation.description) {
-            navigationPath.append(index)
-            selectedAutomationIndex = index
-          }
-          .padding(.bottom, .sm)
-        }
+    VStack {
+      /// Generic editor button
+      CreateButtonView(
+        imageName: "astrophotography_mode_symbol",
+        text1: "Generic Automation",
+        text2: ""
+      ) {
+        navigationPath.append(Destination.GenericEditorView)
       }
-      .listRowSeparator(.hidden)
-      .listRowInsets(EdgeInsets())
+      .padding(.bottom, .sm)
+
+      List {
+        Section("Predefined Automations") {
+          /// Display automations that are able to be created.
+          // Note automations without sufficient devices prepared will not be displayed here.
+          ForEach(Array(viewModel.automations.enumerated()), id: \.offset) { index, automation in
+            CreateButtonView(
+              imageName: "astrophotography_mode_symbol",
+              text1: automation.name,
+              text2: automation.description
+            ) {
+              navigationPath.append(index)
+            }
+            .padding(.bottom, .sm)
+          }
+        }
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets())
+      }
+      .listStyle(PlainListStyle())
     }
-    .listStyle(PlainListStyle())
     .navigationTitle("Automation Suggestions")
     .navigationBarTitleDisplayMode(.inline)
-    .navigationDestination(item: $selectedAutomationIndex) { index in
+    .navigationDestination(for: Int.self) { automationIndex in
       /// Pop up AutomationCreationView when selecting an automation to create
-      AutomationCreationView(
-        viewModel: viewModel.makeCreationViewModel(
-          automationList: automationList, automationIndex: index),
-        navigationPath: $navigationPath
-      )
+      if let viewModel = viewModel.makeCreationViewModel(
+        automationList: automationList,
+        automationIndex: automationIndex
+      ) {
+        AutomationCreationView(
+          viewModel: viewModel,
+          navigationPath: $navigationPath
+        )
+      } else {
+        Text("This automation is no longer available.")
+      }
     }
   }
 }

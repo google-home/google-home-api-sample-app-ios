@@ -52,6 +52,9 @@ public struct CameraSettingsView<T: DeviceType>: View {
         if viewModel.displayedSettings.contains(.camera) {
           cameraSettingsSection
         }
+        if viewModel.displayedSettings.contains(.recording) {
+          recordingSettingsSection
+        }
         if viewModel.displayedSettings.contains(.doorbell) {
           doorbellSettingsSection
         }
@@ -168,6 +171,26 @@ public struct CameraSettingsView<T: DeviceType>: View {
       }.disabled(!viewModel.statusLightBrightnessController.isEnabled)
     } header: {
       Text("Camera Settings")
+    }
+  }
+
+  private var recordingSettingsSection: some View {
+    Section {
+      Picker(selection: viewModel.recordingModeController.binding) {
+        ForEach(viewModel.recordingModeSettings, id: \.self) { recordingMode in
+          Text(viewModel.recordingModeDisplayName(setting: recordingMode))
+        }
+      } label: {
+        HStack {
+          Text("Recording Mode")
+          if viewModel.recordingModeController.isLoading {
+            ProgressView()
+          }
+        }
+      }
+      .disabled(!viewModel.recordingModeController.isEnabled)
+    } header: {
+      Text("Recording Settings")
     }
   }
 

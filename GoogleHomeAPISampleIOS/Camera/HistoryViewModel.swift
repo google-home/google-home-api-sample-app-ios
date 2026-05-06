@@ -68,6 +68,8 @@ public class HistoryViewModel {
     EventType(.glassBreak, "Glass Break", "EVENT_TYPE_GLASS_BREAK"),
     EventType(.garageDoorOpened, "Garage Door Opened", "EVENT_TYPE_GARAGE_DOOR_OPENED"),
     EventType(.garageDoorClosed, "Garage Door Closed", "EVENT_TYPE_GARAGE_DOOR_CLOSED"),
+    EventType(.familiarFace, "Familiar Face", "EVENT_TYPE_FAMILIAR_FACE"),
+    EventType(.unfamiliarFace, "Unfamiliar Face", "EVENT_TYPE_UNFAMILIAR_FACE"),
   ]
 
   /// The list of event types that are available for filtering history.
@@ -84,6 +86,45 @@ public class HistoryViewModel {
     return self.appliedFilterDateInterval != nil
       || self.appliedDeviceFilters != nil
       || self.appliedEventTypeFilters != nil
+  }
+
+  /// The priority list of event types that will determine what is shown in the UI, lower numbered
+  /// priorities are more significant.
+  private static let eventTypePriorityList: [Google.CameraHistoryTrait.EventType] = [
+    .smokeAlarm,
+    .coAlarm,
+    .glassBreak,
+    .packageDelivered,
+    .packageRetrieved,
+    .packageInTransit,
+    .familiarFace,
+    .unfamiliarFace,
+    .doorbell,
+    .person,
+    .garageDoorOpened,
+    .garageDoorClosed,
+    .animal,
+    .vehicle,
+    .motion,
+    .dogBark,
+    .personTalking,
+    .unknown,
+  ]
+
+  /// Pre-computed map for O(1) priority lookups. Initialized once on first use.
+  private static let eventTypePriorityMap: [Google.CameraHistoryTrait.EventType: Int] = {
+    var map = [Google.CameraHistoryTrait.EventType: Int]()
+    for (index, eventType) in eventTypePriorityList.enumerated() {
+      if map[eventType] == nil {
+        map[eventType] = index
+      }
+    }
+    return map
+  }()
+
+  /// Returns the priority of the given event type. Lower numbered priorities are more significant.
+  private func priority(for eventType: Google.CameraHistoryTrait.EventType) -> Int {
+    return HistoryViewModel.eventTypePriorityMap[eventType] ?? Int.max
   }
 
   // MARK: - Properties
@@ -299,6 +340,7 @@ public class HistoryViewModel {
     return HistoryItemViewModel(
       id: historyItem.id,
       eventTitle: eventTitle,
+      captionTitle: nil,
       deviceName: deviceName,
       timestampString: timestampString,
       thumbnailURL: "",
@@ -320,14 +362,35 @@ public class HistoryViewModel {
 
     let eventTypeFilters = self.appliedEventTypeFilters ?? self.eventTypeFilters
 
-    // Extracts all matching event titles from the payload
-    let eventTypes = Set(cameraEvent.payload.eventTracks?.compactMap { $0.eventTypes.first } ?? [])
-    let matchedTitles = eventTypeFilters
-      .filter { eventTypes.contains($0.cameraEventTypeEnum) }
-      .map { $0.eventTypeName }
-    let eventTitle = matchedTitles.isEmpty
-      ? "Unknown camera event"
-      : matchedTitles.joined(separator: " / ")
+    // When multiple event types are present within a single history event, the most significant one
+    // is displayed.
+    let eventTypes = Set(cameraEvent.payload.eventTracks?.flatMap { $0.eventTypes } ?? [])
+    let bestEventType = eventTypes.min(by: { self.priority(for: $0) < self.priority(for: $1) })
+
+    let eventTitle: String
+
+    // When a short AI caption is available, use it as the event title.
+    if let shortCaption = cameraEvent.payload.shortCaption {
+      eventTitle = shortCaption
+    } else {
+      let baseTitle =
+        eventTypeFilters
+        .first { $0.cameraEventTypeEnum == bestEventType }?
+        .eventTypeName ?? "Unknown camera event"
+
+      // If the event is a familiar face, add the face name to the title if it is available.
+      if bestEventType == .familiarFace,
+        let familiarFaceTrack = cameraEvent.payload.eventTracks?.first(where: {
+          $0.eventTypes.contains(.familiarFace) && !$0.face.name.isEmpty
+        })
+      {
+        eventTitle = "\(baseTitle) (\(familiarFaceTrack.face.name))"
+      } else {
+        eventTitle = baseTitle
+      }
+    }
+    // Show the long AI caption when applicable.
+    let captionTitle = cameraEvent.payload.longCaption
 
     let thumbnailURL = cameraEvent.payload.mediaUrl?.thumbnail_url ?? ""
 
@@ -350,6 +413,7 @@ public class HistoryViewModel {
     return HistoryItemViewModel(
       id: historyItem.id,
       eventTitle: eventTitle,
+      captionTitle: captionTitle,
       deviceName: deviceName,
       timestampString: timestamp,
       thumbnailURL: thumbnailURL,
@@ -405,6 +469,16 @@ public class HistoryViewModel {
   }
 }
 
+extension Google.CameraHistoryTrait.HistoryItemEvent.Payload {
+  var shortCaption: String? {
+    return self.captions?.first { $0.captionType == .short }?.captionText
+  }
+
+  var longCaption: String? {
+    return self.captions?.first { $0.captionType == .long }?.captionText
+  }
+}
+
 extension HistoryItem.Source {
   var deviceName: String {
     switch self {
@@ -453,6 +527,7 @@ public struct DeviceFilterSelection: Sendable, Hashable, Identifiable {
 public struct HistoryItemViewModel: Sendable, Identifiable {
   public let id: String
   public let eventTitle: String
+  public let captionTitle: String?
   public let deviceName: String
   public let timestampString: String
   public let thumbnailURL: String

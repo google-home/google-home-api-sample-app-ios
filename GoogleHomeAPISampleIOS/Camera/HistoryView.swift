@@ -304,6 +304,12 @@ public struct FilterCheckboxView<T: Identifiable & Hashable>: View {
 /// animated preview clip if available.
 public struct HistoryItemView: View {
 
+  private enum Constraints {
+    static let trailingPadding: CGFloat = 5
+    static let thumbnailSize: CGFloat = 80
+    static let placeholderSize: CGFloat = 40
+  }
+
   private let historyItem: HistoryItemViewModel
   private let urlSession: URLSession
 
@@ -311,7 +317,7 @@ public struct HistoryItemView: View {
     Image(systemName: "photo")
       .resizable()
       .scaledToFit()
-      .frame(width: 40, height: 40)
+      .frame(width: Constraints.placeholderSize, height: Constraints.placeholderSize)
       .foregroundColor(.gray)
   }()
 
@@ -324,10 +330,13 @@ public struct HistoryItemView: View {
   }
 
   public var body: some View {
-    HStack {
-      Image(systemName: "video").padding(.trailing, 10)
+    HStack(alignment: .firstTextBaseline) {
+      Image(systemName: "video").padding(.trailing, Constraints.trailingPadding)
       VStack(alignment: .leading) {
-        Text(self.historyItem.eventTitle).font(.body)
+        Text(self.historyItem.eventTitle).font(.headline)
+        if let captionTitle = self.historyItem.captionTitle {
+          Text(captionTitle).font(.subheadline)
+        }
         Text(self.historyItem.deviceName).font(.caption).foregroundColor(.gray)
         Text(self.historyItem.timestampString).font(.caption).foregroundColor(.gray)
       }
@@ -337,12 +346,12 @@ public struct HistoryItemView: View {
           switch phase {
           case .empty:
             ProgressView()
-              .frame(width: 80, height: 80)
+              .frame(width: Constraints.thumbnailSize, height: Constraints.thumbnailSize)
           case .success(let image):
             image
               .resizable()
               .scaledToFill()
-              .frame(width: 80, height: 80)
+              .frame(width: Constraints.thumbnailSize, height: Constraints.thumbnailSize)
               .clipped()
           case .failure:
             placeholderThumbnail
@@ -352,7 +361,7 @@ public struct HistoryItemView: View {
         }
         if let previewClipURL = self.historyItem.previewClipURL {
           WebPImageView(url: previewClipURL, urlSession: self.urlSession)
-            .frame(width: 80, height: 80)
+            .frame(width: Constraints.thumbnailSize, height: Constraints.thumbnailSize)
         }
       }
     }

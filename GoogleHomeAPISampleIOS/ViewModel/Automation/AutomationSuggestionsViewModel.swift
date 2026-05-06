@@ -36,10 +36,14 @@ public class AutomationSuggestionsViewModel: ObservableObject {
   public func makeCreationViewModel(
     automationList: AutomationList,
     automationIndex: Int
-  ) -> AutomationCreationViewModel {
+  ) -> AutomationCreationViewModel? {
+    guard automations.indices.contains(automationIndex) else {
+      return nil
+    }
+    let automation = automations[automationIndex]
     return AutomationCreationViewModel(
       automationList: automationList,
-      draftAutomation: automations[automationIndex]
+      draftAutomation: automation
     )
   }
 

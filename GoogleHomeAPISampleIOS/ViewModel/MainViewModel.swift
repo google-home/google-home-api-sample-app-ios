@@ -20,7 +20,11 @@ import OSLog
 
 class MainViewModel: ObservableObject {
 
-  @Published var home: Home?
+  @Published var home: Home? {
+    didSet {
+      self.candidatesViewModel = nil
+    }
+  }
 
   @Published private(set) var structures: [Structure] = []
 
@@ -28,7 +32,11 @@ class MainViewModel: ObservableObject {
     return self.structure(structureID: self.selectedStructureID)
   }
 
-  @Published private(set) var selectedStructureID: String?
+  @Published private(set) var selectedStructureID: String? {
+    didSet {
+      self.candidatesViewModel = nil
+    }
+  }
 
   private let selectedStructureStorage = SelectedStructureStorage()
 

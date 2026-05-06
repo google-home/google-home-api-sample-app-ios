@@ -61,7 +61,7 @@ public final class AutomationsRepository: Sendable {
             draftAutomations.append(draftAutomation)
           }
         }
-        return draftAutomations
+        return draftAutomations.sorted { $0.name < $1.name }
       })
   }
 

@@ -119,6 +119,33 @@ class CameraSettingsViewModel<T: DeviceType> {
     }
   }
 
+  /// String conversion for the recordingmode setting integer.
+  public func recordingModeDisplayName(setting: UInt8) -> String {
+    guard let supported = recordingModeTrait?.attributes.supportedRecordingModes,
+          Int(setting) < supported.count
+    else {
+      return "Unknown (\(setting))"
+    }
+
+    let mode = supported[Int(setting)].recordingMode
+    switch mode {
+    case .disabled:
+      return "Off"
+    case .cvr:
+      return "Continuous"
+    case .ebr:
+      return "Event Based"
+    case .images:
+      return "Images"
+    case .liveView:
+      return "Live View"
+    case .etr:
+      return "Event Triggered"
+    default:
+      return "Unknown"
+    }
+  }
+
   /// String conversion for the battery usage setting enum.
   public func batteryUsageDisplayName(setting: CameraSettingsViewModel.BatteryUsageSetting)
     -> String
@@ -170,6 +197,12 @@ class CameraSettingsViewModel<T: DeviceType> {
   /// Setting controller for the speaker volume setting.
   public private(set) var speakerVolumeController: CameraSetting<Double> =
     CameraSetting<Double>(defaultValue: 100, manualUpdate: true)
+
+  /// Accepted values for the recording mode settings.
+  public private(set) var recordingModeSettings: [UInt8] = []
+  /// Setting controller for the recording mode setting.
+  public private(set) var recordingModeController: CameraSetting<UInt8> =
+    CameraSetting<UInt8>(defaultValue: 0)
 
   /// Struct to hold the doorbell chime names and ids.
   public struct DoorbellChime: Hashable, Identifiable {
@@ -251,6 +284,11 @@ class CameraSettingsViewModel<T: DeviceType> {
   private var streamManagementTrait: Google.CameraAvStreamManagementTrait? {
     didSet {
       self.updateSettingsFromStreamManagementTrait()
+    }
+  }
+  private var recordingModeTrait: Google.RecordingModeTrait? {
+    didSet {
+      self.updateSettingsFromRecordingModeTrait()
     }
   }
   private var doorbellChimeTrait: Google.ChimeTrait? {
@@ -343,6 +381,7 @@ class CameraSettingsViewModel<T: DeviceType> {
         self.powerSourceTrait = deviceType.traits[Matter.PowerSourceTrait.self]
         self.energyPreferenceTrait = deviceType.traits[Google.EnergyPreferenceTrait.self]
         self.extendedBasicInformationTrait = deviceType.traits[Google.ExtendedBasicInformationTrait.self]
+        self.recordingModeTrait = deviceType.traits[Google.RecordingModeTrait.self]
 
         if deviceTypeCollection.contains(RootNodeDeviceType.self) {
           let rootNodeDeviceType = deviceTypeCollection.getAll(of: RootNodeDeviceType.self).first
@@ -363,6 +402,10 @@ class CameraSettingsViewModel<T: DeviceType> {
 
             if deviceType.traits.contains(Google.ExtendedPowerSourceTrait.self) {
               self.displayedSettings.insert(.battery)
+            }
+
+            if deviceType.traits.contains(Google.RecordingModeTrait.self) {
+              self.displayedSettings.insert(.recording)
             }
 
             if deviceType is GoogleDoorbellDeviceType {
@@ -409,6 +452,8 @@ class CameraSettingsViewModel<T: DeviceType> {
       { [weak self] value in await self?.setAnalyticsEnabled(to: value) }
     self.logUploadEnabledController.onUpdate =
       { [weak self] value in await self?.setLogUploadEnabled(to: value) }
+    self.recordingModeController.onUpdate =
+      { [weak self] value in await self?.setRecordingMode(to: value) }
   }
 
   private func updateSettingsFromStreamManagementTrait() {
@@ -433,6 +478,21 @@ class CameraSettingsViewModel<T: DeviceType> {
       value: streamManagementTrait.attributes.statusLightBrightness)
     self.speakerVolumeController.updateValue(
       value: streamManagementTrait.attributes.speakerVolumeLevel.map { Double($0) })
+  }
+
+  private func updateSettingsFromRecordingModeTrait() {
+    guard let recordingModeTrait else {
+      Logger().error("Recording mode trait not available")
+      return
+    }
+
+    if let availableRecordingModes = recordingModeTrait.attributes.availableRecordingModes {
+      self.recordingModeSettings = availableRecordingModes
+    }
+
+    if let selectedRecordingMode = recordingModeTrait.attributes.selectedRecordingMode {
+      self.recordingModeController.updateValue(value: selectedRecordingMode)
+    }
   }
 
   private func updateSettingsFromDoorbellChimeTrait() {
@@ -483,7 +543,7 @@ class CameraSettingsViewModel<T: DeviceType> {
     }
   }
 
-  private func updateSettingsFromPowerSourceTrait() {
+  private func updateSettingsFromPowerSourceTrait() async {
     guard let powerSourceTrait else {
       Logger().error("Power source trait not available")
       return
@@ -785,6 +845,21 @@ class CameraSettingsViewModel<T: DeviceType> {
     }
   }
 
+  private func setRecordingMode(to value: UInt8) async {
+    guard let recordingModeTrait else {
+      Logger().error("Recording mode trait not available")
+      return
+    }
+
+    do {
+      _ = try await recordingModeTrait.update {
+        $0.setSelectedRecordingMode(value)
+      }
+    } catch {
+      Logger().error("Failed to set recording mode: \(error)")
+    }
+  }
+
   private func getRecordingConnection() async throws
     -> Google.PushAvStreamTransportTrait.TransportConfigurationStruct?
   {
@@ -868,4 +943,5 @@ struct SettingsDisplayed: OptionSet {
   public static let battery = SettingsDisplayed(rawValue: 1 << 3)
   public static let information = SettingsDisplayed(rawValue: 1 << 4)
   public static let diagnostics = SettingsDisplayed(rawValue: 1 << 5)
+  public static let recording = SettingsDisplayed(rawValue: 1 << 6)
 }

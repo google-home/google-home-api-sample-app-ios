@@ -48,6 +48,9 @@ struct StructureView: View {
       structureID: self.structureID
     ) {
       actualStructureView(structure: structure)
+        .onChange(of: structure.id) {
+          self.automationList = nil
+        }
         .onChange(of: selectedTab) { _, selectedTab in
           guard selectedTab == .automations else { return }
 
@@ -102,6 +105,7 @@ struct StructureView: View {
           }
           .tag(Tab.automations)
         HistoryView(home: self.viewModel.home, structureID: self.structureID)
+          .id(self.structureID)
           .tabItem {
             Label("History", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
               .font(.title)

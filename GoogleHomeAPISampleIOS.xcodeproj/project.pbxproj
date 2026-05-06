@@ -307,20 +307,20 @@
 		B108B43F2EC5883100618E0A /* Camera */ = {
 			isa = PBXGroup;
 			children = (
-				B1EBB36D2F34F1960086C6F4 /* HistoryView.swift */,
-				B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */,
-				B1941D7D2F86286E001A3B6A /* HistoricalPlaybackView.swift */,
-				B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */,
-				B12A7E352EF533A7004BCB62 /* CodeScannerView.swift */,
+				B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */,
+				B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */,
+				B108B4402EC5886F00618E0A /* CameraOOBEView.swift */,
+				B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */,
 				B1B628EB2EE01879002DDAA0 /* CameraSettings.swift */,
 				B1B628ED2EE0187E002DDAA0 /* CameraSettingsView.swift */,
 				B1B628EF2EE01884002DDAA0 /* CameraSettingsViewModel.swift */,
-				B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */,
+				B12A7E352EF533A7004BCB62 /* CodeScannerView.swift */,
+				B1941D7D2F86286E001A3B6A /* HistoricalPlaybackView.swift */,
+				B1EBB36D2F34F1960086C6F4 /* HistoryView.swift */,
+				B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */,
 				B11BF00E2E77B34B00839F73 /* SignalingService.swift */,
+				B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */,
 				B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */,
-				B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */,
-				B108B4402EC5886F00618E0A /* CameraOOBEView.swift */,
-				B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */,
 			);
 			path = Camera;
 			sourceTree = "<group>";
@@ -356,13 +356,13 @@
 		E60DB6A52CC032CC009DAD9D /* GoogleHomeAPISampleIOS */ = {
 			isa = PBXGroup;
 			children = (
-				B108B43F2EC5883100618E0A /* Camera */,
-				9CC6939B2E3075D1003A5069 /* Extension */,
-				E6EBFC242CC09A2B00273859 /* Info.plist */,
-				E60A14CA2CCC7E0D0006A28B /* Commissioning */,
 				E6E3CB542CC07E7200E99423 /* Accounts */,
 				E6E3CB4D2CC07E7200E99423 /* Assets.xcassets */,
+				B108B43F2EC5883100618E0A /* Camera */,
+				E60A14CA2CCC7E0D0006A28B /* Commissioning */,
+				9CC6939B2E3075D1003A5069 /* Extension */,
 				E6E3CB552CC07E7200E99423 /* GoogleHomeAPISampleIOS.entitlements */,
+				E6EBFC242CC09A2B00273859 /* Info.plist */,
 				E6E3CB502CC07E7200E99423 /* Main */,
 				E6E3CB522CC07E7200E99423 /* Preview Content */,
 				E6E3CB4C2CC07E7200E99423 /* Storage */,
@@ -377,12 +377,12 @@
 		E666F7482CCC4627005A4A6F /* MatterAddDeviceExtension */ = {
 			isa = PBXGroup;
 			children = (
-				E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */,
-				E666F7492CCC4627005A4A6F /* RequestHandler.swift */,
-				E666F74B2CCC4627005A4A6F /* Info.plist */,
 				9D174DB62CEF31030020561B /* AttestationDelegate.swift */,
+				E666F74B2CCC4627005A4A6F /* Info.plist */,
 				9D174DB72CEF31030020561B /* InMemoryMatterStorage.swift */,
+				E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */,
 				9D174DB82CEF31030020561B /* MatterKeypair.swift */,
+				E666F7492CCC4627005A4A6F /* RequestHandler.swift */,
 				9D174DB92CEF31030020561B /* ThirdPartyFabricCommissioner.swift */,
 			);
 			path = MatterAddDeviceExtension;
@@ -400,11 +400,11 @@
 			isa = PBXGroup;
 			children = (
 				99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */,
-				99A8F5132E66CC3200DBC00D /* StackSpacing.swift */,
 				99A8F5112E65884000DBC00D /* AppPadding.swift */,
 				E6E3CB472CC07E7200E99423 /* CGFloat+UX.swift */,
 				E6E3CB482CC07E7200E99423 /* Color+UX.swift */,
 				E6E3CB492CC07E7200E99423 /* ColorPalette.swift */,
+				99A8F5132E66CC3200DBC00D /* StackSpacing.swift */,
 			);
 			path = UX;
 			sourceTree = "<group>";
@@ -444,8 +444,8 @@
 		E6E3CB582CC07E7200E99423 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */,
 				E6E3CB562CC07E7200E99423 /* Comparable+Utils.swift */,
+				E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */,
 				E6E3CB572CC07E7200E99423 /* NumberFormatter+Utils.swift */,
 			);
 			path = Utils;
@@ -454,17 +454,17 @@
 		E6E3CB5E2CC07E7200E99423 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				9C54B8E62E1F55BB008DE522 /* RenameView.swift */,
-				9C54B8DC2E1E66F9008DE522 /* RoomSettingsView.swift */,
-				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
-				9C54B8D82E1E0380008DE522 /* RoomsView.swift */,
-				9C9E5ACC2E16535F0049884A /* DeviceDetailView.swift */,
-				9C9E5ACA2E1523B40049884A /* DeviceRow.swift */,
 				9CF09EEF2DBA115700D0B495 /* AboutView.swift */,
 				9DBD77442D2B876600924F71 /* Automation */,
+				9C9E5ACC2E16535F0049884A /* DeviceDetailView.swift */,
+				9C9E5ACA2E1523B40049884A /* DeviceRow.swift */,
 				E6E3CB592CC07E7200E99423 /* DeviceTileView.swift */,
 				E6E3CB5B2CC07E7200E99423 /* MainView.swift */,
 				E6E3CB5C2CC07E7200E99423 /* RangeView.swift */,
+				9C54B8E62E1F55BB008DE522 /* RenameView.swift */,
+				9C54B8DC2E1E66F9008DE522 /* RoomSettingsView.swift */,
+				9C54B8D82E1E0380008DE522 /* RoomsView.swift */,
+				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
 				E6E3CB5D2CC07E7200E99423 /* StructureView.swift */,
 			);
 			path = View;
@@ -473,15 +473,14 @@
 		E6E3CB682CC07E7200E99423 /* Device */ = {
 			isa = PBXGroup;
 			children = (
-				B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */,
-				B11BF0132E77B36900839F73 /* CameraControl.swift */,
 				9CC693A12E308296003A5069 /* ButtonGroupControl.swift */,
-				9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */,
-				9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */,
+				B11BF0132E77B36900839F73 /* CameraControl.swift */,
 				E6E3CB5F2CC07E7200E99423 /* DeviceControl.swift */,
 				E6E3CB602CC07E7200E99423 /* DeviceControlFactory.swift */,
 				E6E3CB612CC07E7200E99423 /* DeviceTileInfo.swift */,
+				B1B3A7592E7BA92600C146F4 /* DoorbellControl.swift */,
 				9DB83A1A2D13F0FF00F826B8 /* DoorLockControl.swift */,
+				9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */,
 				E6E3CB622CC07E7200E99423 /* FanControl.swift */,
 				E6E3CB632CC07E7200E99423 /* GenericDeviceControl.swift */,
 				E6E3CB642CC07E7200E99423 /* LightControl.swift */,
@@ -492,6 +491,7 @@
 				9DB83A162D13E53C00F826B8 /* SensorControl.swift */,
 				9DB83A182D13E56400F826B8 /* TemperatureSensorControl.swift */,
 				9DBD77682D51DB6E00924F71 /* ThermostatControl.swift */,
+				9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */,
 				9DD60D192D59C539006F489F /* TVControl.swift */,
 				E6E3CB672CC07E7200E99423 /* WindowCoveringControl.swift */,
 			);
@@ -501,11 +501,11 @@
 		E6E3CB6B2CC07E7200E99423 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
-				9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */,
-				9C54B8E42E1F55B5008DE522 /* RenameViewModel.swift */,
 				9DBD774B2D2B87DE00924F71 /* Automation */,
 				E6E3CB682CC07E7200E99423 /* Device */,
+				9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */,
 				E6E3CB692CC07E7200E99423 /* MainViewModel.swift */,
+				9C54B8E42E1F55B5008DE522 /* RenameViewModel.swift */,
 				E6E3CB6A2CC07E7200E99423 /* StructureViewModel.swift */,
 			);
 			path = ViewModel;
@@ -841,7 +841,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.8;
+				MARKETING_VERSION = 1.8.1;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -873,7 +873,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.8;
+				MARKETING_VERSION = 1.8.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

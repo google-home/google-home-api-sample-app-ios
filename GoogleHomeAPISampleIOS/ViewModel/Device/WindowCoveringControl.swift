@@ -53,7 +53,7 @@ final class WindowCoveringControl: DeviceControl {
       self.rangeControl = RangeControl(
         rangeValue: Float(Self.closedLiftPct - self.liftPct100ths(windowCoveringDeviceType))
           / Float(Self.closedLiftPct),
-        label: "Open percentage")
+        label: "Target open percentage")
       self.startRangeSubscription()
     }
   }
