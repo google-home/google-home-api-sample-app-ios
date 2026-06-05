@@ -23,6 +23,7 @@ struct StructureView: View {
     case devices
     case automations
     case history
+    case search
     case settings
   }
 
@@ -111,6 +112,12 @@ struct StructureView: View {
               .font(.title)
           }
           .tag(Tab.history)
+        SearchableHomeView(structure: structure)
+          .id(structure.id)
+          .tabItem {
+            Label("Search", systemImage: "magnifyingglass")
+          }
+          .tag(Tab.search)
         SettingsView(structure: structure)
           .environmentObject(viewModel)
           .tabItem {

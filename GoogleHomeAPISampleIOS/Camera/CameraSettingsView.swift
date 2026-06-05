@@ -55,6 +55,9 @@ public struct CameraSettingsView<T: DeviceType>: View {
         if viewModel.displayedSettings.contains(.recording) {
           recordingSettingsSection
         }
+        if viewModel.displayedSettings.contains(.activityZones) {
+          activityZonesSettingsSection
+        }
         if viewModel.displayedSettings.contains(.doorbell) {
           doorbellSettingsSection
         }
@@ -191,6 +194,25 @@ public struct CameraSettingsView<T: DeviceType>: View {
       .disabled(!viewModel.recordingModeController.isEnabled)
     } header: {
       Text("Recording Settings")
+    }
+  }
+
+  private var activityZonesSettingsSection: some View {
+    Section {
+      NavigationLink {
+        ActivityZoneScreen(
+          home: viewModel.home,
+          deviceID: viewModel.deviceID,
+          backgroundImage: nil
+        )
+      } label: {
+        HStack {
+          Image(systemName: "polygon.inset.filled")
+          Text("Activity Zones")
+        }
+      }
+    } header: {
+      Text("Activity Zones")
     }
   }
 

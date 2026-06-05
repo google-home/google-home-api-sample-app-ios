@@ -166,7 +166,10 @@ class CameraSettingsViewModel<T: DeviceType> {
       return "Unknown"
     }
   }
-
+  /// The Home structure instance.
+  public let home: Home
+  /// The unique device identifier.
+  public let deviceID: String
   /// Setting controller for the microphone on/off setting.
   public private(set) var microphoneOnController: CameraSetting<Bool> =
     CameraSetting<Bool>(defaultValue: true)
@@ -330,8 +333,6 @@ class CameraSettingsViewModel<T: DeviceType> {
     }
   }
 
-  private let home: Home
-  private let deviceID: String
   private var device: HomeDevice?
   private let initiatingFlow: CameraSettingsView<T>.InitiatingFlow
 
@@ -410,6 +411,10 @@ class CameraSettingsViewModel<T: DeviceType> {
 
             if deviceType is GoogleDoorbellDeviceType {
               self.displayedSettings.insert(.doorbell)
+            }
+
+            if deviceType.traits.contains(Google.ZoneManagementTrait.self) {
+              self.displayedSettings.insert(.activityZones)
             }
 
             self.displayedSettings.insert(.information)
@@ -944,4 +949,5 @@ struct SettingsDisplayed: OptionSet {
   public static let information = SettingsDisplayed(rawValue: 1 << 4)
   public static let diagnostics = SettingsDisplayed(rawValue: 1 << 5)
   public static let recording = SettingsDisplayed(rawValue: 1 << 6)
+  public static let activityZones = SettingsDisplayed(rawValue: 1 << 7)
 }

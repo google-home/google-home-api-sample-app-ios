@@ -23,7 +23,10 @@ import SwiftUI
 /// refresh function to update the latest events within the structure.
 public struct HistoryView: View {
 
+  private let home: Home
+  private let structureID: String
   @State private var historyViewModel: HistoryViewModel
+  @State private var homeBriefsViewModel: HomeBriefsViewModel
 
   private enum PresentedSheet: Identifiable {
     case datePicker, devicePicker, eventTypePicker
@@ -38,14 +41,19 @@ public struct HistoryView: View {
   ///   - structureID: The structure ID to load history for.
   ///   - objectID: The object ID to filter the history view to, this can be a device, room, or structure.
   public init(home: Home, structureID: String, objectID: String? = nil) {
-    self.historyViewModel =
-      HistoryViewModel(home: home, structureID: structureID, objectID: objectID)
+    self.home = home
+    self.structureID = structureID
+    self._historyViewModel = State(initialValue: HistoryViewModel(home: home, structureID: structureID, objectID: objectID))
+    self._homeBriefsViewModel = State(initialValue: HomeBriefsViewModel(home: home, structureID: structureID))
   }
 
   public var body: some View {
     VStack {
       List {
         filterButtonsSection
+
+        HomeBriefsView(viewModel: homeBriefsViewModel, urlSession: self.urlSession)
+
         dailyEventsSection
 
         if self.historyViewModel.dailyEvents.isEmpty {
@@ -58,12 +66,12 @@ public struct HistoryView: View {
       }
       .refreshable {
         await self.historyViewModel.refreshEvents()
+        await self.homeBriefsViewModel.loadInitialBriefs()
       }
     }
     .onAppear {
-      Task {
-        await self.historyViewModel.initialize()
-      }
+      Task { await self.historyViewModel.initialize() }
+      Task { await self.homeBriefsViewModel.initialize() }
     }
     .sheet(item: $presentedSheet) { sheet in
       switch sheet {
