@@ -23,14 +23,16 @@ struct GoogleHomeAPISampleIOS: App {
     Logger().info("Home API Version: \(Home.version)")
     Home.configure {
       $0.sharedAppGroup = "HOME_API_TODO_ADD_APP_GROUP"
+      // If you are not using advanced camera features, you should continue
+      // to use the original scope by changing this to
+      // HomePlatformOAuthScope.v1
+      $0.homePlatformOAuthScope = HomePlatformOAuthScope.v2
       $0.referencedAutomationTypes = ReferencedAutomationTypes(
         deviceTypes: [
           OnOffLightDeviceType.self,
           TemperatureSensorDeviceType.self,
           WindowCoveringDeviceType.self,
           GoogleTVDeviceType.self,
-          GoogleCameraDeviceType.self,
-          GoogleDoorbellDeviceType.self,
         ],
         traits: [
           Google.TimeTrait.self,
@@ -44,8 +46,6 @@ struct GoogleHomeAPISampleIOS: App {
           Google.SimplifiedThermostatTrait.self,
           Google.AreaPresenceStateTrait.self,
           Google.AreaAttendanceStateTrait.self,
-          Google.WebRtcLiveViewTrait.self,
-          Google.PushAvStreamTransportTrait.self,
           Matter.LevelControlTrait.self,
           Matter.OnOffTrait.self,
           Matter.TemperatureMeasurementTrait.self,

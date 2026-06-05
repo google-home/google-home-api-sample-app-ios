@@ -16,10 +16,18 @@ import Combine
 import Dispatch
 import Foundation
 import GoogleHomeSDK
+import GoogleHomeTypes
 import OSLog
 
 /// A viewModel for managing the structure, rooms, and devices within them.
+@MainActor
 final class StructureViewModel: ObservableObject {
+
+  private enum Constants {
+    static let unassignedRoomName = "In your home"
+    static let unassignedRoomID = "unassignedDevices"
+    static let emptyRoomName = "<unassigned>"
+  }
 
   public let home: Home
   public let structureID: String
@@ -27,6 +35,7 @@ final class StructureViewModel: ObservableObject {
 
   @Published var entries = [StructureEntry]()
   private var hub: Hub? = nil
+  @Published var faceLibraryConsentStatus: StructureScopedPermissionsController.ConsentStatus = .unspecified
 
   /// Indicates whether the initial load has completed
   @Published var hasLoaded = false
@@ -63,15 +72,15 @@ final class StructureViewModel: ObservableObject {
             result[room.id] = StructureEntry(
               room: room,
               roomID: room.id,
-              roomName: room.name.isEmpty ? "<unassigned>" : room.name
+              roomName: room.name.isEmpty ? Constants.emptyRoomName : room.name
             )
           }
         }
         // Create a specific entry for "In your home" (Unassigned)
         let unassignedEntry = StructureEntry(
           room: nil,
-          roomID: "unassignedDevices",
-          roomName: "In your home"
+          roomID: Constants.unassignedRoomID,
+          roomName: Constants.unassignedRoomName
         )
         var hasUnassignedDevices = false
 
@@ -146,11 +155,8 @@ final class StructureViewModel: ObservableObject {
   // MARK: Hub Activation
 
   /// Discovey the Google Home hub under the same local network.
-  @MainActor
   public func discoverAvailableHubs() async {
-    await MainActor.run {
-      self.isDiscoveringHubs = true
-    }
+    self.isDiscoveringHubs = true
     do {
       let hubs = await self.home.discoverAvailableHubs()
       Logger().info("hubs found: \(hubs)")
@@ -173,5 +179,84 @@ final class StructureViewModel: ObservableObject {
       hub,
       structureID: self.structureID
     )
+  }
+
+  /// Initiates the familiar faces consent flow with the user.
+  /// - Returns: A Boolean indicating if the user consented to the face library feature.
+  public func requestFaceLibraryConsent() async -> Bool {
+    if self.faceLibraryConsentStatus == .consented {
+      return true
+    }
+    do {
+      let structures = try await home.structures().list()
+      if let structure = structures.first(where: { $0.id == self.structureID }) {
+        let response = await structure.permissions.requestConsent(for: [.faceLibrary])
+        if let response = response {
+          switch response {
+          case .success(_, let consentedFeatures):
+            if let status = consentedFeatures?[.faceLibrary] {
+              self.faceLibraryConsentStatus = status
+            } else {
+              Logger().warning("ConsentResponse.success, but faceLibrary consent status is missing in consentedFeatures!")
+            }
+          case .alreadyConsented:
+            self.faceLibraryConsentStatus = .consented
+          @unknown default:
+            Logger().warning("ConsentResponse unknown default case encountered: \(String(describing: response))")
+          }
+        } else {
+          Logger().warning("requestConsent returned nil response (user cancelled or presentation/flow failed/dismissed without status)")
+        }
+      } else {
+        Logger().error("Matching structure with ID \(self.structureID) not found in structures list!")
+      }
+    } catch {
+      Logger().error("Failed to request FaceLibrary consent with error: \(error.localizedDescription) (\(error))")
+    }
+    return self.faceLibraryConsentStatus == .consented
+  }
+
+  /// Refreshes the Face Library consent status for this structure.
+  public func refreshFaceLibraryConsentStatus() async {
+    do {
+      let structures = try await home.structures().list()
+      if let structure = structures.first(where: { $0.id == self.structureID }) {
+        let consentStateMap = await structure.permissions.featureConsentState(features: [.faceLibrary])
+        if let status = consentStateMap[.faceLibrary] {
+          self.faceLibraryConsentStatus = status
+        }
+      }
+    } catch {
+      Logger().error("Failed to refresh FaceLibrary consent status: \(error)")
+    }
+  }
+
+  /// Forces presentation of the Face Library consent web flow to allow the user to modify or revoke consent.
+  /// - Returns: A Boolean indicating if the user consented to the face library feature.
+  public func presentFaceLibraryConsentFlow() async -> Bool {
+    do {
+      let structures = try await home.structures().list()
+      if let structure = structures.first(where: { $0.id == self.structureID }) {
+        let response = await structure.permissions.requestConsent(for: [.faceLibrary])
+        if let response = response {
+          switch response {
+          case .success(_, let consentedFeatures):
+            if let status = consentedFeatures?[.faceLibrary] {
+              self.faceLibraryConsentStatus = status
+            }
+          case .alreadyConsented:
+            self.faceLibraryConsentStatus = .consented
+          @unknown default:
+            break
+          }
+        } else {
+          // If the user cancelled/declined or the response is nil, we should refresh the status
+          await refreshFaceLibraryConsentStatus()
+        }
+      }
+    } catch {
+      Logger().error("Failed to present FaceLibrary consent flow: \(error)")
+    }
+    return self.faceLibraryConsentStatus == .consented
   }
 }

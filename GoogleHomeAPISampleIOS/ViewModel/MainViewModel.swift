@@ -74,6 +74,7 @@ class MainViewModel: ObservableObject {
     return structures.first { $0.id == structureID }
   }
 
+  @MainActor
   func structureViewModel(structureID: String?) -> StructureViewModel? {
     guard let structureID else { return nil }
 

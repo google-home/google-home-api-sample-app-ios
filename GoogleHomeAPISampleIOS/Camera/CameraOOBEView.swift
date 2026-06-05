@@ -31,8 +31,8 @@ public struct CameraOOBEView<T: DeviceType>: View {
   public var body: some View {
     VStack {
       switch viewModel.step {
-      case .otaDownload:
-        OTAView(viewModel: self.viewModel)
+      case .otaDownload(let state, let progress):
+        OtaDownloadView(state: state, progress: progress)
       case .settings:
         CameraSettingsView<T>(
           home: self.viewModel.home, deviceID: self.device.id, initiatingFlow: .oobe
@@ -53,54 +53,17 @@ public struct CameraOOBEView<T: DeviceType>: View {
     .navigationBarTitleDisplayMode(.inline)
   }
 
-  private struct OTAView: View {
-    private let viewModel: CameraOOBEViewModel<T>
-
-    init(viewModel: CameraOOBEViewModel<T>) {
-      self.viewModel = viewModel
-    }
+  private struct OtaDownloadView: View {
+    let state: Matter.OtaSoftwareUpdateRequestorTrait.UpdateStateEnum
+    let progress: Double
 
     var body: some View {
       VStack {
-        Image(systemName: "icloud.and.arrow.down")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 80, height: 80)
-          .foregroundColor(.blue)
-          .padding(.bottom, 10)
-        Text("OTA Software Update")
-          .font(.title2)
-          .fontWeight(.bold)
-        Text(
-          "During this step of the setup process, "
-            + "the device will download a software update if necessary. "
-            + "Check the OTA update status before proceeding to the next step."
-        )
-        .multilineTextAlignment(.center)
-        .foregroundColor(.primary)
-        .padding(.top, 4)
-        Text("For more information, visit")
-          .multilineTextAlignment(.center)
-          .foregroundColor(.secondary)
-          .padding(.top, 4)
-        if let url = URL(string: "https://developers.home.google.com/") {
-          Link("https://developers.home.google.com", destination: url)
-            .font(.subheadline)
-        }
-        Spacer()
-        Button(action: {
-          self.viewModel.nextStep()
-        }) {
-          Text("Next")
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .cornerRadius(12)
-        }
+        Text("Downloading software update...")
+        Text("State: \(state.description)")
+        ProgressView(value: progress) { Text("Progress: \(progress.formatted(.percent))") }
+          .padding()
       }
-      .padding(24)
     }
   }
 
@@ -137,6 +100,35 @@ public struct CameraOOBEView<T: DeviceType>: View {
           }
         }
       }
+    }
+  }
+}
+
+extension Matter.OtaSoftwareUpdateRequestorTrait.UpdateStateEnum {
+  public var description: String {
+    switch self {
+    case .unknown:
+      return "Unknown"
+    case .idle:
+      return "Idle"
+    case .querying:
+      return "Querying"
+    case .delayedOnQuery:
+      return "Delayed on query"
+    case .downloading:
+      return "Downloading"
+    case .applying:
+      return "Applying"
+    case .delayedOnApply:
+      return "Delayed on apply"
+    case .rollingBack:
+      return "Rolling back"
+    case .delayedOnUserConsent:
+      return "Delayed on user consent"
+    case .unrecognized_:
+      return "Unrecognized"
+    @unknown default:
+      return "Unknown"
     }
   }
 }

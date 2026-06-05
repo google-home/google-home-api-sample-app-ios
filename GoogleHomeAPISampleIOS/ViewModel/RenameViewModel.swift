@@ -19,6 +19,7 @@ import OSLog
 enum RenameType {
   case Device
   case Room
+  case Face
 }
 /// The viewModel handling deivce or room renaming.
 @MainActor
@@ -44,6 +45,10 @@ class RenameViewModel: ObservableObject {
       self.title = "Edit name"
       self.subtitle = "Change the name of your room"
       self.textFieldLabel = "Edit room name"
+    case .Face:
+      self.title = "Name this person"
+      self.subtitle = "Entering a name will help identify them in camera alerts"
+      self.textFieldLabel = "Name"
     }
     self.name = name
     self.setName = setName
