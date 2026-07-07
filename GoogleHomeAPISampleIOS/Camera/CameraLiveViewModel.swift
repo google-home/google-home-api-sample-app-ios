@@ -23,17 +23,30 @@ import WebRTC
 /// A viewModel handling camera livestreaming and control.
 @Observable
 @MainActor
-class CameraLiveViewModel {
+class CameraLiveViewModel: CameraTimelineDelegate {
   private static let supportedDeviceTypes: [any DeviceType.Type] = [
     GoogleCameraDeviceType.self,
     GoogleDoorbellDeviceType.self,
   ]
+  private static let defaultPlaybackDuration: TimeInterval = 1800 // 30 minutes
   private let home: Home
   private var player: WebRtcPlayer?
   private var renderer: RTCVideoRenderer
   public private(set) var device: HomeDevice?
   private var liveViewTrait: Google.WebRtcLiveViewTrait?
   private var pushAvStreamTransportTrait: Google.PushAvStreamTransportTrait?
+  private var cameraTimelineTrait: Google.CameraTimelineTrait?
+  private var cameraHistoryTrait: Google.CameraHistoryTrait?
+
+  // MARK: - CameraTimelineDelegate Properties
+  public private(set) var timelinePeriods: CameraTimelinePeriodList = CameraTimelinePeriodList()
+  public private(set) var isTimelineLoading: Bool = false
+  public var currentTimelineDate: Date?
+  private var cameraTimelineFetcher: CameraTimelineFetcher?
+  private var onPrioritizedTimeChanged: ((Date) -> Void)?
+  private var playbackStartTime: Date?
+
+  public var playerState: CameraPlayerState = .live
 
   var isTwoWayTalkOn: Bool = false
 
@@ -100,6 +113,22 @@ class CameraLiveViewModel {
               return
             }
             self.pushAvStreamTransportTrait = pushAvStreamTransportTrait
+
+            self.cameraTimelineTrait = deviceType.traits[Google.CameraTimelineTrait.self]
+            self.cameraHistoryTrait = deviceType.traits[Google.CameraHistoryTrait.self]
+
+            if self.cameraTimelineTrait != nil, self.cameraTimelineFetcher == nil {
+              self.cameraTimelineFetcher = CameraTimelineFetcher(
+                cameraTimelineTraitProvider: { [weak self] in return await self?.cameraTimelineTrait },
+                accessTokenProvider: { [weak self] in
+                  guard let self = self else { throw HomeError.notFound("ViewModel deallocated") }
+                  let (accessToken, _) = try await self.home.permissions.authorization()
+                  return accessToken
+                }
+              )
+              await self.initializeCameraTimelineFetcher()
+            }
+
             await self.initializePlayer()
             // Case where the player has been turned on by another controller.
             if self.uiState == .off && self.isDeviceRecording() {
@@ -181,6 +210,7 @@ class CameraLiveViewModel {
   public func leaveStreamView() {
     Logger().info("Left livestream view.")
     self.player = nil
+    self.playerState = .live
   }
 
   /// Reconnects to the livestream.
@@ -249,6 +279,133 @@ class CameraLiveViewModel {
     self.reconnectStream()
   }
 
+  // MARK: - CameraTimelineDelegate implementation
+
+  private func initializeCameraTimelineFetcher() async {
+    guard let cameraTimelineFetcher = self.cameraTimelineFetcher else { return }
+
+    let (periodsStream, onPrioritizedTimeChanged) =
+      await cameraTimelineFetcher.fetchTimeline(
+        startDate: self.currentTimelineDate ?? Date()
+      )
+
+    self.isTimelineLoading = true
+    Task { [weak self] in
+      var iterator = periodsStream.makeAsyncIterator()
+      let firstPeriodList = await iterator.next()
+
+      // Handle the initial emission. Using optional chaining avoids creating a strong self reference.
+      if let firstPeriodList = firstPeriodList {
+        self?.timelinePeriods = firstPeriodList
+      }
+      self?.isTimelineLoading = false
+
+      // Monitor subsequent period list updates. Checking `self` weakly in each iteration
+      // ensures that when the view model is deallocated, the loop breaks, the task terminates,
+      // and we avoid a retain cycle / memory leak.
+      while let nextPeriodList = await iterator.next() {
+        guard let self = self else { break }
+        self.timelinePeriods = nextPeriodList
+      }
+    }
+
+    self.onPrioritizedTimeChanged = onPrioritizedTimeChanged
+    self.onPrioritizedTimeChanged?(self.currentTimelineDate ?? Date())
+  }
+
+  public func timelineTimeDidChange(_ time: Date) {
+    self.currentTimelineDate = time
+    self.onPrioritizedTimeChanged?(time)
+  }
+
+  public func timelineStateDidChange(_ state: CameraTimelineState) {
+    switch state {
+    case .scrubbing:
+      self.playerState = .scrubbing
+      self.playbackStartTime = nil
+    case .live:
+      self.playerState = .live
+      self.playbackStartTime = nil
+      self.reconnectStream()
+    case .stopped:
+      guard let currentTimelineDate = self.currentTimelineDate else { return }
+
+      let intersectingRecording = self.timelinePeriods.intersectingPeriods(
+        in: currentTimelineDate...currentTimelineDate
+      ).recording
+
+      guard !intersectingRecording.isEmpty else {
+        self.playerState = .noVideo(reason: "No recording available at this time.")
+        return
+      }
+
+      guard
+        let cameraHistoryTrait = self.cameraHistoryTrait,
+        let urlTemplateString = cameraHistoryTrait.attributes.hlsMasterPlaylistUrlTemplate,
+        let url = buildHistoricalPlaybackURL(
+          template: urlTemplateString,
+          startTime: currentTimelineDate,
+          duration: Self.defaultPlaybackDuration
+        )
+      else {
+        self.playerState = .noVideo(reason: "History URL template not available.")
+        return
+      }
+
+      self.playbackStartTime = currentTimelineDate
+
+      Task {
+        do {
+          let (accessToken, _) = try await self.home.permissions.authorization()
+          let headers = ["Authorization": "Bearer \(accessToken)"]
+          self.player = nil
+          self.playerState = .historicalPlayback(playbackURL: url, headers: headers)
+        } catch {
+          self.playerState = .noVideo(reason: "Failed to authorize: \(error)")
+        }
+      }
+    }
+  }
+
+  public func onPlaybackTimeChanged(offset: TimeInterval) {
+    guard let playbackStartTime = self.playbackStartTime else { return }
+    let currentPlaybackDate = playbackStartTime.addingTimeInterval(offset)
+    self.currentTimelineDate = currentPlaybackDate
+  }
+
+  private func buildHistoricalPlaybackURL(
+    template: String,
+    startTime: Date,
+    duration: TimeInterval
+  ) -> URL? {
+    guard var components = URLComponents(string: template) else { return nil }
+
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+    components.queryItems =
+      (components.queryItems ?? [])
+      + [
+        URLQueryItem(name: "start_time", value: formatter.string(from: startTime)),
+        URLQueryItem(
+          name: "end_time",
+          value: formatter.string(
+            from: min(startTime.addingTimeInterval(duration), Date())
+          )
+        ),
+        URLQueryItem(name: "include_init_segment", value: "true"),
+      ]
+
+    return components.url
+  }
+
+}
+
+enum CameraPlayerState: Equatable {
+  case live
+  case historicalPlayback(playbackURL: URL, headers: [String: String])
+  case scrubbing
+  case noVideo(reason: String?)
 }
 
 enum CameraUIState {

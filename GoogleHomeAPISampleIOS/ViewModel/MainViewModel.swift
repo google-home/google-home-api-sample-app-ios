@@ -16,6 +16,7 @@ import Combine
 import Dispatch
 import Foundation
 import GoogleHomeSDK
+import GoogleHomeTypes
 import OSLog
 
 class MainViewModel: ObservableObject {
@@ -37,12 +38,14 @@ class MainViewModel: ObservableObject {
       self.candidatesViewModel = nil
     }
   }
+  @Published var areaPresenceState: Google.AreaPresenceStateTrait.PresenceState?
 
   private let selectedStructureStorage = SelectedStructureStorage()
 
   private var cancellables: Set<AnyCancellable> = []
   private var structuresCancellable: AnyCancellable?
   private var candidatesViewModel: CandidatesViewModel?
+  private var areaPresenceStateCancellable: AnyCancellable?
 
   // MARK: - Initialization
 
@@ -67,6 +70,54 @@ class MainViewModel: ObservableObject {
       // to arbitrarily showing the first structure in the array.
       self.selectedStructureID = newStructures.first?.id
     }.store(in: &cancellables)
+
+    Publishers.CombineLatest($selectedStructureID, $structures)
+      .removeDuplicates { oldTuple, newTuple in
+        let (oldSelectedID, oldStructures) = oldTuple
+        let (newSelectedID, newStructures) = newTuple
+
+        let isSameSelection = oldSelectedID == newSelectedID
+        let isSameStructureList = oldStructures.map(\.id) == newStructures.map(\.id)
+
+        return isSameSelection && isSameStructureList
+      }
+      .sink { [weak self] structureID, structures in
+        self?.handleSelectedStructureChange(structureID: structureID, structures: structures)
+      }
+      .store(in: &cancellables)
+  }
+
+  /// Handles resetting and re-subscribing when the selected structure changes.
+  private func handleSelectedStructureChange(structureID: String?, structures: [Structure]) {
+    self.areaPresenceStateCancellable?.cancel()
+    self.areaPresenceState = nil
+
+    guard let structureID = structureID,
+      let structure = structures.first(where: { $0.id == structureID })
+    else {
+      Logger().info("MainViewModel: No selected structure or structures not loaded yet.")
+      return
+    }
+
+    self.subscribeToAreaPresence(for: structure)
+  }
+
+  /// Subscribes to the AreaPresenceStateTrait for the given structure.
+  private func subscribeToAreaPresence(for structure: Structure) {
+    self.areaPresenceStateCancellable =
+      structure
+      .traits
+      .subscribe(Google.AreaPresenceStateTrait.self)
+      .receive(on: DispatchQueue.main)
+      .sink(
+        receiveCompletion: { [weak self] completion in
+          guard case .failure(let error) = completion else { return }
+          Logger().error("AreaPresenceStateTrait subscription failed: \(error)")
+          self?.areaPresenceState = nil
+        },
+        receiveValue: { [weak self] trait in
+          self?.areaPresenceState = trait.attributes.presenceState
+        })
   }
 
   func structure(structureID: String?) -> Structure? {

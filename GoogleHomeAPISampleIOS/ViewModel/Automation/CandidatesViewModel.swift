@@ -19,6 +19,14 @@ import GoogleHomeTypes
 
 @MainActor
 public class CandidatesViewModel: ObservableObject {
+  public static let queryOptions = [
+    "a familiar person shows up",
+    "a person shows up",
+    "a package shows up",
+    "a vehicle shows up",
+    "an animal shows up",
+    "custom text"
+  ]
 
   private let home: Home
   public let structure: Structure
@@ -79,13 +87,45 @@ public class CandidatesViewModel: ObservableObject {
     }
   }
 
-  public func addSelectedStarters(device: HomeDevice, deviceType: any DeviceType.Type, trait: any GoogleHomeSDK.Trait.Type, valueOnOff: Bool, operation: Operations, levelValue: UInt8) {
-    let _selectedStarter = SelectedEntry(device: device, deviceType: deviceType, traitType: trait, valueOnOff: valueOnOff, operation: operation, levelValue: levelValue)
+  public func addSelectedStarters(
+    device: HomeDevice,
+    deviceType: any DeviceType.Type,
+    trait: any GoogleHomeSDK.Trait.Type,
+    eventType: (any GoogleHomeSDK.Event.Type)? = nil,
+    valueOnOff: Bool,
+    operation: Operations,
+    levelValue: UInt8,
+    cameraDescription: String? = nil
+  ) {
+    let _selectedStarter = SelectedEntry(
+      device: device,
+      deviceType: deviceType,
+      traitType: trait,
+      eventType: eventType,
+      valueOnOff: valueOnOff,
+      operation: operation,
+      levelValue: levelValue,
+      cameraDescription: cameraDescription
+    )
     self.selectedStarters.append(_selectedStarter)
   }
 
-  public func addSelectedActions(device: HomeDevice, deviceType: any DeviceType.Type, trait: any GoogleHomeSDK.Trait.Type, valueOnOff: Bool, operation: Operations, levelValue: UInt8) {
-    let _selectedAction = SelectedEntry(device: device, deviceType: deviceType, traitType: trait, valueOnOff: valueOnOff, operation: operation, levelValue: levelValue)
+  public func addSelectedActions(
+    device: HomeDevice,
+    deviceType: any DeviceType.Type,
+    trait: any GoogleHomeSDK.Trait.Type,
+    valueOnOff: Bool,
+    operation: Operations,
+    levelValue: UInt8
+  ) {
+    let _selectedAction = SelectedEntry(
+      device: device,
+      deviceType: deviceType,
+      traitType: trait,
+      valueOnOff: valueOnOff,
+      operation: operation,
+      levelValue: levelValue
+    )
     self.selectedActions.append(_selectedAction)
   }
 
@@ -137,9 +177,32 @@ public class CandidatesViewModel: ObservableObject {
         return WindowCoveringDeviceType.self
       } else if device.types.contains(GoogleDisplayDeviceType.self) {
         return GoogleDisplayDeviceType.self
+      } else if device.types.contains(GoogleCameraDeviceType.self) ||
+                device.types.contains(CameraDeviceType.self) ||
+                device.types.contains(FloodlightCameraDeviceType.self) ||
+                device.types.contains(SnapshotCameraDeviceType.self) {
+        return GoogleCameraDeviceType.self
+      } else if device.types.contains(GoogleDoorbellDeviceType.self) ||
+                device.types.contains(DoorbellDeviceType.self) ||
+                device.types.contains(VideoDoorbellDeviceType.self) ||
+                device.types.contains(AudioDoorbellDeviceType.self) {
+        return GoogleDoorbellDeviceType.self
+      } else if device.types.contains(SpeakerDeviceType.self) {
+        return SpeakerDeviceType.self
       } else {
         return UnknownDeviceType.self
       }
+    }
+
+    public var isCameraOrDoorbell: Bool {
+      return device.types.contains(GoogleCameraDeviceType.self) ||
+             device.types.contains(CameraDeviceType.self) ||
+             device.types.contains(FloodlightCameraDeviceType.self) ||
+             device.types.contains(SnapshotCameraDeviceType.self) ||
+             device.types.contains(GoogleDoorbellDeviceType.self) ||
+             device.types.contains(DoorbellDeviceType.self) ||
+             device.types.contains(VideoDoorbellDeviceType.self) ||
+             device.types.contains(AudioDoorbellDeviceType.self)
     }
 
     public var iconName: String {
@@ -161,6 +224,18 @@ public class CandidatesViewModel: ObservableObject {
         return "tv_symbol"
       } else if device.types.contains(DimmableLightDeviceType.self) {
         return "lightbulb_symbol"
+      } else if device.types.contains(GoogleCameraDeviceType.self) ||
+                device.types.contains(CameraDeviceType.self) ||
+                device.types.contains(FloodlightCameraDeviceType.self) ||
+                device.types.contains(SnapshotCameraDeviceType.self) {
+        return "devices_other_symbol"
+      } else if device.types.contains(GoogleDoorbellDeviceType.self) ||
+                device.types.contains(DoorbellDeviceType.self) ||
+                device.types.contains(VideoDoorbellDeviceType.self) ||
+                device.types.contains(AudioDoorbellDeviceType.self) {
+        return "devices_other_symbol"
+      } else if device.types.contains(SpeakerDeviceType.self) {
+        return "speaker_symbol"
       } else {
         return "devices_other_symbol"
       }
@@ -173,9 +248,15 @@ public class CandidatesViewModel: ObservableObject {
         return "Light Switch"
       } else if device.types.contains(OnOffPluginUnitDeviceType.self) {
         return "Outlet"
-      } else if device.types.contains(GoogleCameraDeviceType.self) {
+      } else if device.types.contains(GoogleCameraDeviceType.self) ||
+                device.types.contains(CameraDeviceType.self) ||
+                device.types.contains(FloodlightCameraDeviceType.self) ||
+                device.types.contains(SnapshotCameraDeviceType.self) {
         return "Camera"
-      } else if device.types.contains(GoogleDoorbellDeviceType.self) {
+      } else if device.types.contains(GoogleDoorbellDeviceType.self) ||
+                device.types.contains(DoorbellDeviceType.self) ||
+                device.types.contains(VideoDoorbellDeviceType.self) ||
+                device.types.contains(AudioDoorbellDeviceType.self) {
         return "Doorbell"
       } else if device.types.contains(ThermostatDeviceType.self) {
         return "Thermostat"
@@ -219,6 +300,13 @@ public class CandidatesViewModel: ObservableObject {
 
     public let node: any NodeCandidate
 
+    public var eventType: (any GoogleHomeSDK.Event.Type)? {
+      if let eventCandidate = self.node as? EventCandidate {
+        return eventCandidate.event
+      }
+      return nil
+    }
+
     public var traitType: any GoogleHomeSDK.Trait.Type {
       if self.node.trait == Matter.OnOffTrait.self {
         return Matter.OnOffTrait.self
@@ -232,6 +320,8 @@ public class CandidatesViewModel: ObservableObject {
         return Google.BrightnessTrait.self
       } else if self.node.trait == Google.SimplifiedOnOffTrait.self {
         return Google.SimplifiedOnOffTrait.self
+      } else if self.node.trait == Google.VideoAnalysisTrait.self {
+        return Google.VideoAnalysisTrait.self
       } else {
         return UnknownTrait.self
       }
@@ -250,6 +340,8 @@ public class CandidatesViewModel: ObservableObject {
         return "brightness_symbol"
       } else if self.node.trait == Google.SimplifiedOnOffTrait.self {
         return "power_settings_new_symbol"
+      } else if self.node.trait == Google.VideoAnalysisTrait.self {
+        return "closed_caption_symbol"
       } else {
         return ""
       }
@@ -268,9 +360,27 @@ public class CandidatesViewModel: ObservableObject {
         return "Changes brightness"
       } else if self.node.trait == Google.SimplifiedOnOffTrait.self {
         return "Turns on or off"
+      } else if self.node.trait == Google.VideoAnalysisTrait.self {
+        if let eventCandidate = self.node as? EventCandidate,
+          eventCandidate.event == Google.VideoAnalysisTrait.QueryMatchedEvent.self
+        {
+          return "Detects custom activity"
+        }
+        return "Camera event stream"
       } else {
         return node.trait.identifier
       }
+    }
+
+    public var subdescription: String {
+      if self.node.trait == Google.VideoAnalysisTrait.self {
+        if let eventCandidate = self.node as? EventCandidate,
+          eventCandidate.event == Google.VideoAnalysisTrait.QueryMatchedEvent.self
+        {
+          return "Describe the activity to detect (e.g. package delivery)"
+        }
+      }
+      return ""
     }
 
     /// Whether it's a supported trait in current generic editor
@@ -279,7 +389,9 @@ public class CandidatesViewModel: ObservableObject {
         return true
       } else if self.node.trait == Matter.LevelControlTrait.self {
         return true
-      }  else {
+      } else if self.node.trait == Google.VideoAnalysisTrait.self {
+        return true
+      } else {
         return false
       }
     }
@@ -344,15 +456,38 @@ public struct SelectedEntry: Identifiable {
   public let device: HomeDevice
   public let deviceType: any DeviceType.Type
   public let traitType: any GoogleHomeSDK.Trait.Type
+  public let eventType: (any GoogleHomeSDK.Event.Type)?
 
   public let valueOnOff: Bool
   public let operation: Operations
   public let levelValue: UInt8
+  public let cameraDescription: String?
+
+  public init(
+    device: HomeDevice,
+    deviceType: any DeviceType.Type,
+    traitType: any GoogleHomeSDK.Trait.Type,
+    eventType: (any GoogleHomeSDK.Event.Type)? = nil,
+    valueOnOff: Bool = false,
+    operation: Operations = .equalsTo,
+    levelValue: UInt8 = 0,
+    cameraDescription: String? = nil
+  ) {
+    self.device = device
+    self.deviceType = deviceType
+    self.traitType = traitType
+    self.eventType = eventType
+    self.valueOnOff = valueOnOff
+    self.operation = operation
+    self.levelValue = levelValue
+    self.cameraDescription = cameraDescription
+  }
 }
 
 public enum Operations {
   case equalsTo
   case greaterThan
   case lessThan
+  case cameraDescriptionMatch
 }
 

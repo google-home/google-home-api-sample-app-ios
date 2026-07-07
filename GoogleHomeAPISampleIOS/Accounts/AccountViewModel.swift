@@ -25,6 +25,7 @@ class AccountViewModel: ObservableObject {
   /// The current Home client.
   @Published var home: Home?
   @Published var isShowAboutView: Bool = false
+  @Published var isShowUserManagementView: Bool = false
 
   init() {
     Task {
@@ -41,6 +42,9 @@ class AccountViewModel: ObservableObject {
     } else {
       Menu {
         Button("Disconnect", action: self.disconnect)
+        Button("User Management") {
+          self.isShowUserManagementView.toggle()
+        }
         Button("Update permissions", action: self.updatePermissions)
         Button("About") {
           self.isShowAboutView.toggle()

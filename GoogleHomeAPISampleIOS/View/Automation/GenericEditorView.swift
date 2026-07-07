@@ -27,10 +27,30 @@ struct GenericEditorView: View {
 
   @State private var isShowingErrorAlert = false
 
-  init(viewModel: GenericEditorViewModel, candidatesViewModel: CandidatesViewModel, automationRepository: AutomationsRepository, navigationPath: Binding<NavigationPath>) {
+  @State private var isShowingCameraEditSheet = false
+  @State private var editedCameraDescription = ""
+  @State private var selectedQueryOption = CandidatesViewModel.queryOptions.first ?? ""
+
+  private static let sheetHeightFraction = 0.65
+
+  @FocusState private var isSheetCameraDescriptionFocused: Bool
+
+  let cameraOnly: Bool
+  let editorTitle: String
+
+  init(
+    viewModel: GenericEditorViewModel,
+    candidatesViewModel: CandidatesViewModel,
+    automationRepository: AutomationsRepository,
+    cameraOnly: Bool = false,
+    editorTitle: String = "Generic Editor",
+    navigationPath: Binding<NavigationPath>
+  ) {
     self.viewModel = viewModel
     self.candidatesViewModel = candidatesViewModel
     self.automationRepository = automationRepository
+    self.cameraOnly = cameraOnly
+    self.editorTitle = editorTitle
     self._navigationPath = navigationPath
     // Clear anything previously stored
     candidatesViewModel.clearSelected()
@@ -51,7 +71,7 @@ struct GenericEditorView: View {
 
     }
     .listStyle(.inset)
-    .navigationTitle("Generic Editor")
+    .navigationTitle(editorTitle)
     .navigationBarTitleDisplayMode(.inline)
     .overlay {
       if isShowingProgressView {
@@ -67,6 +87,96 @@ struct GenericEditorView: View {
       error: viewModel.error.map { .errorSavingAutomation(error: $0.localizedDescription) }
     ) {
       viewModel.error = nil
+    }
+    .sheet(isPresented: $isShowingCameraEditSheet) {
+      cameraEditSheetView
+    }
+  }
+
+  @ViewBuilder
+  private var cameraEditSheetView: some View {
+    VStack(alignment: .leading, spacing: .mmd) {
+      Text("Detect Custom Activity")
+        .font(.title2)
+        .bold()
+        .padding(.top, .xl)
+
+      Text("Select or describe the activity or object that should trigger this automation.")
+        .font(.body)
+        .foregroundColor(.secondary)
+
+      Picker("Activity Type", selection: $selectedQueryOption) {
+        ForEach(CandidatesViewModel.queryOptions, id: \.self) { option in
+          Text(option).tag(option)
+        }
+      }
+      .pickerStyle(.wheel)
+      .frame(height: Dimensions.CameraPicker.height)
+      .padding(.top, .md)
+      .padding(.bottom, Dimensions.CameraPicker.bottomPadding)
+
+      if selectedQueryOption == "custom text" {
+        TextField("Enter description...", text: $editedCameraDescription)
+          .focused($isSheetCameraDescriptionFocused)
+          .textFieldStyle(.roundedBorder)
+          .padding(.vertical, .sm)
+          .autocorrectionDisabled(true)
+          .textInputAutocapitalization(.never)
+      }
+
+      Spacer()
+
+      HStack {
+        Spacer()
+        Button(action: {
+          let description = (selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption
+          if let starter = candidatesViewModel.selectedStarters.first {
+            candidatesViewModel.selectedStarters[0] = SelectedEntry(
+              device: starter.device,
+              deviceType: starter.deviceType,
+              traitType: starter.traitType,
+              eventType: starter.eventType,
+              valueOnOff: starter.valueOnOff,
+              operation: starter.operation,
+              levelValue: starter.levelValue,
+              cameraDescription: description
+            )
+          }
+          isShowingCameraEditSheet = false
+        }) {
+          let finalDescription = (selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption
+          let isDisabled = finalDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          Text("Done")
+            .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
+            .background(isDisabled ? Color.gray : Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(.md)
+            .padding(.bottom, .lg)
+            .padding(.trailing, .smd)
+        }
+        .disabled(
+          ((selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption)
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        )
+      }
+    }
+    .padding(.horizontal, .xl)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      UIApplication.shared.endEditing()
+    }
+    .presentationDetents([.fraction(Self.sheetHeightFraction)])
+    .presentationCornerRadius(.lg)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      UIApplication.shared.endEditing()
+    }
+    .onAppear {
+      if !CandidatesViewModel.queryOptions.contains(editedCameraDescription) {
+        selectedQueryOption = "custom text"
+      } else {
+        selectedQueryOption = editedCameraDescription
+      }
     }
   }
 
@@ -111,12 +221,23 @@ struct GenericEditorView: View {
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name,
                            text2: subTitle) {}
             .padding(.bottom, .sm)
+        } else if device.traitType is Google.VideoAnalysisTrait.Type {
+          let subTitle = device.cameraDescription ?? ""
+          CreateButtonView(
+            imageName: "devices_other_symbol",
+            text1: device.device.name,
+            text2: subTitle
+          ) {
+            editedCameraDescription = subTitle
+            isShowingCameraEditSheet = true
+          }
+          .padding(.bottom, .sm)
         }
       } else {
         // If there's no selected one, display a button for selection
         CreateButtonView(imageName: "astrophotography_mode_symbol", text1: "Add Starter and Condition",
                          text2: "") {
-          navigationPath.append(Destination.StarterCandidatesView)
+          navigationPath.append(cameraOnly ? Destination.CameraStarterCandidatesView : Destination.StarterCandidatesView)
         }
         .padding(.bottom, .sm)
       }

@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import GoogleHomeSDK
+import GoogleHomeTypes
 import SwiftUI
 
 /// A view of settings.
 struct SettingsView: View {
   @EnvironmentObject private var structureViewModel: StructureViewModel
+  @EnvironmentObject private var mainViewModel: MainViewModel
   private var structure: Structure
   @State private var isShowingFamiliarFaces = false
   @State private var showPermissionErrorAlert = false
@@ -29,6 +31,7 @@ struct SettingsView: View {
     static let notConsentedValue = "Not Consented (Disabled)"
     static let unspecifiedValue = "Unspecified"
     static let unknownValue = "Unknown"
+    static let fetchingValue = "Loading..."
     static let manageFacesButton = "Manage Faces"
     static let revokeConsentButton = "Revoke Consent"
     static let enableFamiliarFaceButton = "Enable Familiar Face Detection"
@@ -52,6 +55,9 @@ struct SettingsView: View {
       Divider()
         .padding(.vertical, .sm)
       familiarFaceSection
+      Divider()
+        .padding(.vertical, .sm)
+      presenceSection
       Spacer()
     }
     .padding()
@@ -107,6 +113,9 @@ struct SettingsView: View {
             .font(.body)
             .foregroundColor(.primary)
           let consentStr: String = {
+            if structureViewModel.isFetchingConsentStatus {
+              return Constants.fetchingValue
+            }
             switch structureViewModel.faceLibraryConsentStatus {
             case .consented:
               return Constants.consentedValue
@@ -125,55 +134,57 @@ struct SettingsView: View {
         Spacer()
       }
       .padding(.vertical, .sm)
-      .padding(.horizontal, .md)
-      if structureViewModel.faceLibraryConsentStatus == .consented {
-        Button(action: {
-          isShowingFamiliarFaces = true
-        }) {
-          HStack {
-            Text(Constants.manageFacesButton)
-              .font(.body)
-              .foregroundColor(.primary)
-            Spacer()
-            Image(systemName: Constants.chevronRightIcon)
-              .foregroundColor(.secondary)
-          }
-        }
-        .padding(.vertical, .sm)
-        .padding(.horizontal, .md)
-        Button(action: {
-          Task {
-            await structureViewModel.presentFaceLibraryConsentFlow()
-          }
-        }) {
-          HStack {
-            Text(Constants.revokeConsentButton)
-              .font(.body)
-              .foregroundColor(.red)
-          }
-        }
-        .padding(.vertical, .sm)
-        .padding(.horizontal, .md)
-      } else {
-        Button(action: {
-          Task {
-            let granted = await structureViewModel.requestFaceLibraryConsent()
-            if !granted {
-              showPermissionErrorAlert = true
+      .padding(.horizontal, .md)   
+      if !structureViewModel.isFetchingConsentStatus {
+        if structureViewModel.faceLibraryConsentStatus == .consented {
+          Button(action: {
+            isShowingFamiliarFaces = true
+          }) {
+            HStack {
+              Text(Constants.manageFacesButton)
+                .font(.body)
+                .foregroundColor(.primary)
+              Spacer()
+              Image(systemName: Constants.chevronRightIcon)
+                .foregroundColor(.secondary)
             }
           }
-        }) {
-          HStack {
-            Text(Constants.enableFamiliarFaceButton)
-              .font(.body)
-              .foregroundColor(.blue)
-            Spacer()
-            Image(systemName: Constants.chevronRightIcon)
-              .foregroundColor(.blue)
+          .padding(.vertical, .sm)
+          .padding(.horizontal, .md)
+          Button(action: {
+            Task {
+              await structureViewModel.presentFaceLibraryConsentFlow()
+            }
+          }) {
+            HStack {
+              Text(Constants.revokeConsentButton)
+                .font(.body)
+                .foregroundColor(.red)
+            }
           }
+          .padding(.vertical, .sm)
+          .padding(.horizontal, .md)
+        } else {
+          Button(action: {
+            Task {
+              let granted = await structureViewModel.requestFaceLibraryConsent()
+              if !granted {
+                showPermissionErrorAlert = true
+              }
+            }
+          }) {
+            HStack {
+              Text(Constants.enableFamiliarFaceButton)
+                .font(.body)
+                .foregroundColor(.blue)
+              Spacer()
+              Image(systemName: Constants.chevronRightIcon)
+                .foregroundColor(.blue)
+            }
+          }
+          .padding(.vertical, .sm)
+          .padding(.horizontal, .md)
         }
-        .padding(.vertical, .sm)
-        .padding(.horizontal, .md)
       }
     }
     .background(
@@ -194,11 +205,39 @@ struct SettingsView: View {
     }
   }
 
+  @ViewBuilder
+  private var presenceSection: some View {
+    Section {
+      Text("Presence")
+        .font(.headline)
+      NavigationLink(
+        destination: AreaPresenceStateView(
+          viewModel: AreaPresenceStateViewModel(currentStructure: structure)
+        )
+      ) {
+        HStack {
+          Text("Area Presence")
+            .font(.body)
+            .foregroundColor(.primary)
+          Spacer()
+          if let presenceState = mainViewModel.areaPresenceState {
+            Text(presenceState.text ?? "")
+              .font(.subheadline)
+              .foregroundColor(.secondary)
+          }
+          Image(systemName: Constants.chevronRightIcon)
+            .foregroundColor(.secondary)
+        }
+      }
+      .padding(.vertical, .sm)
+      .padding(.horizontal, .md)
+    }
+  }
+
   /// A reusable view component for a single row in the room list.
   struct RoomRow: View {
     let roomName: String
     let deviceCount: Int
-
     var body: some View {
       HStack {
           VStack(alignment: .leading, spacing: .xs) {

@@ -34,6 +34,7 @@ public final class AutomationsRepository: Sendable {
   typealias DoorLockTrait = Matter.DoorLockTrait
   typealias RvcRunModeTrait = Matter.RvcRunModeTrait
   typealias ColorControlTrait = Matter.ColorControlTrait
+  typealias VideoAnalysisTrait = Google.VideoAnalysisTrait
 
   private let home: Home
   private let structure: Structure
@@ -44,7 +45,7 @@ public final class AutomationsRepository: Sendable {
   }
 
   public func list() async throws -> [any DraftAutomation] {
-    let devices = try await self.home.devices().list().filter{$0.structureID == structure.id}
+    let devices = try await self.home.devices().list().filter { $0.structureID == structure.id }
 
     return await withTaskGroup(
       of: (any DraftAutomation)?.self,
@@ -72,7 +73,12 @@ public final class AutomationsRepository: Sendable {
   ///   - actions: users selected action entries
   /// - Returns: the automation object to be created
   /// A Generic Editor sample with one starter and one action
-  public func genericAutomation(name: String, description: String, starters: [SelectedEntry], actions: [SelectedEntry]) async throws -> any DraftAutomation {
+  public func genericAutomation(
+    name: String,
+    description: String,
+    starters: [SelectedEntry],
+    actions: [SelectedEntry]
+  ) async throws -> any DraftAutomation {
     guard let starterEntry = starters.first else {
       Logger().error("Empty starter component.")
       throw HomeError.notFound("Empty starter component")
@@ -103,12 +109,24 @@ public final class AutomationsRepository: Sendable {
               switch starterEntry.operation {
               case .equalsTo:
                 levelstarter.currentLevel.equals(starterEntry.levelValue)
-              case .lessThan:
+               case .lessThan:
                 levelstarter.currentLevel.lessThan(starterEntry.levelValue)
-              case .greaterThan:
+               case .greaterThan:
                 levelstarter.currentLevel.greaterThan(starterEntry.levelValue)
+              default:
+                levelstarter.currentLevel.equals(starterEntry.levelValue)
               }
             }
+          } else if let cameraEvent = starterEntry.eventType as? Google.VideoAnalysisTrait.QueryMatchedEvent.Type,
+                    let queryText = starterEntry.cameraDescription {
+            let videoAnalysisEvent = starter(
+              starterEntry.device,
+              starterEntry.deviceType,
+              cameraEvent
+            ) {
+              Google.VideoAnalysisTrait.QueryMatchedEvent.query(queryText)
+            }
+            videoAnalysisEvent
           }
         }
       }
@@ -139,7 +157,11 @@ public final class AutomationsRepository: Sendable {
       sequential {
         select {
           sequential {
-            let onOffStarter = starter(onOffLightDevices[0], OnOffLightDeviceType.self, OnOffTrait.self)
+            let onOffStarter = starter(
+              onOffLightDevices[0],
+              OnOffLightDeviceType.self,
+              OnOffTrait.self
+            )
             onOffStarter
             condition {
               onOffStarter.onOff.equals(true)
@@ -154,7 +176,6 @@ public final class AutomationsRepository: Sendable {
       }
     }
   }
-
 
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
@@ -184,9 +205,9 @@ public final class AutomationsRepository: Sendable {
     return automation(
       name: "Close Window blinds",
       description:
-      """
-      Close window blinds when the temperature inside drops below 60F (15C) and it's dark outside.
-      """
+        """
+        Close window blinds when the temperature inside drops below 60F (15C) and it's dark outside.
+        """
     ) {
       select {
         starter(
@@ -196,11 +217,13 @@ public final class AutomationsRepository: Sendable {
         )
         starter(structure, Google.TimeTrait.ScheduledEvent.self) {
           Google.TimeTrait.ScheduledEvent.solarTime(
-            SolarTime(type: .sunrise, offset: .seconds(0)))
+            SolarTime(type: .sunrise, offset: .seconds(0))
+          )
         }
         starter(structure, Google.TimeTrait.ScheduledEvent.self) {
           Google.TimeTrait.ScheduledEvent.solarTime(
-            SolarTime(type: .sunset, offset: .seconds(0)))
+            SolarTime(type: .sunset, offset: .seconds(0))
+          )
         }
       }
       temperatureMeasurement
@@ -224,64 +247,67 @@ public final class AutomationsRepository: Sendable {
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
   /// This automation will turn on lights or turn off thermostat eco mode when you unlock the door.
-  public func lightAndThermostatAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation {
-     let doorLock = devices.first {
-       $0.types.contains(DoorLockDeviceType.self)
-     }
-     guard let doorLock else {
-       Logger().error("Unable to find door lock device.")
-       throw HomeError.notFound("No devices support DoorLockDeviceType")
-     }
-     let thermostat = devices.first {
-       $0.types.contains(ThermostatDeviceType.self)
-     }
-     guard let thermostat else {
-       Logger().error("Unable to find thermostat device.")
-       throw HomeError.notFound("No devices support ThermostatDeviceType")
-     }
-     let lightDevices = devices.filter {
-       $0.types.contains(OnOffLightDeviceType.self)
-     }
-     guard !lightDevices.isEmpty else {
-       Logger().error("Unable to find lights device.")
-       throw HomeError.notFound("No devices support OnOffLightDeviceType")
-     }
+  public func lightAndThermostatAutomation(devices: Set<HomeDevice>) async throws
+    -> any DraftAutomation
+  {
+    let doorLock = devices.first {
+      $0.types.contains(DoorLockDeviceType.self)
+    }
+    guard let doorLock else {
+      Logger().error("Unable to find door lock device.")
+      throw HomeError.notFound("No devices support DoorLockDeviceType")
+    }
+    let thermostat = devices.first {
+      $0.types.contains(ThermostatDeviceType.self)
+    }
+    guard let thermostat else {
+      Logger().error("Unable to find thermostat device.")
+      throw HomeError.notFound("No devices support ThermostatDeviceType")
+    }
+    let lightDevices = devices.filter {
+      $0.types.contains(OnOffLightDeviceType.self)
+    }
+    guard !lightDevices.isEmpty else {
+      Logger().error("Unable to find lights device.")
+      throw HomeError.notFound("No devices support OnOffLightDeviceType")
+    }
 
-     return automation(
-       name: "Turn on lights and thermostat",
-       description:
-         """
-         Turn on lights or turn off thermostat eco mode when you unlock the door.
-         """
-     ) {
-       let doorLockTrait = starter(
-         doorLock,
-         DoorLockDeviceType.self,
-         DoorLockTrait.self
-       )
-       doorLockTrait
-       condition {
-         doorLockTrait.lockState.equals(.unlocked)
-       }
-       parallel {
-         for light in lightDevices {
-           action(light, OnOffLightDeviceType.self) {
-             OnOffTrait.on()
-           }
-           // Assume the thermostat is in eco mode, set to auto.
-           action(thermostat, ThermostatDeviceType.self) {
-             Google.SimplifiedThermostatTrait.setSystemMode(systemMode: .auto)
-           }
-         }
-       }
-     }
-   }
+    return automation(
+      name: "Turn on lights and thermostat",
+      description:
+        """
+        Turn on lights or turn off thermostat eco mode when you unlock the door.
+        """
+    ) {
+      let doorLockTrait = starter(
+        doorLock,
+        DoorLockDeviceType.self,
+        DoorLockTrait.self
+      )
+      doorLockTrait
+      condition {
+        doorLockTrait.lockState.equals(.unlocked)
+      }
+      parallel {
+        for light in lightDevices {
+          action(light, OnOffLightDeviceType.self) {
+            OnOffTrait.on()
+          }
+          // Assume the thermostat is in eco mode, set to auto.
+          action(thermostat, ThermostatDeviceType.self) {
+            Google.SimplifiedThermostatTrait.setSystemMode(systemMode: .auto)
+          }
+        }
+      }
+    }
+  }
 
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
   /// This automation will play ocean wave sounds, turn on the fan and onOffPlugin
   /// when user says “Hey Google, I can’t sleep”
-  public func speakerAndFanAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation {
+  public func speakerAndFanAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation
+  {
     let speaker = devices.first {
       $0.types.contains(SpeakerDeviceType.self)
     }
@@ -341,7 +367,9 @@ public final class AutomationsRepository: Sendable {
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
   /// This automation will broadcast alarm and periodically turn on/off lights and TV to deter intruders.
-  public func lightAndTVPeriodicAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation {
+  public func lightAndTVPeriodicAutomation(devices: Set<HomeDevice>) async throws
+    -> any DraftAutomation
+  {
     let allLights = devices.filter {
       $0.types.contains(OnOffLightDeviceType.self)
     }

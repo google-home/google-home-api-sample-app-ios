@@ -35,6 +35,15 @@ public struct AutomationSuggestionsView: View {
       }
       .padding(.bottom, .sm)
 
+      CreateButtonView(
+        imageName: "astrophotography_mode_symbol",
+        text1: "Nature Language Starter",
+        text2: ""
+      ) {
+        navigationPath.append(Destination.NaturalLanguageEditorView)
+      }
+      .padding(.bottom, .sm)
+
       List {
         Section("Predefined Automations") {
           /// Display automations that are able to be created.

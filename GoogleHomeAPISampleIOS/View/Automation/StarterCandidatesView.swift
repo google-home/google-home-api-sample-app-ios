@@ -19,10 +19,12 @@ import SwiftUI
 /// Display starter candidates
 struct StarterCandidatesView: View {
   @ObservedObject private var viewModel: CandidatesViewModel
+  let cameraOnly: Bool
   @Binding var navigationPath: NavigationPath
 
-  init(viewModel: CandidatesViewModel, navigationPath: Binding<NavigationPath>) {
+  init(viewModel: CandidatesViewModel, cameraOnly: Bool = false, navigationPath: Binding<NavigationPath>) {
     self.viewModel = viewModel
+    self.cameraOnly = cameraOnly
     self._navigationPath = navigationPath
   }
 
@@ -50,20 +52,29 @@ struct StarterCandidatesView: View {
   private func actualCandidateList() -> some View {
     List {
       ForEach(self.viewModel.roomEntries.sorted()) { entry in
-        Section {
-          ForEach(entry.devices, id: \.id) { device in
-            CreateButtonView(imageName: device.iconName, text1: device.device.name, text2: "") {
-              viewModel.selectedStarterDevice = device
-              /// Redirect to the StarterCandidateDetailView with selected device
-              navigationPath.append(Destination.StarterCandidateDetailView)
-            }
-            .padding(.bottom, .sm)
-          }.listRowSeparator(.hidden)
-        } header: {
-          HStack {
-            Text(entry.room.name).foregroundColor(Color("fontColor"))
+        let filteredDevices = entry.devices.filter { device in
+          if cameraOnly {
+            return device.isCameraOrDoorbell
+          } else {
+            return !device.isCameraOrDoorbell
           }
-        }.textCase(nil)
+        }
+        if !filteredDevices.isEmpty {
+          Section {
+            ForEach(filteredDevices, id: \.id) { device in
+              CreateButtonView(imageName: device.iconName, text1: device.device.name, text2: "") {
+                viewModel.selectedStarterDevice = device
+                /// Redirect to the StarterCandidateDetailView with selected device
+                navigationPath.append(Destination.StarterCandidateDetailView)
+              }
+              .padding(.bottom, .sm)
+            }.listRowSeparator(.hidden)
+          } header: {
+            HStack {
+              Text(entry.room.name).foregroundColor(Color("fontColor"))
+            }
+          }.textCase(nil)
+        }
       }
     }
   }

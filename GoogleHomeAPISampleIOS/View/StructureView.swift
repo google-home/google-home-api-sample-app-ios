@@ -36,7 +36,12 @@ struct StructureView: View {
   @State private var selectedTab: Tab = .devices
   @State private var oobeDevice: HomeDevice?
   @State private var isShowingCodeScanner: Bool = false
+  @State private var scannerAdd3PFabricFirst: Bool = false
   @State private var automationList: AutomationList? = nil
+  @State private var authorizationCodeInput: String = ""
+  @State private var showAuthorizationCodeInput: Bool = false
+  @State private var sampleError: HomeSampleError?
+  @State private var isShowingErrorAlert = false
 
   var structureID: String { self.viewModel.structureID }
 
@@ -83,7 +88,11 @@ struct StructureView: View {
         }
         .sheet(isPresented: self.$isShowingCodeScanner) {
           CodeScannerView(isPresented: self.$isShowingCodeScanner) { payload in
-            self.addDevice(structure: structure, add3PFabricFirst: false, setupPayload: payload)
+            self.addDevice(
+              structure: structure,
+              add3PFabricFirst: self.scannerAdd3PFabricFirst,
+              setupPayload: payload
+            )
           }
         }
     } else {
@@ -140,12 +149,11 @@ struct StructureView: View {
         if self.selectedTab == .devices {
           Menu {
             Button("Add Device to Google Fabric") {
-              self.addDevice(structure: structure, add3PFabricFirst: false)
+              self.scannerAdd3PFabricFirst = false
+              self.isShowingCodeScanner = true
             }
             Button("Add Device to Google & 3P Fabric") {
-              self.addDevice(structure: structure, add3PFabricFirst: true)
-            }
-            Button("Add Camera Device") {
+              self.scannerAdd3PFabricFirst = true
               self.isShowingCodeScanner = true
             }
             Button("Add Room") { self.viewModel.showRoomNameInput = true }
@@ -153,6 +161,13 @@ struct StructureView: View {
               Task {
                 await self.viewModel.discoverAvailableHubs()
               }
+            }
+            Button("Link Cloud Account") {
+              self.authorizationCodeInput = ""
+              self.showAuthorizationCodeInput = true
+            }
+            Button("Sync Cloud Linked Devices") {
+              self.syncCloudLinkedDevices()
             }
           } label: {
             Image(systemName: "plus")
@@ -173,6 +188,18 @@ struct StructureView: View {
       }
     }
     .errorAlert(isPresented: self.$viewModel.showNoHubFoundDialog, error: .noHubFound)
+    .alert("Enter Authorization Code", isPresented: self.$showAuthorizationCodeInput) {
+      TextField("Authorization Code", text: self.$authorizationCodeInput)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+      Button("Cancel", role: .cancel) {}
+      Button("Link") {
+        guard !self.authorizationCodeInput.isEmpty else { return }
+        self.linkCloudAccount(
+          structure: structure, authorizationCode: self.authorizationCodeInput)
+      }
+    }
+    .errorAlert(isPresented: self.$isShowingErrorAlert, error: self.sampleError)
   }
 
   @ViewBuilder
@@ -303,6 +330,38 @@ struct StructureView: View {
     if device.types.contains(GoogleCameraDeviceType.self) ||
        device.types.contains(GoogleDoorbellDeviceType.self) {
         self.oobeDevice = device
+    }
+  }
+
+  /// Links the cloud account for the structure with the provided authorization code.
+  ///
+  /// - Parameters:
+  ///   - structure: The structure to link the cloud account to.
+  ///   - authorizationCode: The authorization code obtained from the cloud provider.
+  private func linkCloudAccount(structure: Structure, authorizationCode: String) {
+    Task {
+      do {
+        try await structure.linkCloudAccount(authorization: authorizationCode)
+        Logger().info("Cloud account linked successfully.")
+      } catch {
+        Logger().error("Failed to link cloud account: \(error)")
+        self.sampleError = .unableToLinkCloudAccount(error: error.localizedDescription)
+        self.isShowingErrorAlert = true
+      }
+    }
+  }
+
+  /// Syncs cloud linked devices for the current home.
+  private func syncCloudLinkedDevices() {
+    Task {
+      do {
+        try await self.mainViewModel.home?.syncLinkedDevices()
+        Logger().info("Cloud linked devices synced successfully.")
+      } catch {
+        Logger().error("Failed to sync cloud linked devices: \(error)")
+        self.sampleError = .unableToSyncLinkedDevices(error: error.localizedDescription)
+        self.isShowingErrorAlert = true
+      }
     }
   }
 }
