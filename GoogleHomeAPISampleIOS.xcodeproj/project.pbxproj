@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		184DF50F3E2AADE61D02A099 /* HomeBriefsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A99CC8D54B74212966E54188 /* HomeBriefsViewModel.swift */; };
+		4AC572041D944970D95EACBD /* CameraEventType+Priority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E771372813E2913DC7EA47 /* CameraEventType+Priority.swift */; };
+		87D1FEBC9CB3F823040C2B8E /* CameraTimelineDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C08620D9229A80CF3044C48 /* CameraTimelineDelegate.swift */; };
 		99A8F5122E65884000DBC00D /* AppPadding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5112E65884000DBC00D /* AppPadding.swift */; };
 		99A8F5142E66CC3900DBC00D /* StackSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5132E66CC3200DBC00D /* StackSpacing.swift */; };
 		99A8F5162E66D66000DBC00D /* AppCornerRadius.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */; };
@@ -58,6 +60,10 @@
 		9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE32D822BAA004957F6 /* StarterCandidatesView.swift */; };
 		9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */; };
 		9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD60D192D59C539006F489F /* TVControl.swift */; };
+		A6863CC5D78E92362F315B8F /* CameraTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B56CA3A811E0DD53AF23793 /* CameraTimelineView.swift */; };
+		AA2A6DEBA07593B7494D2EFC /* CameraTimelinePeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064C45BD970055FCF8EE62FE /* CameraTimelinePeriod.swift */; };
+		B10424912FD90E07003B930E /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10424902FD90E07003B930E /* UserManagementView.swift */; };
+		B10424932FD90E1D003B930E /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10424922FD90E1D003B930E /* UserManagementViewModel.swift */; };
 		B108B4412EC5886F00618E0A /* CameraOOBEView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4402EC5886F00618E0A /* CameraOOBEView.swift */; };
 		B108B4432EC5887B00618E0A /* CameraOOBEViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */; };
 		B108B4522EC5887C00618E0C /* ActivityZoneScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4512EC5887C00618E0B /* ActivityZoneScreen.swift */; };
@@ -66,6 +72,8 @@
 		B108B4582EC5887C00618E1C /* ActivityZoneEditViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4572EC5887C00618E1B /* ActivityZoneEditViewModel.swift */; };
 		B108B45A2EC5887C00618E1E /* ActivityZoneOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B4592EC5887C00618E1D /* ActivityZoneOverlayView.swift */; };
 		B108B45C2EC5887C00618E2A /* ActivityZoneShapeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B108B45B2EC5887C00618E1F /* ActivityZoneShapeEditView.swift */; };
+		B10D9D7D2FED02A100483144 /* AreaPresenceStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10D9D7C2FED02A100483144 /* AreaPresenceStateView.swift */; };
+		B10D9D7F2FED02AC00483144 /* AreaPresenceStateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10D9D7E2FED02AC00483144 /* AreaPresenceStateViewModel.swift */; };
 		B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */; };
 		B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */; };
 		B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */; };
@@ -85,10 +93,13 @@
 		B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */; };
 		B1F000012F000001 /* SearchableHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F000022F000001 /* SearchableHomeView.swift */; };
 		B1F000032F000001 /* SearchableHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F000042F000001 /* SearchableHomeViewModel.swift */; };
+		B3439F8A06DC22F493FE9623 /* CameraTimelineFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2383BB9545B4452E4E1B84E3 /* CameraTimelineFetcher.swift */; };
 		D1CCF15AAB67FD65462140A5 /* HomeBriefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B4499EEAEAF12424070666 /* HomeBriefsView.swift */; };
+		D897011C6DB15E50A916B8B2 /* CameraTimelineScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA55E5C65389C55D349A8F74 /* CameraTimelineScreen.swift */; };
 		E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */; };
 		E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */ = {isa = PBXBuildFile; fileRef = E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */; };
 		E666F74A2CCC4627005A4A6F /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E666F7492CCC4627005A4A6F /* RequestHandler.swift */; };
+		E666F74A2CCC4627005A4A7B /* AutomationSuggestionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E666F74A2CCC4627005A4A7A /* AutomationSuggestionRowView.swift */; };
 		E666F74E2CCC4627005A4A6F /* MatterAddDeviceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E666F7472CCC4627005A4A6F /* MatterAddDeviceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E699C6992CC0916600B35E68 /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E699C6982CC0916600B35E68 /* SafariServices.framework */; };
 		E6E3CB6C2CC07E7200E99423 /* CGFloat+UX.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E3CB472CC07E7200E99423 /* CGFloat+UX.swift */; };
@@ -153,10 +164,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		064C45BD970055FCF8EE62FE /* CameraTimelinePeriod.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelinePeriod.swift; sourceTree = "<group>"; };
+		14E771372813E2913DC7EA47 /* CameraEventType+Priority.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "CameraEventType+Priority.swift"; sourceTree = "<group>"; };
+		2383BB9545B4452E4E1B84E3 /* CameraTimelineFetcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineFetcher.swift; sourceTree = "<group>"; };
+		3B56CA3A811E0DD53AF23793 /* CameraTimelineView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineView.swift; sourceTree = "<group>"; };
 		79B4499EEAEAF12424070666 /* HomeBriefsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeBriefsView.swift; sourceTree = "<group>"; };
 		99A8F5112E65884000DBC00D /* AppPadding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPadding.swift; sourceTree = "<group>"; };
 		99A8F5132E66CC3200DBC00D /* StackSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackSpacing.swift; sourceTree = "<group>"; };
 		99A8F5152E66D66000DBC00D /* AppCornerRadius.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCornerRadius.swift; sourceTree = "<group>"; };
+		9C08620D9229A80CF3044C48 /* CameraTimelineDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineDelegate.swift; sourceTree = "<group>"; };
 		9C54B8D42E1B9DC7008DE522 /* DropdownControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropdownControl.swift; sourceTree = "<group>"; };
 		9C54B8D62E1BC5A9008DE522 /* ToggleControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleControl.swift; sourceTree = "<group>"; };
 		9C54B8D82E1E0380008DE522 /* RoomsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoomsView.swift; sourceTree = "<group>"; };
@@ -204,6 +220,9 @@
 		9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CandidatesViewModel.swift; sourceTree = "<group>"; };
 		9DD60D192D59C539006F489F /* TVControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVControl.swift; sourceTree = "<group>"; };
 		A99CC8D54B74212966E54188 /* HomeBriefsViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeBriefsViewModel.swift; sourceTree = "<group>"; };
+		AA55E5C65389C55D349A8F74 /* CameraTimelineScreen.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineScreen.swift; sourceTree = "<group>"; };
+		B10424902FD90E07003B930E /* UserManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementView.swift; sourceTree = "<group>"; };
+		B10424922FD90E1D003B930E /* UserManagementViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManagementViewModel.swift; sourceTree = "<group>"; };
 		B108B4402EC5886F00618E0A /* CameraOOBEView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraOOBEView.swift; sourceTree = "<group>"; };
 		B108B4422EC5887B00618E0A /* CameraOOBEViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraOOBEViewModel.swift; sourceTree = "<group>"; };
 		B108B4512EC5887C00618E0B /* ActivityZoneScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityZoneScreen.swift; sourceTree = "<group>"; };
@@ -212,6 +231,8 @@
 		B108B4572EC5887C00618E1B /* ActivityZoneEditViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityZoneEditViewModel.swift; sourceTree = "<group>"; };
 		B108B4592EC5887C00618E1D /* ActivityZoneOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityZoneOverlayView.swift; sourceTree = "<group>"; };
 		B108B45B2EC5887C00618E1F /* ActivityZoneShapeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityZoneShapeEditView.swift; sourceTree = "<group>"; };
+		B10D9D7C2FED02A100483144 /* AreaPresenceStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreaPresenceStateView.swift; sourceTree = "<group>"; };
+		B10D9D7E2FED02AC00483144 /* AreaPresenceStateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AreaPresenceStateViewModel.swift; sourceTree = "<group>"; };
 		B11BF00A2E77B31D00839F73 /* CameraDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraDetailView.swift; sourceTree = "<group>"; };
 		B11BF00D2E77B34B00839F73 /* CameraLiveViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraLiveViewModel.swift; sourceTree = "<group>"; };
 		B11BF00E2E77B34B00839F73 /* SignalingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalingService.swift; sourceTree = "<group>"; };
@@ -234,6 +255,7 @@
 		E65ECB042CE7F4C6004300B9 /* HomeSampleError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSampleError.swift; sourceTree = "<group>"; };
 		E666F7472CCC4627005A4A6F /* MatterAddDeviceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MatterAddDeviceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E666F7492CCC4627005A4A6F /* RequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestHandler.swift; sourceTree = "<group>"; };
+		E666F74A2CCC4627005A4A7A /* AutomationSuggestionRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AutomationSuggestionRowView.swift; sourceTree = "<group>"; };
 		E666F74B2CCC4627005A4A6F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E699C6982CC0916600B35E68 /* SafariServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SafariServices.framework; path = System/Library/Frameworks/SafariServices.framework; sourceTree = SDKROOT; };
 		E6E3CB472CC07E7200E99423 /* CGFloat+UX.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGFloat+UX.swift"; sourceTree = "<group>"; };
@@ -287,6 +309,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9C54B8E62E1F55BD008DF0FF /* FamiliarFace */ = {
+			isa = PBXGroup;
+			children = (
+				9C54B8E62E1F55BD008DF001 /* FamiliarFacesView.swift */,
+				9C54B8E62E1F55BD008DF003 /* FamiliarFacesViewModel.swift */,
+			);
+			path = FamiliarFace;
+			sourceTree = "<group>";
+		};
 		9CC6939B2E3075D1003A5069 /* Extension */ = {
 			isa = PBXGroup;
 			children = (
@@ -301,6 +332,7 @@
 				9D83C2D82DB787BC00BF5AF4 /* ActionCandidateDetailView.swift */,
 				9D83C2D62DB787AD00BF5AF4 /* ActionCandidatesView.swift */,
 				9DBD77472D2B878300924F71 /* AutomationCreationView.swift */,
+				E666F74A2CCC4627005A4A7A /* AutomationSuggestionRowView.swift */,
 				9D4749362D547A1A006A54F4 /* AutomationSuggestionsView.swift */,
 				9DBD77492D2B87B900924F71 /* AutomationsView.swift */,
 				9DBD77452D2B876D00924F71 /* AutomationView.swift */,
@@ -346,6 +378,7 @@
 				79B4499EEAEAF12424070666 /* HomeBriefsView.swift */,
 				A99CC8D54B74212966E54188 /* HomeBriefsViewModel.swift */,
 				B11BF00E2E77B34B00839F73 /* SignalingService.swift */,
+				D14537480B3BD3B8C0F3731F /* Timeline */,
 				B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */,
 				B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */,
 			);
@@ -363,6 +396,19 @@
 				B108B4532EC5887C00618E0D /* ActivityZoneViewModel.swift */,
 			);
 			path = ActivityZones;
+			sourceTree = "<group>";
+		};
+		D14537480B3BD3B8C0F3731F /* Timeline */ = {
+			isa = PBXGroup;
+			children = (
+				14E771372813E2913DC7EA47 /* CameraEventType+Priority.swift */,
+				9C08620D9229A80CF3044C48 /* CameraTimelineDelegate.swift */,
+				2383BB9545B4452E4E1B84E3 /* CameraTimelineFetcher.swift */,
+				064C45BD970055FCF8EE62FE /* CameraTimelinePeriod.swift */,
+				AA55E5C65389C55D349A8F74 /* CameraTimelineScreen.swift */,
+				3B56CA3A811E0DD53AF23793 /* CameraTimelineView.swift */,
+			);
+			path = Timeline;
 			sourceTree = "<group>";
 		};
 		E60A14CA2CCC7E0D0006A28B /* Commissioning */ = {
@@ -496,6 +542,7 @@
 			isa = PBXGroup;
 			children = (
 				9CF09EEF2DBA115700D0B495 /* AboutView.swift */,
+				B10D9D7C2FED02A100483144 /* AreaPresenceStateView.swift */,
 				9DBD77442D2B876600924F71 /* Automation */,
 				9C9E5ACC2E16535F0049884A /* DeviceDetailView.swift */,
 				9C9E5ACA2E1523B40049884A /* DeviceRow.swift */,
@@ -508,6 +555,7 @@
 				B1F000022F000001 /* SearchableHomeView.swift */,
 				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
 				E6E3CB5D2CC07E7200E99423 /* StructureView.swift */,
+				B10424902FD90E07003B930E /* UserManagementView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -543,6 +591,7 @@
 		E6E3CB6B2CC07E7200E99423 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				B10D9D7E2FED02AC00483144 /* AreaPresenceStateViewModel.swift */,
 				9DBD774B2D2B87DE00924F71 /* Automation */,
 				E6E3CB682CC07E7200E99423 /* Device */,
 				9C8553B92E24AF7C00529E4C /* DeviceDetailViewModel.swift */,
@@ -550,17 +599,9 @@
 				9C54B8E42E1F55B5008DE522 /* RenameViewModel.swift */,
 				B1F000042F000001 /* SearchableHomeViewModel.swift */,
 				E6E3CB6A2CC07E7200E99423 /* StructureViewModel.swift */,
+				B10424922FD90E1D003B930E /* UserManagementViewModel.swift */,
 			);
 			path = ViewModel;
-			sourceTree = "<group>";
-		};
-		9C54B8E62E1F55BD008DF0FF /* FamiliarFace */ = {
-			isa = PBXGroup;
-			children = (
-				9C54B8E62E1F55BD008DF001 /* FamiliarFacesView.swift */,
-				9C54B8E62E1F55BD008DF003 /* FamiliarFacesViewModel.swift */,
-			);
-			path = FamiliarFace;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -690,102 +731,113 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C54B8E62E1F55BD008DF002 /* FamiliarFacesView.swift in Sources */,
-				9C54B8E62E1F55BD008DF004 /* FamiliarFacesViewModel.swift in Sources */,
-				B108B4522EC5887C00618E0C /* ActivityZoneScreen.swift in Sources */,
-				B108B4542EC5887C00618E0E /* ActivityZoneViewModel.swift in Sources */,
+				B10D9D7D2FED02A100483144 /* AreaPresenceStateView.swift in Sources */,
+				9CF09EF02DBA115900D0B495 /* AboutView.swift in Sources */,
+				E6E3CB742CC07E7200E99423 /* AccountViewModel.swift in Sources */,
+				9D83C2D92DB787C500BF5AF4 /* ActionCandidateDetailView.swift in Sources */,
+				9D83C2D72DB787B800BF5AF4 /* ActionCandidatesView.swift in Sources */,
 				B108B4562EC5887C00618E1A /* ActivityZoneEditView.swift in Sources */,
 				B108B4582EC5887C00618E1C /* ActivityZoneEditViewModel.swift in Sources */,
 				B108B45A2EC5887C00618E1E /* ActivityZoneOverlayView.swift in Sources */,
+				B108B4522EC5887C00618E0C /* ActivityZoneScreen.swift in Sources */,
 				B108B45C2EC5887C00618E2A /* ActivityZoneShapeEditView.swift in Sources */,
-				B1B628F02EE01884002DDAA0 /* CameraSettingsViewModel.swift in Sources */,
-				9DBD774F2D2B880700924F71 /* AutomationList.swift in Sources */,
-				E6E3CB6F2CC07E7200E99423 /* SelectedStructureStorage.swift in Sources */,
-				9DBD77692D51DB7700924F71 /* ThermostatControl.swift in Sources */,
-				9D4749392D548320006A54F4 /* AutomationCreationViewModel.swift in Sources */,
-				E6E3CB792CC07E7200E99423 /* MainView.swift in Sources */,
-				9D174DB42CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */,
-				B1F000012F000001 /* SearchableHomeView.swift in Sources */,
-				B1F000032F000001 /* SearchableHomeViewModel.swift in Sources */,
-				E6E3CB822CC07E7200E99423 /* PINCodeInputState.swift in Sources */,
-				9C9E5ACD2E1653640049884A /* DeviceDetailView.swift in Sources */,
-				E6E3CB812CC07E7200E99423 /* LightControl.swift in Sources */,
-				E6E3CB7B2CC07E7200E99423 /* StructureView.swift in Sources */,
+				B108B4542EC5887C00618E0E /* ActivityZoneViewModel.swift in Sources */,
 				99A8F5162E66D66000DBC00D /* AppCornerRadius.swift in Sources */,
-				E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */,
-				E6E3CB7C2CC07E7200E99423 /* DeviceControl.swift in Sources */,
-				9DBD776B2D51ED6B00924F71 /* OnOffPlugInUnitControl.swift in Sources */,
-				B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */,
-				B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */,
-				B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */,
-				9D4749472D548675006A54F4 /* AutomationSuggestionsViewModel.swift in Sources */,
-				B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */,
-				9DBD776D2D51FFE200924F71 /* OccupancySensorControl.swift in Sources */,
-				9D83C2D92DB787C500BF5AF4 /* ActionCandidateDetailView.swift in Sources */,
-				9C9E5ACB2E1524250049884A /* DeviceRow.swift in Sources */,
-				9DB83A1B2D13F10D00F826B8 /* DoorLockControl.swift in Sources */,
-				9DBD774D2D2B87F300924F71 /* AutomationViewModel.swift in Sources */,
+				99A8F5122E65884000DBC00D /* AppPadding.swift in Sources */,
 				9DBD77482D2B878C00924F71 /* AutomationCreationView.swift in Sources */,
-				E6E3CB742CC07E7200E99423 /* AccountViewModel.swift in Sources */,
-				B1EBB3702F34F1960086C6F4 /* WebPImageView.swift in Sources */,
-				B1EBB3712F34F1960086C6F4 /* HistoryView.swift in Sources */,
-				B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */,
-				9C54B8DB2E1E5FA9008DE522 /* SettingsView.swift in Sources */,
-				9DB83A172D13E54000F826B8 /* SensorControl.swift in Sources */,
-				E6E3CB6D2CC07E7200E99423 /* Color+UX.swift in Sources */,
-				9C54B8E52E1F55B8008DE522 /* RenameViewModel.swift in Sources */,
-				E6E3CB842CC07E7200E99423 /* WindowCoveringControl.swift in Sources */,
-				E6E3CB752CC07E7200E99423 /* Comparable+Utils.swift in Sources */,
-				E6E3CB762CC07E7200E99423 /* NumberFormatter+Utils.swift in Sources */,
+				9D4749392D548320006A54F4 /* AutomationCreationViewModel.swift in Sources */,
+				9DBD774F2D2B880700924F71 /* AutomationList.swift in Sources */,
+				9D4749492D548766006A54F4 /* AutomationsRepository.swift in Sources */,
+				E666F74A2CCC4627005A4A7B /* AutomationSuggestionRowView.swift in Sources */,
+				9D4749372D547A1D006A54F4 /* AutomationSuggestionsView.swift in Sources */,
+				9D4749472D548675006A54F4 /* AutomationSuggestionsViewModel.swift in Sources */,
+				9DBD774A2D2B87C000924F71 /* AutomationsView.swift in Sources */,
+				9D47493B2D548418006A54F4 /* AutomationUIDataModel.swift in Sources */,
+				9DBD77462D2B877400924F71 /* AutomationView.swift in Sources */,
+				9DBD774D2D2B87F300924F71 /* AutomationViewModel.swift in Sources */,
+				B10D9D7F2FED02AC00483144 /* AreaPresenceStateViewModel.swift in Sources */,
+				9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */,
+				B11BF0142E77B36900839F73 /* CameraControl.swift in Sources */,
+				B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */,
+				4AC572041D944970D95EACBD /* CameraEventType+Priority.swift in Sources */,
+				B11BF0112E77B34B00839F73 /* CameraLiveViewModel.swift in Sources */,
 				B108B4412EC5886F00618E0A /* CameraOOBEView.swift in Sources */,
-				E6E3CB7E2CC07E7200E99423 /* DeviceTileInfo.swift in Sources */,
-				9C8553BA2E24AF8400529E4C /* DeviceDetailViewModel.swift in Sources */,
+				B108B4432EC5887B00618E0A /* CameraOOBEViewModel.swift in Sources */,
 				B1B628EC2EE0187C002DDAA0 /* CameraSettings.swift in Sources */,
 				B1B628EE2EE0187E002DDAA0 /* CameraSettingsView.swift in Sources */,
-				E6E3CB832CC07E7200E99423 /* RangeControl.swift in Sources */,
-				9C54B8E72E1F55BD008DE522 /* RenameView.swift in Sources */,
-				E6E3CB7A2CC07E7200E99423 /* RangeView.swift in Sources */,
-				99A8F5122E65884000DBC00D /* AppPadding.swift in Sources */,
-				9DB21DC12D7986450004570D /* GenericEditorViewModel.swift in Sources */,
-				B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */,
-				9D4749492D548766006A54F4 /* AutomationsRepository.swift in Sources */,
+				B1B628F02EE01884002DDAA0 /* CameraSettingsViewModel.swift in Sources */,
+				87D1FEBC9CB3F823040C2B8E /* CameraTimelineDelegate.swift in Sources */,
+				B3439F8A06DC22F493FE9623 /* CameraTimelineFetcher.swift in Sources */,
+				AA2A6DEBA07593B7494D2EFC /* CameraTimelinePeriod.swift in Sources */,
+				D897011C6DB15E50A916B8B2 /* CameraTimelineScreen.swift in Sources */,
+				A6863CC5D78E92362F315B8F /* CameraTimelineView.swift in Sources */,
+				9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */,
 				E6E3CB6C2CC07E7200E99423 /* CGFloat+UX.swift in Sources */,
-				9D4749372D547A1D006A54F4 /* AutomationSuggestionsView.swift in Sources */,
-				9CC6939F2E307602003A5069 /* ThermostatTraitExtension.swift in Sources */,
-				9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */,
-				9D83C2D72DB787B800BF5AF4 /* ActionCandidatesView.swift in Sources */,
-				9DB83A192D13E57000F826B8 /* TemperatureSensorControl.swift in Sources */,
-				99A8F5142E66CC3900DBC00D /* StackSpacing.swift in Sources */,
-				9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */,
+				B12A7E362EF533AA004BCB62 /* CodeScannerView.swift in Sources */,
+				E6E3CB6D2CC07E7200E99423 /* Color+UX.swift in Sources */,
+				E6E3CB6E2CC07E7200E99423 /* ColorPalette.swift in Sources */,
+				E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */,
+				9D174DB42CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */,
+				E6E3CB752CC07E7200E99423 /* Comparable+Utils.swift in Sources */,
+				9DBD776F2D52029100924F71 /* CreateButtonView.swift in Sources */,
 				9DD537A42D91461D00452815 /* CreateToggleButtonView.swift in Sources */,
+				E6E3CB7C2CC07E7200E99423 /* DeviceControl.swift in Sources */,
+				E6E3CB7D2CC07E7200E99423 /* DeviceControlFactory.swift in Sources */,
+				9C9E5ACD2E1653640049884A /* DeviceDetailView.swift in Sources */,
+				9C8553BA2E24AF8400529E4C /* DeviceDetailViewModel.swift in Sources */,
+				9C9E5ACB2E1524250049884A /* DeviceRow.swift in Sources */,
+				E6E3CB7E2CC07E7200E99423 /* DeviceTileInfo.swift in Sources */,
+				E6E3CB772CC07E7200E99423 /* DeviceTileView.swift in Sources */,
+				B1B3A75A2E7BA92600C146F4 /* DoorbellControl.swift in Sources */,
+				9DB83A1B2D13F10D00F826B8 /* DoorLockControl.swift in Sources */,
+				9C54B8D52E1B9DCC008DE522 /* DropdownControl.swift in Sources */,
+				9C54B8E62E1F55BD008DF002 /* FamiliarFacesView.swift in Sources */,
+				9C54B8E62E1F55BD008DF004 /* FamiliarFacesViewModel.swift in Sources */,
+				E6E3CB7F2CC07E7200E99423 /* FanControl.swift in Sources */,
+				E6E3CB802CC07E7200E99423 /* GenericDeviceControl.swift in Sources */,
+				9DB21DBF2D797B010004570D /* GenericEditorView.swift in Sources */,
+				9DB21DC12D7986450004570D /* GenericEditorViewModel.swift in Sources */,
 				E6E3CB722CC07E7200E99423 /* GoogleHomeAPISampleIOS.swift in Sources */,
 				B1941D7E2F86286E001A3B6A /* HistoricalPlaybackView.swift in Sources */,
+				B1EBB3712F34F1960086C6F4 /* HistoryView.swift in Sources */,
+				B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */,
 				D1CCF15AAB67FD65462140A5 /* HomeBriefsView.swift in Sources */,
 				184DF50F3E2AADE61D02A099 /* HomeBriefsViewModel.swift in Sources */,
-				E6E3CB772CC07E7200E99423 /* DeviceTileView.swift in Sources */,
-				E6E3CB802CC07E7200E99423 /* GenericDeviceControl.swift in Sources */,
-				9D47493B2D548418006A54F4 /* AutomationUIDataModel.swift in Sources */,
-				E6E3CB7D2CC07E7200E99423 /* DeviceControlFactory.swift in Sources */,
-				9CF09EF02DBA115900D0B495 /* AboutView.swift in Sources */,
-				9C54B8D72E1BC5AC008DE522 /* ToggleControl.swift in Sources */,
-				9C54B8D52E1B9DCC008DE522 /* DropdownControl.swift in Sources */,
-				9DBD776F2D52029100924F71 /* CreateButtonView.swift in Sources */,
-				B12A7E362EF533AA004BCB62 /* CodeScannerView.swift in Sources */,
-				9DD53BE22D8226B9004957F6 /* StarterCandidateDetailView.swift in Sources */,
-				9DBD77462D2B877400924F71 /* AutomationView.swift in Sources */,
-				9C54B8DD2E1E6700008DE522 /* RoomSettingsView.swift in Sources */,
-				9DBD774A2D2B87C000924F71 /* AutomationsView.swift in Sources */,
-				9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */,
-				E6E3CB6E2CC07E7200E99423 /* ColorPalette.swift in Sources */,
-				9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */,
-				E6E3CB7F2CC07E7200E99423 /* FanControl.swift in Sources */,
-				E6E3CB862CC07E7200E99423 /* StructureViewModel.swift in Sources */,
-				9DB21DBF2D797B010004570D /* GenericEditorView.swift in Sources */,
-				9CC693A22E30829B003A5069 /* ButtonGroupControl.swift in Sources */,
+				E65ECB052CE7F4DA004300B9 /* HomeSampleError.swift in Sources */,
+				E6E3CB812CC07E7200E99423 /* LightControl.swift in Sources */,
+				E6E3CB792CC07E7200E99423 /* MainView.swift in Sources */,
 				E6E3CB852CC07E7200E99423 /* MainViewModel.swift in Sources */,
-				E60A14CB2CCC7E0D0006A28B /* CommissioningManager.swift in Sources */,
-				B108B4432EC5887B00618E0A /* CameraOOBEViewModel.swift in Sources */,
-				B11BF00B2E77B31D00839F73 /* CameraDetailView.swift in Sources */,
+				E6E3CB762CC07E7200E99423 /* NumberFormatter+Utils.swift in Sources */,
+				9DBD776D2D51FFE200924F71 /* OccupancySensorControl.swift in Sources */,
+				9DBD776B2D51ED6B00924F71 /* OnOffPlugInUnitControl.swift in Sources */,
+				E6E3CB822CC07E7200E99423 /* PINCodeInputState.swift in Sources */,
+				B10424932FD90E1D003B930E /* UserManagementViewModel.swift in Sources */,
+				E6E3CB832CC07E7200E99423 /* RangeControl.swift in Sources */,
+				E6E3CB7A2CC07E7200E99423 /* RangeView.swift in Sources */,
+				9C54B8E72E1F55BD008DE522 /* RenameView.swift in Sources */,
+				9C54B8E52E1F55B8008DE522 /* RenameViewModel.swift in Sources */,
+				9C54B8DD2E1E6700008DE522 /* RoomSettingsView.swift in Sources */,
+				9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */,
+				B1F000012F000001 /* SearchableHomeView.swift in Sources */,
+				B1F000032F000001 /* SearchableHomeViewModel.swift in Sources */,
+				E6E3CB6F2CC07E7200E99423 /* SelectedStructureStorage.swift in Sources */,
+				9DB83A172D13E54000F826B8 /* SensorControl.swift in Sources */,
+				9C54B8DB2E1E5FA9008DE522 /* SettingsView.swift in Sources */,
+				B11BF0122E77B34B00839F73 /* SignalingService.swift in Sources */,
+				99A8F5142E66CC3900DBC00D /* StackSpacing.swift in Sources */,
+				9DD53BE22D8226B9004957F6 /* StarterCandidateDetailView.swift in Sources */,
+				9DD53BE42D822BAF004957F6 /* StarterCandidatesView.swift in Sources */,
+				E6E3CB7B2CC07E7200E99423 /* StructureView.swift in Sources */,
+				E6E3CB862CC07E7200E99423 /* StructureViewModel.swift in Sources */,
+				9DB83A192D13E57000F826B8 /* TemperatureSensorControl.swift in Sources */,
+				9DBD77692D51DB7700924F71 /* ThermostatControl.swift in Sources */,
+				9CC6939F2E307602003A5069 /* ThermostatTraitExtension.swift in Sources */,
+				9C54B8D72E1BC5AC008DE522 /* ToggleControl.swift in Sources */,
+				9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */,
+				B1EBB3702F34F1960086C6F4 /* WebPImageView.swift in Sources */,
+				B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */,
+				E6E3CB842CC07E7200E99423 /* WindowCoveringControl.swift in Sources */,
+				B10424912FD90E07003B930E /* UserManagementView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -793,12 +845,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9D174DB52CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */,
-				9D174DBA2CEF31030020561B /* ThirdPartyFabricCommissioner.swift in Sources */,
-				9D174DBB2CEF31030020561B /* MatterKeypair.swift in Sources */,
 				9D174DBC2CEF31030020561B /* AttestationDelegate.swift in Sources */,
+				9D174DB52CEF30CF0020561B /* CommissioningUserDefaultsKeys.swift in Sources */,
 				9D174DBD2CEF31030020561B /* InMemoryMatterStorage.swift in Sources */,
+				9D174DBB2CEF31030020561B /* MatterKeypair.swift in Sources */,
 				E666F74A2CCC4627005A4A6F /* RequestHandler.swift in Sources */,
+				9D174DBA2CEF31030020561B /* ThirdPartyFabricCommissioner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -905,7 +957,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 1.9.1;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -937,7 +989,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 1.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

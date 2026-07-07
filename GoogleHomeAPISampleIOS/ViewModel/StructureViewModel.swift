@@ -36,7 +36,7 @@ final class StructureViewModel: ObservableObject {
   @Published var entries = [StructureEntry]()
   private var hub: Hub? = nil
   @Published var faceLibraryConsentStatus: StructureScopedPermissionsController.ConsentStatus = .unspecified
-
+  @Published var isFetchingConsentStatus = true
   /// Indicates whether the initial load has completed
   @Published var hasLoaded = false
   @Published var showRoomNameInput = false
@@ -55,7 +55,9 @@ final class StructureViewModel: ObservableObject {
   init(home: Home, structureID: String) {
     self.home = home
     self.structureID = structureID
-
+    Task {
+      await self.refreshFaceLibraryConsentStatus()
+    }
     /// query rooms and devices and map them to current structure
     self.home.rooms().batched()
       .combineLatest(self.home.devices().batched())
@@ -83,7 +85,6 @@ final class StructureViewModel: ObservableObject {
           roomName: Constants.unassignedRoomName
         )
         var hasUnassignedDevices = false
-
         for device in devices where device.structureID == self.structureID {
           do {
             let control = try DeviceControlFactory.make(device: device)
@@ -100,7 +101,6 @@ final class StructureViewModel: ObservableObject {
             Logger().error("Failed to create device control: \(error)")
           }
         }
-
         return Array(entriesByRoom.values)
           .sorted { $0.roomName < $1.roomName }
         + (hasUnassignedDevices ? [unassignedEntry] : [])
@@ -137,7 +137,6 @@ final class StructureViewModel: ObservableObject {
     private(set) var deviceControls = [DeviceControl]()
 
     // MARK: Initialization
-
     init(room: Room?, roomID: String, roomName: String) {
       self.room = room
       self.roomID = roomID
@@ -218,6 +217,8 @@ final class StructureViewModel: ObservableObject {
 
   /// Refreshes the Face Library consent status for this structure.
   public func refreshFaceLibraryConsentStatus() async {
+    isFetchingConsentStatus = true
+    defer { isFetchingConsentStatus = false }
     do {
       let structures = try await home.structures().list()
       if let structure = structures.first(where: { $0.id == self.structureID }) {

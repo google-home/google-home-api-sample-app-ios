@@ -16,12 +16,14 @@ import Combine
 import GoogleHomeSDK
 import GoogleHomeTypes
 import OSLog
+
 @MainActor
 public class AutomationList: ObservableObject {
   /// Data models for UI display.
   @Published public var automationsAndUIModels = [(any Automation, AutomationUIDataModel)]()
   public var automationsUIModels: [AutomationUIDataModel] { automationsAndUIModels.map { $0.1 } }
   public var automations: [any Automation] { automationsAndUIModels.map { $0.0 } }
+  @Published public var suggestions = [AutomationSuggestion]()
   public let structure: Structure
   public init(structure: Structure) {
     self.structure = structure
@@ -48,16 +50,67 @@ public class AutomationList: ObservableObject {
         add(automation)
       }
       Logger().info("ListAutomations response: \(automations)")
+
+      try await fetchSuggestions()
     } catch {
       Logger().error("ListAutomations error: \(error)")
       throw error
     }
   }
 
-  /// Create automation command.
-  public func createAutomation(_ automationObject: any DraftAutomation) async throws {
+  /// Fetch automation suggestions from the structure.
+  public func fetchSuggestions() async throws {
+    Logger().info("Fetching suggestions for structure ID: \(self.structure.id)")
     do {
-      let newAutomation = try await structure.createAutomation(automationObject)
+      let suggestionsList = try await structure.suggestions()
+      self.suggestions = suggestionsList
+      Logger().info("Fetch suggestions response: \(suggestionsList)")
+    } catch {
+      Logger().error("Fetch suggestions error: \(error)")
+      throw error
+    }
+  }
+
+  /// Likes an automation suggestion.
+  public func likeSuggestion(_ suggestion: AutomationSuggestion) async throws {
+    do {
+      try await structure.likeSuggestion(suggestionID: suggestion.id)
+      Logger().info("Liked suggestion: \(suggestion.id)")
+      try await fetchSuggestions()
+    } catch {
+      Logger().error("Like suggestion error: \(error)")
+      throw error
+    }
+  }
+
+  /// Dislikes an automation suggestion.
+  public func dislikeSuggestion(_ suggestion: AutomationSuggestion) async throws {
+    do {
+      try await structure.dislikeSuggestion(suggestionID: suggestion.id)
+      Logger().info("Disliked suggestion: \(suggestion.id)")
+      try await fetchSuggestions()
+    } catch {
+      Logger().error("Dislike suggestion error: \(error)")
+      throw error
+    }
+  }
+
+  /// Clears the feedback for an automation suggestion.
+  public func clearSuggestionFeedback(_ suggestion: AutomationSuggestion) async throws {
+    do {
+      try await structure.clearSuggestionFeedback(suggestionID: suggestion.id)
+      Logger().info("Cleared suggestion feedback: \(suggestion.id)")
+      try await fetchSuggestions()
+    } catch {
+      Logger().error("Clear suggestion feedback error: \(error)")
+      throw error
+    }
+  }
+
+  /// Create automation command.
+  public func createAutomation(_ draftAutomation: any DraftAutomation) async throws {
+    do {
+      let newAutomation = try await structure.createAutomation(draftAutomation)
       Logger().info("CreateCommand Response Automation name: \(newAutomation.name)")
       if newAutomation.validationIssues.count > 0 {
         Logger().error("Found issues in the automation: \(newAutomation.validationIssues)")
@@ -66,8 +119,11 @@ public class AutomationList: ObservableObject {
         } catch {
           Logger().error("Failed to delete invalid automation during rollback: \(error)")
         }
+        let issueDescriptions = newAutomation.validationIssues
+          .map { self.description(for: $0) }
+          .joined(separator: "; ")
         throw HomeError.invalidArgument(
-          "Automation has validation issues, new automation generation failed."
+          "Automation has validation issues: \(issueDescriptions)"
         )
       }
     } catch {
@@ -121,8 +177,7 @@ public class AutomationList: ObservableObject {
             (updatedAutomation, AutomationUIDataModel(draftAutomation: updatedAutomation))
         }
       } else {
-        Logger().error(
-          "Unable to update automation list for automation: \(updatedAutomation.id)")
+        Logger().error("Unable to update automation list for automation: \(updatedAutomation.id)")
       }
       return updatedAutomation
     } catch {
@@ -150,5 +205,14 @@ public class AutomationList: ObservableObject {
       Logger().error("DeleteCommand error: \(error)")
       throw error
     }
+  }
+
+  private func description(for issue: AutomationValidationIssue) -> String {
+    if case .invalidCustomCameraEventQuery(let query, let reason, let suggestions, _) = issue.issueType {
+      let detailsSuffix = issue.details.isEmpty ? "" : " (\(issue.details))"
+      let suggestionsSuffix = suggestions.isEmpty ? "" : " (Suggestions: \(suggestions.joined(separator: ", ")))"
+      return "Invalid camera query '\(query)': \(reason)\(detailsSuffix)\(suggestionsSuffix)"
+    }
+    return issue.details.isEmpty ? String(describing: issue.issueType) : issue.details
   }
 }

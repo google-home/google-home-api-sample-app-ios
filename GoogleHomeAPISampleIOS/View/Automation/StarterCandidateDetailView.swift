@@ -19,15 +19,12 @@ import SwiftUI
 
 @MainActor
 struct StarterCandidateDetailView: View {
-  @State private var toggleValue = false
   @State private var selectedEntryForSheet: CandidatesViewModel.NodeEntry?
-  @State private var selectedOperation: Operations = Operations.equalsTo
-  @State private var levelValue: Float = 125
 
   /// Model for the selected device
   @ObservedObject private var viewModel: CandidatesViewModel
   @Binding var navigationPath: NavigationPath
-  
+
   init(viewModel: CandidatesViewModel, navigationPath: Binding<NavigationPath>) {
     self.viewModel = viewModel
     self._navigationPath = navigationPath
@@ -48,7 +45,7 @@ struct StarterCandidateDetailView: View {
       .padding(.top, .lg)
     }
     .sheet(item: $selectedEntryForSheet) { currentEntry in
-      AnyView(self.constraintSheet(for: currentEntry))
+      StarterConstraintSheetView(entry: currentEntry, viewModel: viewModel, navigationPath: $navigationPath)
     }
   }
 
@@ -63,9 +60,15 @@ struct StarterCandidateDetailView: View {
   /// Display corresponding selectable traits
   private func deviceNodeSection(selectedStarterDevice: CandidatesViewModel.DeviceEntry) -> some View {
     Section(selectedStarterDevice.typeName) {
-      ForEach(selectedStarterDevice.nodes.filter { $0.isSupported && $0.node is TraitAttributesCandidate }) {
-        entry in
-        CreateButtonView(imageName: entry.iconName, text1: entry.description, text2: "") {
+      let nodes = selectedStarterDevice.nodes.filter {
+        $0.isSupported && ($0.node is TraitAttributesCandidate || $0.node is EventCandidate)
+      }
+      ForEach(nodes) { entry in
+        CreateButtonView(
+          imageName: entry.iconName,
+          text1: entry.description,
+          text2: entry.subdescription
+        ) {
           selectedEntryForSheet = entry
         }
         .padding(.bottom, .sm)
@@ -73,20 +76,33 @@ struct StarterCandidateDetailView: View {
       .listRowSeparator(.hidden)
     }
   }
+}
 
-  /// Display a sheet for trait condition selection
-  private func constraintSheet(for entry: CandidatesViewModel.NodeEntry) -> any View {
-    let trait = entry.node.trait
+struct StarterConstraintSheetView: View {
+  private static let defaultLevelValue: Float = 125
+  private static let minLevelValue: Float = 1
+  private static let maxLevelValue: Float = 254
+  private static let levelStep: Float = 1
+  private static let sheetHeightFraction = 0.65
 
-    guard let selectedStarterDevice = viewModel.selectedStarterDevice else {
-      return VStack {
-        Text("No device selected")
-      }
-      .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(.lg)
-    }
-    if trait == Matter.OnOffTrait.self || trait == Google.SimplifiedOnOffTrait.self {
-      return VStack {
+  let entry: CandidatesViewModel.NodeEntry
+  @ObservedObject var viewModel: CandidatesViewModel
+  @Binding var navigationPath: NavigationPath
+
+  @State private var toggleValue = false
+  @State private var selectedOperation: Operations = .equalsTo
+  @State private var levelValue: Float = defaultLevelValue
+
+  // Custom camera trigger variables
+  @State private var selectedQueryOption = CandidatesViewModel.queryOptions.first ?? ""
+  @State private var cameraDescriptionText: String = ""
+
+  var body: some View {
+    let trait = entry.traitType
+    let eventType = entry.eventType
+
+    VStack {
+      if trait == Matter.OnOffTrait.self || trait == Google.SimplifiedOnOffTrait.self {
         Spacer()
         HStack {
           Text(entry.description).foregroundColor(Color("fontColor"))
@@ -95,60 +111,125 @@ struct StarterCandidateDetailView: View {
         Spacer()
         CreateToggleButtonView(isOn: $toggleValue, leftText: "On", rightText: "Off")
         Spacer()
-        doneButtonView(for: entry, selectedStarterDevice: selectedStarterDevice)
-      }
-      .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(.lg)
-    } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
-      return VStack {
-        // Display operations and a slder for  selection
-        Picker(selection: $selectedOperation, label: Text("Operation")) {
-          Text("Eaquals to").tag(Operations.equalsTo)
-          Text("Less than").tag(Operations.lessThan)
-          Text("Greater than").tag(Operations.greaterThan)
+        doneButtonView(cameraDescription: nil)
+      } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
+        VStack(spacing: .lg) {
+          Picker(selection: $selectedOperation, label: Text("Operation")) {
+            Text("Equals to").tag(Operations.equalsTo)
+            Text("Less than").tag(Operations.lessThan)
+            Text("Greater than").tag(Operations.greaterThan)
+          }
+          .pickerStyle(SegmentedPickerStyle())
+
+          Spacer()
+
+          Text("Value: \(String(format: "%.0f", levelValue))")
+          Slider(
+            value: $levelValue,
+            in: Self.minLevelValue...Self.maxLevelValue,
+            step: Self.levelStep
+          ) {
+            Text("Level")
+          } minimumValueLabel: {
+            Text(String(format: "%.0f", Self.minLevelValue))
+          } maximumValueLabel: {
+            Text(String(format: "%.0f", Self.maxLevelValue))
+          }
+
+          Spacer()
+
+          doneButtonView(cameraDescription: nil)
         }
-        .pickerStyle(SegmentedPickerStyle())
-        Spacer()
-        Text("Value: \(String(format: "%.0f", levelValue))")
-        Slider(value: $levelValue, in : 1...254, step: 1) {
-        } minimumValueLabel: {
-            Text("1")
-        } maximumValueLabel: {
-            Text("254")
+        .padding(.horizontal, .xl)
+      } else if eventType == Google.VideoAnalysisTrait.QueryMatchedEvent.self {
+        VStack(alignment: .leading, spacing: .mmd) {
+          Text("Detect Custom Activity")
+            .font(.title2)
+            .bold()
+            .padding(.top, .xl)
+
+          Text("Select or describe the activity or object that should trigger this automation.")
+            .font(.body)
+            .foregroundColor(.secondary)
+
+          Picker("Activity Type", selection: $selectedQueryOption) {
+            ForEach(CandidatesViewModel.queryOptions, id: \.self) { option in
+              Text(option).tag(option)
+            }
+          }
+          .pickerStyle(.wheel)
+          .frame(height: Dimensions.CameraPicker.height)
+          .padding(.top, .md)
+          .padding(.bottom, Dimensions.CameraPicker.bottomPadding)
+
+          if selectedQueryOption == "custom text" {
+            TextField("Enter description...", text: $cameraDescriptionText)
+              .textFieldStyle(.roundedBorder)
+              .padding(.vertical, .sm)
+              .autocorrectionDisabled(true)
+              .textInputAutocapitalization(.never)
+          }
+
+          Spacer()
+
+          let finalDescription = (selectedQueryOption == "custom text") ? cameraDescriptionText : selectedQueryOption
+          doneButtonView(cameraDescription: finalDescription)
         }
-        Spacer()
-        doneButtonView(for: entry, selectedStarterDevice: selectedStarterDevice)
-      }
-      .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(.lg)
-    } else {
-      return VStack {
+        .padding(.horizontal, .xl)
+        .contentShape(Rectangle())
+        .onTapGesture {
+          UIApplication.shared.endEditing()
+        }
+      } else {
         Text("No supported trait")
       }
-      .presentationDetents([.fraction(CGFloat(0.5))])
-      .presentationCornerRadius(.lg)
+    }
+    .presentationDetents([.fraction(Self.sheetHeightFraction)])
+    .presentationCornerRadius(.lg)
+    .contentShape(Rectangle())
+    .onTapGesture {
+      UIApplication.shared.endEditing()
+    }
+    .onAppear {
+      if eventType == Google.VideoAnalysisTrait.QueryMatchedEvent.self {
+        selectedOperation = .cameraDescriptionMatch
+      }
     }
   }
 
-  private func doneButtonView(for entry: CandidatesViewModel.NodeEntry, selectedStarterDevice: CandidatesViewModel.DeviceEntry) -> some View {
-    HStack {
-      Spacer()
-      Button(action: {
-        // Store the selected starter info to the 'selecettedStarters' array
-        viewModel.addSelectedStarters(device: selectedStarterDevice.device, deviceType: selectedStarterDevice.deviceType, trait: entry.traitType, valueOnOff: toggleValue, operation: selectedOperation, levelValue: UInt8(levelValue))
-        // Redirect back to GenericEditorView
-        navigationPath.removeLast(2)
-      }) {
-        Text("Done")
-          .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
-          .background(Color.blue)
-          .foregroundColor(.white)
-          .cornerRadius(.md)
-          .padding(.bottom, .lg)
-          .padding(.trailing, .smd)
+  @ViewBuilder
+  private func doneButtonView(cameraDescription: String?) -> some View {
+    if let selectedStarterDevice = viewModel.selectedStarterDevice {
+      let isCameraEvent = entry.eventType == Google.VideoAnalysisTrait.QueryMatchedEvent.self
+      let isInvalidCameraDescription =
+        isCameraEvent
+        && (cameraDescription?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+
+      HStack {
+        Spacer()
+        Button(action: {
+          viewModel.addSelectedStarters(
+            device: selectedStarterDevice.device,
+            deviceType: selectedStarterDevice.deviceType,
+            trait: entry.traitType,
+            eventType: entry.eventType,
+            valueOnOff: toggleValue,
+            operation: selectedOperation,
+            levelValue: UInt8(levelValue),
+            cameraDescription: cameraDescription
+          )
+          navigationPath.removeLast(2)
+        }) {
+          Text("Done")
+            .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
+            .background(isInvalidCameraDescription ? Color.gray : Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(.md)
+            .padding(.bottom, .lg)
+            .padding(.trailing, .smd)
+        }
+        .disabled(isInvalidCameraDescription)
       }
-      .alignmentGuide(.bottom) { $0[.bottom] }
-      .background(Color.clear)
     }
   }
 }

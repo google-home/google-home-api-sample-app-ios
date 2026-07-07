@@ -23,6 +23,8 @@ enum HomeSampleError: Error {
   case unableToExecuteAutomation
   case noHubFound
   case errorSavingAutomation(error: String)
+  case unableToLinkCloudAccount(error: String)
+  case unableToSyncLinkedDevices(error: String)
 
   var title: String {
     alertInfo.title
@@ -40,6 +42,10 @@ enum HomeSampleError: Error {
       return ("Unable to execute automation", "An error occurred while executing the automation.")
     case .noHubFound:
       return ("No hub found.", "Please ensure a hub is set up in your home.")
+    case .unableToLinkCloudAccount(let error):
+      return ("Link Cloud Account Error", "Unable to link cloud account: \(error)")
+    case .unableToSyncLinkedDevices(let error):
+      return ("Sync Linked Devices Error", "Unable to sync linked devices: \(error)")
     }
   }
 }

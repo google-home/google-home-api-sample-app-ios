@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import GoogleHomeSDK
+import GoogleHomeTypes
 import SwiftUI
 
 struct MainView: View {
@@ -45,7 +46,8 @@ struct MainView: View {
               let selectedID = self.mainViewModel.selectedStructureID
               let selectedStructure = self.mainViewModel.structure(
                 structureID: selectedID)
-              Menu(selectedStructure?.name ?? "Select Structure") {
+              let areaPresenceStateText = self.mainViewModel.areaPresenceState?.text
+              Menu {
                 ForEach(sortedStructures) { structure in
                   let isSelected = structure.id == selectedID
                   Button(
@@ -54,6 +56,15 @@ struct MainView: View {
                   ) {
                     self.mainViewModel.updateSelectedStructureID(structure.id)
                   }
+                }
+              } label: {
+                let name = selectedStructure?.name ?? "Select Structure"
+                if let areaPresenceStateText {
+                  Text(
+                    "\(name) (\(areaPresenceStateText)) \(Image(systemName: "chevron.up.chevron.down"))"
+                  )
+                } else {
+                  Text("\(name) \(Image(systemName: "chevron.up.chevron.down"))")
                 }
               }
             }
@@ -74,13 +85,24 @@ struct MainView: View {
       self.mainViewModel.structureViewModel(
         structureID: self.mainViewModel.selectedStructureID)
 
-    if let structureViewModel {
-      StructureView(viewModel: structureViewModel)
-        .environmentObject(self.mainViewModel)
-    } else if accountViewModel.home == nil {
-      Text("Sign In Required")
-    } else {
-      Text("No available structures.")
+    Group {
+      if let structureViewModel {
+        StructureView(viewModel: structureViewModel)
+          .environmentObject(self.mainViewModel)
+      } else if accountViewModel.home == nil {
+        Text("Sign In Required")
+      } else {
+        Text("No available structures.")
+      }
+    }
+    .sheet(isPresented: self.$accountViewModel.isShowUserManagementView) {
+      if let home = self.accountViewModel.home {
+        NavigationStack {
+          UserManagementView(home: home) {
+            self.accountViewModel.isShowUserManagementView = false
+          }
+        }
+      }
     }
   }
 }

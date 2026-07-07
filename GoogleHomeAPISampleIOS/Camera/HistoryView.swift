@@ -113,9 +113,13 @@ public struct HistoryView: View {
     ForEach(self.historyViewModel.dailyEvents, id: \.dateString) { dayEvents in
       Section(header: Text(dayEvents.dateString)) {
         ForEach(dayEvents.events, id: \.id) { historyItem in
-          NavigationLink (
-            destination: HistoricalPlaybackView(url: historyItem.historicalPlaybackURL)
-          ) {
+          if let url = historyItem.historicalPlaybackURL {
+            NavigationLink (
+              destination: HistoricalPlaybackView(url: url, home: self.home)
+            ) {
+              HistoryItemView(historyItem: historyItem, urlSession: self.urlSession)
+            }
+          } else {
             HistoryItemView(historyItem: historyItem, urlSession: self.urlSession)
           }
         }
@@ -316,6 +320,7 @@ public struct HistoryItemView: View {
     static let trailingPadding: CGFloat = 5
     static let thumbnailSize: CGFloat = 80
     static let placeholderSize: CGFloat = 40
+    static let iconSize: CGFloat = 24
   }
 
   private let historyItem: HistoryItemViewModel
@@ -339,7 +344,9 @@ public struct HistoryItemView: View {
 
   public var body: some View {
     HStack(alignment: .firstTextBaseline) {
-      Image(systemName: "video").padding(.trailing, Constraints.trailingPadding)
+      Image(systemName: self.historyItem.iconName)
+        .frame(width: Constraints.iconSize, height: Constraints.iconSize)
+        .padding(.trailing, Constraints.trailingPadding)
       VStack(alignment: .leading) {
         Text(self.historyItem.eventTitle).font(.headline)
         if let captionTitle = self.historyItem.captionTitle {
@@ -349,6 +356,13 @@ public struct HistoryItemView: View {
         Text(self.historyItem.timestampString).font(.caption).foregroundColor(.gray)
       }
       Spacer()
+      self.mediaView
+    }
+  }
+
+  @ViewBuilder
+  private var mediaView: some View {
+    if !self.historyItem.thumbnailURL.isEmpty {
       ZStack {
         AsyncImage(url: URL(string: self.historyItem.thumbnailURL)) { phase in
           switch phase {

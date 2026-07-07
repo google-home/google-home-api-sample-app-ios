@@ -26,6 +26,15 @@ class FamiliarFacesViewModel: ObservableObject {
     static let loadFailedErrorMessagePrefix = "Failed to load faces: "
     static let loadCamerasFailedMessagePrefix = "Failed to load cameras: "
     static let toggleFaceDetectionFailedMessagePrefix = "Failed to toggle face detection for "
+    static let renameMissingTraitMessage = "Cannot rename: trait or face ID is missing."
+    static let renameFailedMessagePrefix = "Failed to rename face: "
+    static let deleteFailedMessagePrefix = "Failed to delete face: "
+    static let dismissFailedMessagePrefix = "Failed to dismiss face: "
+    static let mergeFailedMessagePrefix = "Failed to merge faces: "
+    static let loadInstancesFailedMessagePrefix = "Failed to load face instances: "
+    static let deleteInstancesFailedMessagePrefix = "Failed to delete face instances: "
+    static let moveInstancesFailedMessagePrefix = "Failed to move face instances: "
+    static let createPersonFailedMessagePrefix = "Failed to create new person: "
   }
 
   struct FaceCameraItem: Identifiable {
@@ -39,6 +48,8 @@ class FamiliarFacesViewModel: ObservableObject {
   @Published var knownFaces = [GoogleHomeTypes.Google.FaceLibraryTrait.Face]()
   @Published var unlabeledFaces = [GoogleHomeTypes.Google.FaceLibraryTrait.Face]()
   @Published var cameraItems = [FaceCameraItem]()
+  @Published var loadedFaceInstances = [GoogleHomeTypes.Google.FaceLibraryTrait.FaceInstance]()
+  @Published var isLoadingInstances = false
   @Published var isLoading = false
   @Published var errorMessage: String? = nil
   private let home: Home
@@ -66,7 +77,7 @@ class FamiliarFacesViewModel: ObservableObject {
       self.knownFaces = faces.filter { $0.category == .faceCategoryKnown }
       self.unlabeledFaces = faces.filter { $0.category == .faceCategoryUnlabeled }
     } catch {
-      Logger().error("[FamiliarFacesViewModel] Failed to load faces: \(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.loadFailedErrorMessagePrefix)\(error.localizedDescription) (\(error))")
       errorMessage = "\(Constants.loadFailedErrorMessagePrefix)\(error.localizedDescription)"
     }
     isLoading = false
@@ -79,7 +90,7 @@ class FamiliarFacesViewModel: ObservableObject {
   /// - Returns: A Boolean indicating if the rename operation completed successfully.
   public func renameFace(face: GoogleHomeTypes.Google.FaceLibraryTrait.Face, newName: String) async -> Bool {
     guard let trait = faceLibraryTrait, let faceID = face.id else {
-      Logger().error("[FamiliarFacesViewModel] Cannot rename: trait or face ID is missing.")
+      Logger().error("\(Constants.renameMissingTraitMessage)")
       return false
     }
     do {
@@ -91,7 +102,7 @@ class FamiliarFacesViewModel: ObservableObject {
       await loadFaces()
       return true
     } catch {
-      Logger().error("[FamiliarFacesViewModel] Failed to rename face: \(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.renameFailedMessagePrefix)\(error.localizedDescription) (\(error))")
       return false
     }
   }
@@ -104,7 +115,7 @@ class FamiliarFacesViewModel: ObservableObject {
       _ = try await trait.removeFaces(faceIdsArray: [faceID])
       await loadFaces()
     } catch {
-      Logger().error("[FamiliarFacesViewModel] Failed to delete face: \(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.deleteFailedMessagePrefix)\(error.localizedDescription) (\(error))")
     }
   }
 
@@ -116,7 +127,7 @@ class FamiliarFacesViewModel: ObservableObject {
       _ = try await trait.updateFace(id: faceID, name: "", category: .faceCategoryNotAPerson)
       await loadFaces()
     } catch {
-      Logger().error("[FamiliarFacesViewModel] Failed to dismiss face: \(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.dismissFailedMessagePrefix)\(error.localizedDescription) (\(error))")
     }
   }
 
@@ -128,15 +139,19 @@ class FamiliarFacesViewModel: ObservableObject {
     guard let trait = faceLibraryTrait, let masterID = masterFace.id else { return }
     let duplicateIDs = duplicateFaces.compactMap { $0.id }
     guard !duplicateIDs.isEmpty else { return }
+    var allIDsToMerge = duplicateIDs
+    if !allIDsToMerge.contains(masterID) {
+      allIDsToMerge.append(masterID)
+    }
     do {
       _ = try await trait.mergeFaces(
         mergedFaceId: masterID,
-        faceIdsToMergeArray: duplicateIDs,
+        faceIdsToMergeArray: allIDsToMerge,
         name: nil
       )
       await loadFaces()
     } catch {
-      Logger().error("[FamiliarFacesViewModel] Failed to merge faces: \(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.mergeFailedMessagePrefix)\(error.localizedDescription) (\(error))")
     }
   }
 
@@ -145,10 +160,8 @@ class FamiliarFacesViewModel: ObservableObject {
     do {
       let devices = try await home.devices().list()
       let structureDevices = devices.filter { $0.structureID == structure.id }
-
       let rooms = try await home.rooms().list()
       let roomMap = Dictionary(uniqueKeysWithValues: rooms.map { ($0.id, $0.name) })
-
       var items = [FaceCameraItem]()
       for device in structureDevices {
         guard let trait = await getAvStreamAnalysisTrait(for: device) else {
@@ -157,10 +170,8 @@ class FamiliarFacesViewModel: ObservableObject {
         guard trait.attributes.supportedEventTriggers?.contains(.face) == true else {
           continue
         }
-
         let isEnabled = trait.attributes.enabledEventTriggers?.contains(.face) == true
         let roomName = device.roomID.flatMap { roomMap[$0] }
-
         items.append(
           FaceCameraItem(
             id: device.id,
@@ -173,7 +184,7 @@ class FamiliarFacesViewModel: ObservableObject {
       }
       self.cameraItems = items.sorted(by: { $0.name < $1.name })
     } catch {
-      Logger().error("[FamiliarFacesViewModel] \(Constants.loadCamerasFailedMessagePrefix)\(error.localizedDescription) (\(error))")
+      Logger().error("\(Constants.loadCamerasFailedMessagePrefix)\(error.localizedDescription) (\(error))")
     }
   }
 
@@ -193,8 +204,82 @@ class FamiliarFacesViewModel: ObservableObject {
         ]
       )
     } catch {
-      Logger().error("[FamiliarFacesViewModel] \(Constants.toggleFaceDetectionFailedMessagePrefix)\(item.name): \(error.localizedDescription)")
+      Logger().error("\(Constants.toggleFaceDetectionFailedMessagePrefix)\(item.name): \(error.localizedDescription)")
       cameraItems[index].isEnabled = !isEnabled
+    }
+  }
+
+  /// Asynchronously loads all face instances for a specific face profile.
+  public func loadFaceInstances(for face: GoogleHomeTypes.Google.FaceLibraryTrait.Face) async {
+    guard let trait = faceLibraryTrait, let faceID = face.id else { return }
+    self.loadedFaceInstances = [] // Clear previous instances immediately to prevent UI ghosting
+    self.isLoadingInstances = true
+    do {
+      let response = try await trait.getFaceInstances(faceId: faceID)
+      self.loadedFaceInstances = response.faceInstancesArray
+    } catch {
+      Logger().error("\(Constants.loadInstancesFailedMessagePrefix)\(error.localizedDescription) (\(error))")
+    }
+    self.isLoadingInstances = false
+  }
+
+  /// Deletes selected face instances.
+  public func deleteFaceInstances(instanceIDs: [String], for face: GoogleHomeTypes.Google.FaceLibraryTrait.Face) async {
+    guard let trait = faceLibraryTrait, !instanceIDs.isEmpty else { return }
+    do {
+      _ = try await trait.removeFaceInstances(faceInstanceIdsArray: instanceIDs)
+      await loadFaceInstances(for: face)
+      await loadFaces()
+    } catch {
+      Logger().error("\(Constants.deleteInstancesFailedMessagePrefix)\(error.localizedDescription) (\(error))")
+    }
+  }
+
+  /// Moves selected face instances to another target face profile.
+  public func moveFaceInstances(instanceIDs: [String], toTargetFaceID targetFaceID: String, for face: GoogleHomeTypes.Google.FaceLibraryTrait.Face) async {
+    guard let trait = faceLibraryTrait, !instanceIDs.isEmpty else { return }
+    do {
+      let oldFaces = try await trait.getFaces().facesArray
+      _ = try await trait.moveFaceInstances(faceInstanceIdsArray: instanceIDs)
+      if !targetFaceID.isEmpty {
+        let newFaces = try await trait.getFaces().facesArray
+        let oldIDs = Set(oldFaces.compactMap { $0.id })
+        let newlyCreatedFaceIDs = newFaces.compactMap { $0.id }.filter { !oldIDs.contains($0) }
+        for mID in newlyCreatedFaceIDs {
+          _ = try await trait.mergeFaces(
+            mergedFaceId: targetFaceID,
+            faceIdsToMergeArray: [targetFaceID, mID],
+            name: nil
+          )
+        }
+      }
+      await loadFaceInstances(for: face)
+      await loadFaces()
+    } catch {
+      Logger().error("\(Constants.moveInstancesFailedMessagePrefix)\(error.localizedDescription) (\(error))")
+    }
+  }
+
+  /// Splits selected face instances into a new person with the given name.
+  public func createNewPerson(from instanceIDs: [String], withName name: String, for face: GoogleHomeTypes.Google.FaceLibraryTrait.Face) async {
+    guard let trait = faceLibraryTrait, !instanceIDs.isEmpty else { return }
+    do {
+      let oldFaces = try await trait.getFaces().facesArray
+      _ = try await trait.moveFaceInstances(faceInstanceIdsArray: instanceIDs)
+      let newFaces = try await trait.getFaces().facesArray
+      let oldIDs = Set(oldFaces.compactMap { $0.id })
+      let newlyCreatedFaceIDs = newFaces.compactMap { $0.id }.filter { !oldIDs.contains($0) }
+      for targetID in newlyCreatedFaceIDs {
+        _ = try await trait.updateFace(
+          id: targetID,
+          name: name,
+          category: .faceCategoryKnown
+        )
+      }
+      await loadFaceInstances(for: face)
+      await loadFaces()
+    } catch {
+      Logger().error("\(Constants.createPersonFailedMessagePrefix)\(error.localizedDescription) (\(error))")
     }
   }
 

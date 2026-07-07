@@ -33,6 +33,8 @@ struct GoogleHomeAPISampleIOS: App {
           TemperatureSensorDeviceType.self,
           WindowCoveringDeviceType.self,
           GoogleTVDeviceType.self,
+          GoogleCameraDeviceType.self,
+          GoogleDoorbellDeviceType.self
         ],
         traits: [
           Google.TimeTrait.self,
@@ -46,6 +48,7 @@ struct GoogleHomeAPISampleIOS: App {
           Google.SimplifiedThermostatTrait.self,
           Google.AreaPresenceStateTrait.self,
           Google.AreaAttendanceStateTrait.self,
+          Google.VideoAnalysisTrait.self,
           Matter.LevelControlTrait.self,
           Matter.OnOffTrait.self,
           Matter.TemperatureMeasurementTrait.self,

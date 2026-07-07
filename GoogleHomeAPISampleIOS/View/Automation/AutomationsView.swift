@@ -26,67 +26,23 @@ struct AutomationsView: View {
   public var body: some View {
     NavigationStack(path: $navigationPath) {
       VStack {
-        HStack {
-          Text("Automation")
-            .font(.body)
-            .padding(.leading, .xs)
-          Spacer()
-        }
-        if automationList.automationsUIModels.isEmpty {
-          Spacer()
-          Text("Add an automation to get started.")
-            .font(.body)
-          Spacer()
-        } else {
-          List {
-            /// Display automation scripts
-            ForEach(Array(automationList.automationsUIModels.enumerated()), id: \.offset) { index, uiModel in
-              let startersText =
-                "\(uiModel.starters.count) \(uiModel.starters.count == 1 ? "starter" : "starters")"
-              let conditionsText =
-                "\(uiModel.conditions.count) \(uiModel.conditions.count == 1 ? "condition" : "conditions")"
-              let actionsText =
-                "\(uiModel.actions.count) \(uiModel.actions.count == 1 ? "action" : "actions")"
+        headerView()
 
-              CreateButtonView(imageName: "wb_twilight_symbol", text1: "\(uiModel.name)",
-                               text2: "\(startersText) · \(conditionsText) · \(actionsText)")
-              {
-                selectedAutomationIndex = index
-              }
-              .swipeActions(
-                edge: .trailing, allowsFullSwipe: false,
-                content: {
-                  Button(role: .destructive) {
-                    Task {
-                      try await automationList.deleteAutomation(automationList.automations[index])
-                    }
-                  } label: {
-                    Image("delete_symbol")
-                  }
-                }
-              )
-              .padding(.bottom, .sm)
-            }
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
+        List {
+          if automationList.automationsUIModels.isEmpty {
+            emptyStateSection()
+          } else {
+            userAutomationsSection()
           }
-          .listStyle(PlainListStyle())
+
+          if !automationList.suggestions.isEmpty {
+            aiSuggestionsSection()
+          }
         }
+        .listStyle(PlainListStyle())
 
         Spacer()
-        HStack {
-          Spacer()
-          NavigationLink(value: Destination.AutomationSuggestionsView) {
-            Text("+ Add")
-              .frame(
-                width: Dimensions.buttonWidth,
-                height: Dimensions.buttonHeight
-              )
-              .background(Color.blue)
-              .foregroundColor(.white)
-              .cornerRadius(.md)
-          }
-        }
+        addButtonView()
       }
       .navigationDestination(item: $selectedAutomationIndex) { index in
         if automationList.automations.count > index {
@@ -98,6 +54,18 @@ struct AutomationsView: View {
             selectedAutomationIndex = nil
           }
           AutomationView(viewModel: viewModel)
+        }
+      }
+      .navigationDestination(for: SuggestionDestination.self) { destination in
+        if let suggestion = automationList.suggestions.first(where: { $0.id == destination.id }) {
+          let viewModel = AutomationCreationViewModel(
+            automationList: automationList,
+            draftAutomation: suggestion.suggestionInstance
+          )
+          AutomationCreationView(
+            viewModel: viewModel,
+            navigationPath: $navigationPath
+          )
         }
       }
       .navigationDestination(for: Destination.self) { destination in
@@ -128,10 +96,35 @@ struct AutomationsView: View {
               navigationPath: $navigationPath
             )
           }
+        case .NaturalLanguageEditorView:
+          if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel(),
+            let home = mainViewModel.home
+          {
+            GenericEditorView(
+              viewModel: GenericEditorViewModel(automationList: automationList),
+              candidatesViewModel: candidatesViewModel,
+              automationRepository: AutomationsRepository(
+                home: home,
+                structure: automationList.structure
+              ),
+              cameraOnly: true,
+              editorTitle: "Nature Language Starter",
+              navigationPath: $navigationPath
+            )
+          }
         case .StarterCandidatesView:
           if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel() {
             StarterCandidatesView(
               viewModel: candidatesViewModel,
+              cameraOnly: false,
+              navigationPath: $navigationPath
+            )
+          }
+        case .CameraStarterCandidatesView:
+          if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel() {
+            StarterCandidatesView(
+              viewModel: candidatesViewModel,
+              cameraOnly: true,
               navigationPath: $navigationPath
             )
           }
@@ -160,12 +153,136 @@ struct AutomationsView: View {
       }
     }
   }
+
+  // MARK: - Subviews
+
+  @ViewBuilder
+  private func headerView() -> some View {
+    HStack {
+      Text("Automation")
+        .font(.body)
+        .padding(.leading, .xs)
+      Spacer()
+    }
+  }
+
+  @ViewBuilder
+  private func emptyStateSection() -> some View {
+    Section {
+      VStack(alignment: .center) {
+        Spacer()
+        Text("Add an automation to get started.")
+          .font(.body)
+          .foregroundColor(.secondary)
+          .frame(maxWidth: .infinity, alignment: .center)
+        Spacer()
+      }
+      .frame(height: 120)
+    }
+    .listRowInsets(EdgeInsets())
+    .listRowSeparator(.hidden)
+  }
+
+  @ViewBuilder
+  private func userAutomationsSection() -> some View {
+    Section("Your Automations") {
+      ForEach(Array(automationList.automationsUIModels.enumerated()), id: \.offset) { index, uiModel in
+        let startersText =
+          "\(uiModel.starters.count) \(uiModel.starters.count == 1 ? "starter" : "starters")"
+        let conditionsText =
+          "\(uiModel.conditions.count) \(uiModel.conditions.count == 1 ? "condition" : "conditions")"
+        let actionsText =
+          "\(uiModel.actions.count) \(uiModel.actions.count == 1 ? "action" : "actions")"
+
+        CreateButtonView(imageName: "wb_twilight_symbol", text1: "\(uiModel.name)",
+                         text2: "\(startersText) · \(conditionsText) · \(actionsText)")
+        {
+          selectedAutomationIndex = index
+        }
+        .swipeActions(
+          edge: .trailing, allowsFullSwipe: false,
+          content: {
+            Button(role: .destructive) {
+              Task {
+                try await automationList.deleteAutomation(automationList.automations[index])
+              }
+            } label: {
+              Image("delete_symbol")
+            }
+          }
+        )
+        .padding(.bottom, .sm)
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowSeparator(.hidden)
+    }
+  }
+
+  @ViewBuilder
+  private func aiSuggestionsSection() -> some View {
+    Section("Suggested by AI") {
+      ForEach(automationList.suggestions, id: \.id) { suggestion in
+        AutomationSuggestionRowView(
+          suggestion: suggestion,
+          onSelect: {
+            navigationPath.append(SuggestionDestination(id: suggestion.id))
+          },
+          onLike: {
+            Task {
+              if suggestion.suggestionMetadata.feedbackType == .like {
+                try? await automationList.clearSuggestionFeedback(suggestion)
+              } else {
+                try? await automationList.likeSuggestion(suggestion)
+              }
+            }
+          },
+          onDislike: {
+            Task {
+              if suggestion.suggestionMetadata.feedbackType == .dislike {
+                try? await automationList.clearSuggestionFeedback(suggestion)
+              } else {
+                try? await automationList.dislikeSuggestion(suggestion)
+              }
+            }
+          }
+        )
+        .padding(.bottom, .sm)
+      }
+      .listRowInsets(EdgeInsets())
+      .listRowSeparator(.hidden)
+    }
+  }
+
+  @ViewBuilder
+  private func addButtonView() -> some View {
+    HStack {
+      Spacer()
+      NavigationLink(value: Destination.AutomationSuggestionsView) {
+        Text("+ Add")
+          .frame(
+            width: Dimensions.buttonWidth,
+            height: Dimensions.buttonHeight
+          )
+          .background(Color.blue)
+          .foregroundColor(.white)
+          .cornerRadius(.md)
+          .padding(.trailing, .xs)
+          .padding(.bottom, .xs)
+      }
+    }
+  }
 }
 
-enum Destination {
+struct SuggestionDestination: Hashable {
+  let id: String
+}
+
+enum Destination: Hashable {
   case AutomationSuggestionsView
   case GenericEditorView
+  case NaturalLanguageEditorView
   case StarterCandidatesView
+  case CameraStarterCandidatesView
   case ActionCandidatesView
   case StarterCandidateDetailView
   case ActionCandidateDetailView
@@ -174,4 +291,9 @@ enum Destination {
 enum Dimensions {
   static let buttonHeight = 40.0
   static let buttonWidth = 80.0
+
+  enum CameraPicker {
+    static let height: CGFloat = 150
+    static let bottomPadding: CGFloat = -30
+  }
 }
