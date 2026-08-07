@@ -48,7 +48,8 @@ public class CommissioningManager: NSObject, ObservableObject {
     add3PFabricFirst, forKey: CommissioningUserDefaultsKeys.shouldPerform3PFabricCommissioning)
 
     do {
-      try await structure.prepareForMatterCommissioning()
+      try await structure.prepareForMatterCommissioning(
+        matterOnboardingPayload: setupPayload)
     } catch {
       Logger().error("Failed to prepare for Matter Commissioning: \(error).")
       throw error
@@ -60,6 +61,9 @@ public class CommissioningManager: NSObject, ObservableObject {
       homes: [MatterAddDeviceRequest.Home(displayName: structure.name)]
     )
     let payload = self.createMatterSetupPayload(from: setupPayload)
+    if payload == nil {
+      Logger().warning("matter payload parsed as nil from setupPayload")
+    }
     let request = MatterAddDeviceRequest(topology: topology, setupPayload: payload)
 
     do {

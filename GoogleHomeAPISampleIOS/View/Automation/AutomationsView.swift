@@ -81,6 +81,7 @@ struct AutomationsView: View {
               navigationPath: $navigationPath
             )
             .environmentObject(automationList)
+            .environmentObject(mainViewModel)
           }
         case .GenericEditorView:
           if let candidatesViewModel = self.mainViewModel.getCandidatesViewModel(),

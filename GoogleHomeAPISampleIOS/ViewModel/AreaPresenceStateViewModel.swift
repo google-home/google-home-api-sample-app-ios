@@ -24,14 +24,19 @@ public class AreaPresenceStateViewModel: ObservableObject {
     "home.platform.traits.AreaAttendanceStateTrait.AttendanceStateChangeEvent"
   ]
   @Published private(set) var optInStatus: Bool = false
+  @Published private(set) var areaPresenceState: Google.AreaPresenceStateTrait.PresenceState? = nil
 
   private let structure: Structure
+  private var cancellable: AnyCancellable?
 
   public init(currentStructure: Structure) {
     self.structure = currentStructure
   }
 
   /// Opts in the user to area presence for the given structure.
+  ///
+  /// - Parameter optIn: `true` to participate in presence detection; `false` to opt out.
+  /// - Note: Controls whether this user's device contributes to structure Home/Away determination.
   public func optInToAreaPresence(optIn: Bool) async {
     do {
       try await self.structure.userStructure.setPresenceOptIn(optIn)
@@ -41,6 +46,9 @@ public class AreaPresenceStateViewModel: ObservableObject {
   }
 
   /// Monitors the opt in status of the structure.
+  ///
+  /// - Note: Runs as a structured child of the SwiftUI `.task` that calls it,
+  ///   so it is automatically cancelled when the view disappears.
   public func monitorOptInStatus() async {
     do {
       let stream = await self.structure.userStructure.presenceOptInStatus()
@@ -53,6 +61,8 @@ public class AreaPresenceStateViewModel: ObservableObject {
   }
 
   /// Deletes the presence history for the structure.
+  ///
+  /// - Note: Deletes history targeted at `AreaAttendanceStateTrait` event type IDs.
   public func deletePresenceHistory() async {
     do {
       try await self.structure.history.deleteAll(
@@ -61,6 +71,31 @@ public class AreaPresenceStateViewModel: ObservableObject {
     } catch {
       Logger().error("Failed to delete presence history: \(error)")
     }
+  }
+
+  /// Subscribes to real-time area presence state updates.
+  ///
+  /// - Note: Observes structure occupancy (`Home`/`Away`) via Combine on the main thread.
+  public func monitorAreaPresenceState() {
+    self.cancellable?.cancel()
+    self.cancellable = structure.traits
+      .subscribe(Google.AreaPresenceStateTrait.self)
+      .receive(on: DispatchQueue.main)
+      .sink(
+        receiveCompletion: { [weak self] completion in
+          if case .failure(let error) = completion {
+            Logger().error("AreaPresenceStateTrait subscription failed: \(error)")
+            self?.areaPresenceState = nil
+          }
+        },
+        receiveValue: { [weak self] trait in
+          self?.areaPresenceState = trait.attributes.presenceState
+        }
+      )
+  }
+
+  deinit {
+    cancellable?.cancel()
   }
 }
 

@@ -15,12 +15,34 @@
 import SwiftUI
 
 /// A view of area presence state.
+///
+/// - Note: Separates structure occupancy (`AreaPresenceStateTrait`) from user device opt-in (`setPresenceOptIn`).
 struct AreaPresenceStateView: View {
   @ObservedObject var viewModel: AreaPresenceStateViewModel
 
+  private enum Constants {
+    static let currentStateHeader = "Current State"
+    static let presenceStateLabel = "Presence State"
+    static let unknownValue = "Unknown"
+    static let optInSectionHeader = "Opt-in to Presence"
+    static let areaPresenceToggle = "Area Presence"
+    static let deleteHistoryButton = "Delete Presence History"
+    static let navigationTitle = "Area Presence"
+  }
+
   var body: some View {
     List {
-      Section(header: Text("Opt-in to Presence")) {
+      // Displays aggregate structure occupancy (e.g., Home/Away).
+      Section(header: Text(Constants.currentStateHeader)) {
+        HStack {
+          Text(Constants.presenceStateLabel)
+          Spacer()
+          Text(self.viewModel.areaPresenceState?.text ?? Constants.unknownValue)
+            .foregroundColor(.secondary)
+        }
+      }
+      // Controls whether this user's device contributes to presence sensing.
+      Section(header: Text(Constants.optInSectionHeader)) {
         Toggle(
           isOn: Binding<Bool>(
             get: { self.viewModel.optInStatus },
@@ -31,11 +53,12 @@ struct AreaPresenceStateView: View {
             }
           )
         ) {
-          Text("Area Presence")
+          Text(Constants.areaPresenceToggle)
         }
       }
+      // Clears historical presence transition events from storage.
       Section {
-        Button("Delete Presence History", role: .destructive) {
+        Button(Constants.deleteHistoryButton, role: .destructive) {
           Task {
             await self.viewModel.deletePresenceHistory()
           }
@@ -43,8 +66,9 @@ struct AreaPresenceStateView: View {
       }
     }
     .listStyle(.grouped)
-    .navigationBarTitle("Area Presence", displayMode: .inline)
+    .navigationBarTitle(Constants.navigationTitle, displayMode: .inline)
     .task {
+      self.viewModel.monitorAreaPresenceState()
       await self.viewModel.monitorOptInStatus()
     }
   }

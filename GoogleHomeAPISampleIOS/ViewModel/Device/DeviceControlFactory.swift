@@ -32,6 +32,8 @@ struct DeviceControlFactory {
     OnOffPluginUnitDeviceType.self,
     OccupancySensorDeviceType.self,
     GoogleTVDeviceType.self,
+    BasicVideoPlayerDeviceType.self,
+    GoogleDisplayDeviceType.self,
     GoogleCameraDeviceType.self,
     GoogleDoorbellDeviceType.self,
   ]
@@ -49,6 +51,8 @@ struct DeviceControlFactory {
     OnOffPluginUnitDeviceType.identifier: OnOffPlugInUnitControl.init,
     OccupancySensorDeviceType.identifier: OccupancySensorControl.init,
     GoogleTVDeviceType.identifier: TVControl.init,
+    BasicVideoPlayerDeviceType.identifier: TVControl.init,
+    GoogleDisplayDeviceType.identifier: TVControl.init,
     GoogleCameraDeviceType.identifier: CameraControl.init,
     GoogleDoorbellDeviceType.identifier: DoorbellControl.init,
   ]

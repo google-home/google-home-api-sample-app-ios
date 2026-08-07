@@ -97,6 +97,18 @@ struct StarterConstraintSheetView: View {
   @State private var selectedQueryOption = CandidatesViewModel.queryOptions.first ?? ""
   @State private var cameraDescriptionText: String = ""
 
+  private var minimumLevelValue: Float {
+    return Self.minLevelValue
+  }
+
+  private var maximumLevelValue: Float {
+    // Google.BrightnessTrait uses percentage (0-100), whereas Matter.LevelControlTrait uses 1-254.
+    if entry.traitType == Google.BrightnessTrait.self {
+      return 100
+    }
+    return Self.maxLevelValue
+  }
+
   var body: some View {
     let trait = entry.traitType
     let eventType = entry.eventType
@@ -112,7 +124,7 @@ struct StarterConstraintSheetView: View {
         CreateToggleButtonView(isOn: $toggleValue, leftText: "On", rightText: "Off")
         Spacer()
         doneButtonView(cameraDescription: nil)
-      } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
+      } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self || trait == Google.BrightnessTrait.self {
         VStack(spacing: .lg) {
           Picker(selection: $selectedOperation, label: Text("Operation")) {
             Text("Equals to").tag(Operations.equalsTo)
@@ -126,14 +138,14 @@ struct StarterConstraintSheetView: View {
           Text("Value: \(String(format: "%.0f", levelValue))")
           Slider(
             value: $levelValue,
-            in: Self.minLevelValue...Self.maxLevelValue,
+            in: minimumLevelValue...maximumLevelValue,
             step: Self.levelStep
           ) {
             Text("Level")
           } minimumValueLabel: {
-            Text(String(format: "%.0f", Self.minLevelValue))
+            Text(String(format: "%.0f", minimumLevelValue))
           } maximumValueLabel: {
-            Text(String(format: "%.0f", Self.maxLevelValue))
+            Text(String(format: "%.0f", maximumLevelValue))
           }
 
           Spacer()
@@ -193,6 +205,10 @@ struct StarterConstraintSheetView: View {
     .onAppear {
       if eventType == Google.VideoAnalysisTrait.QueryMatchedEvent.self {
         selectedOperation = .cameraDescriptionMatch
+      }
+      // If default levelValue (125) exceeds BrightnessTrait percentage upper bound (100), reset to midpoint (50%).
+      if entry.traitType == Google.BrightnessTrait.self && levelValue > 100 {
+        levelValue = 50
       }
     }
   }

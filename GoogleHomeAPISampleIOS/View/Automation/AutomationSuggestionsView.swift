@@ -20,6 +20,7 @@ import SwiftUI
 @MainActor
 public struct AutomationSuggestionsView: View {
   @EnvironmentObject var automationList: AutomationList
+  @EnvironmentObject private var mainViewModel: MainViewModel
   @ObservedObject var viewModel: AutomationSuggestionsViewModel
   @Binding var navigationPath: NavigationPath
 
@@ -31,6 +32,7 @@ public struct AutomationSuggestionsView: View {
         text1: "Generic Automation",
         text2: ""
       ) {
+        mainViewModel.getCandidatesViewModel()?.clearSelected()
         navigationPath.append(Destination.GenericEditorView)
       }
       .padding(.bottom, .sm)
@@ -40,6 +42,7 @@ public struct AutomationSuggestionsView: View {
         text1: "Nature Language Starter",
         text2: ""
       ) {
+        mainViewModel.getCandidatesViewModel()?.clearSelected()
         navigationPath.append(Destination.NaturalLanguageEditorView)
       }
       .padding(.bottom, .sm)
