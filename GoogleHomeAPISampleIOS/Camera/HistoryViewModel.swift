@@ -224,6 +224,7 @@ public class HistoryViewModel {
 
   /// Initializes the list of devices in the structure that are available for filtering history.
   private func initializeDeviceList() async {
+    defer { self.cancelStagedDeviceFilters() }
     do {
       self.filterableDevices = try await self.home.devices().list().filter {
         $0.structureID == self.structureID
@@ -241,6 +242,7 @@ public class HistoryViewModel {
       return
     }
     self.filterableEventTypes = []
+    defer { self.cancelStagedEventTypeFilters() }
     do {
       let filters = try await structure.history.fetchApplicableFilters()
       for filter in filters {
@@ -269,7 +271,7 @@ public class HistoryViewModel {
   /// Cancels the staged device filters and resets the staged device list to the applied device
   /// list.
   public func cancelStagedDeviceFilters() {
-    self.stagedDeviceFilters = self.appliedDeviceFilters ?? []
+    self.stagedDeviceFilters = self.appliedDeviceFilters ?? Set(self.filterableDevices)
   }
 
   /// Applies the device filters based on the isSelected state of the devices and reloads the events.
@@ -283,6 +285,15 @@ public class HistoryViewModel {
   public func refreshEvents() async {
     guard let structure = self.structure else {
       Logger().error("Structure not initialized")
+      return
+    }
+
+    let isDeviceFilterEmpty = self.objectID == nil && (self.appliedDeviceFilters?.isEmpty ?? false)
+    let isEventTypeFilterEmpty = self.appliedEventTypeFilters?.isEmpty ?? false
+
+    if isDeviceFilterEmpty || isEventTypeFilterEmpty {
+      self.hasNextPage = false
+      self.dailyEvents = []
       return
     }
 
@@ -562,7 +573,7 @@ public class HistoryViewModel {
   /// Cancels the staged event type filters and resets the staged event type filters to the applied
   /// filter or the empty array if no filters are applied.
   public func cancelStagedEventTypeFilters() {
-    self.stagedEventTypeFilters = self.appliedEventTypeFilters ?? []
+    self.stagedEventTypeFilters = self.appliedEventTypeFilters ?? Set(self.filterableEventTypes)
   }
 
   /// Clears all applied history filters and reloads the events.

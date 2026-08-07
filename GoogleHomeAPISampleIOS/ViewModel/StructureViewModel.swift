@@ -37,6 +37,8 @@ final class StructureViewModel: ObservableObject {
   private var hub: Hub? = nil
   @Published var faceLibraryConsentStatus: StructureScopedPermissionsController.ConsentStatus = .unspecified
   @Published var isFetchingConsentStatus = true
+  @Published var presenceSensingConsentStatus: StructureScopedPermissionsController.ConsentStatus = .unspecified
+  @Published var isFetchingPresenceConsentStatus = true
   /// Indicates whether the initial load has completed
   @Published var hasLoaded = false
   @Published var showRoomNameInput = false
@@ -57,6 +59,7 @@ final class StructureViewModel: ObservableObject {
     self.structureID = structureID
     Task {
       await self.refreshFaceLibraryConsentStatus()
+      await self.refreshPresenceSensingConsentStatus()
     }
     /// query rooms and devices and map them to current structure
     self.home.rooms().batched()
@@ -180,84 +183,120 @@ final class StructureViewModel: ObservableObject {
     )
   }
 
-  /// Initiates the familiar faces consent flow with the user.
-  /// - Returns: A Boolean indicating if the user consented to the face library feature.
+  // MARK: - Generic Consent Helpers
+
+  /// Initiates the consent flow or modification screen for a feature.
+  ///
+  /// - Parameter feature: The permission feature to request or manage.
+  /// - Returns: The updated feature consent status.
+  ///
+  /// - Note: Sensitive features require explicit user consent via `requestConsent(for:)`.
+  private func performConsentFlow(for feature: StructureScopedPermissionsController.Feature) async -> StructureScopedPermissionsController.ConsentStatus {
+    do {
+      let structures = try await home.structures().list()
+      if let structure = structures.first(where: { $0.id == self.structureID }) {
+        // Launch the OAuth consent modal for the feature.
+        if let response = await structure.permissions.requestConsent(for: [feature]) {
+          switch response {
+          case .success(let completed, let consentedFeatures):
+            // Verify that the user completed the web flow and granted consent.
+            if let completed = completed, completed, let status = consentedFeatures?[feature] {
+              return status
+            }
+          case .alreadyConsented:
+            return .consented
+          @unknown default:
+            break
+          }
+        }
+        // If the modal was cancelled or missing status, fall back to backend query.
+        if let status = await refreshConsentStatus(for: feature) {
+          return status
+        }
+      }
+    } catch {
+      Logger().error("Failed to perform consent flow for \(String(describing: feature)): \(error)")
+    }
+    return .unspecified
+  }
+
+  /// Fetches the latest feature consent status from the permissions controller.
+  ///
+  /// - Parameter feature: The permission feature to query.
+  /// - Returns: The current `ConsentStatus`, or `nil` on network failure.
+  ///
+  /// - Note: Returning `nil` on error prevents overwriting valid consent states with `.unspecified`.
+  private func refreshConsentStatus(for feature: StructureScopedPermissionsController.Feature) async -> StructureScopedPermissionsController.ConsentStatus? {
+    do {
+      let structures = try await home.structures().list()
+      if let structure = structures.first(where: { $0.id == self.structureID }) {
+        // Query feature consent state from ApplicationInfo.
+        let consentStateMap = await structure.permissions.featureConsentState(features: [feature])
+        return consentStateMap[feature]
+      }
+    } catch {
+      Logger().error("Failed to refresh consent status for \(String(describing: feature)): \(error)")
+    }
+    return nil
+  }
+
+  // MARK: - Familiar Faces Consent
+
+  /// Initiates the familiar faces consent flow.
+  ///
+  /// - Returns: `true` if the user consented to the face library feature.
   public func requestFaceLibraryConsent() async -> Bool {
     if self.faceLibraryConsentStatus == .consented {
       return true
     }
-    do {
-      let structures = try await home.structures().list()
-      if let structure = structures.first(where: { $0.id == self.structureID }) {
-        let response = await structure.permissions.requestConsent(for: [.faceLibrary])
-        if let response = response {
-          switch response {
-          case .success(_, let consentedFeatures):
-            if let status = consentedFeatures?[.faceLibrary] {
-              self.faceLibraryConsentStatus = status
-            } else {
-              Logger().warning("ConsentResponse.success, but faceLibrary consent status is missing in consentedFeatures!")
-            }
-          case .alreadyConsented:
-            self.faceLibraryConsentStatus = .consented
-          @unknown default:
-            Logger().warning("ConsentResponse unknown default case encountered: \(String(describing: response))")
-          }
-        } else {
-          Logger().warning("requestConsent returned nil response (user cancelled or presentation/flow failed/dismissed without status)")
-        }
-      } else {
-        Logger().error("Matching structure with ID \(self.structureID) not found in structures list!")
-      }
-    } catch {
-      Logger().error("Failed to request FaceLibrary consent with error: \(error.localizedDescription) (\(error))")
-    }
+    self.faceLibraryConsentStatus = await performConsentFlow(for: .faceLibrary)
     return self.faceLibraryConsentStatus == .consented
   }
 
-  /// Refreshes the Face Library consent status for this structure.
+  /// Refreshes the familiar faces consent status for this structure.
   public func refreshFaceLibraryConsentStatus() async {
     isFetchingConsentStatus = true
     defer { isFetchingConsentStatus = false }
-    do {
-      let structures = try await home.structures().list()
-      if let structure = structures.first(where: { $0.id == self.structureID }) {
-        let consentStateMap = await structure.permissions.featureConsentState(features: [.faceLibrary])
-        if let status = consentStateMap[.faceLibrary] {
-          self.faceLibraryConsentStatus = status
-        }
-      }
-    } catch {
-      Logger().error("Failed to refresh FaceLibrary consent status: \(error)")
+    if let status = await refreshConsentStatus(for: .faceLibrary) {
+      self.faceLibraryConsentStatus = status
     }
   }
 
-  /// Forces presentation of the Face Library consent web flow to allow the user to modify or revoke consent.
-  /// - Returns: A Boolean indicating if the user consented to the face library feature.
+  /// Presents the familiar faces consent modification screen.
+  ///
+  /// - Returns: `true` if the user consented to the face library feature.
   public func presentFaceLibraryConsentFlow() async -> Bool {
-    do {
-      let structures = try await home.structures().list()
-      if let structure = structures.first(where: { $0.id == self.structureID }) {
-        let response = await structure.permissions.requestConsent(for: [.faceLibrary])
-        if let response = response {
-          switch response {
-          case .success(_, let consentedFeatures):
-            if let status = consentedFeatures?[.faceLibrary] {
-              self.faceLibraryConsentStatus = status
-            }
-          case .alreadyConsented:
-            self.faceLibraryConsentStatus = .consented
-          @unknown default:
-            break
-          }
-        } else {
-          // If the user cancelled/declined or the response is nil, we should refresh the status
-          await refreshFaceLibraryConsentStatus()
-        }
-      }
-    } catch {
-      Logger().error("Failed to present FaceLibrary consent flow: \(error)")
-    }
+    self.faceLibraryConsentStatus = await performConsentFlow(for: .faceLibrary)
     return self.faceLibraryConsentStatus == .consented
+  }
+
+  // MARK: - Presence Sensing Consent
+
+  /// Initiates the presence sensing consent flow.
+  ///
+  /// - Returns: `true` if the user consented to the presence sensing feature.
+  public func requestPresenceSensingConsent() async -> Bool {
+    if self.presenceSensingConsentStatus == .consented {
+      return true
+    }
+    self.presenceSensingConsentStatus = await performConsentFlow(for: .presenceSensing)
+    return self.presenceSensingConsentStatus == .consented
+  }
+
+  /// Refreshes the presence sensing consent status for this structure.
+  public func refreshPresenceSensingConsentStatus() async {
+    isFetchingPresenceConsentStatus = true
+    defer { isFetchingPresenceConsentStatus = false }
+    if let status = await refreshConsentStatus(for: .presenceSensing) {
+      self.presenceSensingConsentStatus = status
+    }
+  }
+
+  /// Presents the presence sensing consent modification screen.
+  ///
+  /// - Returns: `true` if the user consented to the presence sensing feature.
+  public func presentPresenceSensingConsentFlow() async -> Bool {
+    self.presenceSensingConsentStatus = await performConsentFlow(for: .presenceSensing)
+    return self.presenceSensingConsentStatus == .consented
   }
 }

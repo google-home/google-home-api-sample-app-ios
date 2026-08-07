@@ -27,8 +27,10 @@ final class TVControl: DeviceControl {
   // MARK: - Initialization
 
   public override init(device: HomeDevice) throws {
-    guard device.types.contains(GoogleTVDeviceType.self) else {
-      throw HomeError.notFound("Device does not support GoogleTVDeviceType")
+    guard device.types.contains(GoogleTVDeviceType.self) ||
+          device.types.contains(BasicVideoPlayerDeviceType.self) ||
+          device.types.contains(GoogleDisplayDeviceType.self) else {
+      throw HomeError.notFound("Device does not support TV / Display DeviceType")
     }
     try super.init(device: device)
 

@@ -6,6 +6,10 @@
 	<string>development</string>
 	<key>com.apple.developer.matter.allow-setup-payload</key>
 	<true/>
+	<key>com.apple.developer.networking.manage-thread-network-credentials</key>
+	<true/>
+	<key>com.apple.developer.networking.wifi-info</key>
+	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>HOME_API_TODO_ADD_APP_GROUP</string>

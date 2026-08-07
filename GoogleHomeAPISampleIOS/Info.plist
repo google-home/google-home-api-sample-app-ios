@@ -46,6 +46,8 @@
 	<string>Network usage is required for Matter discovery</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>To communicate with camera devices, allow Google Home Demo App to access your microphone</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access is required to sync Thread network credentials during Matter commissioning</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

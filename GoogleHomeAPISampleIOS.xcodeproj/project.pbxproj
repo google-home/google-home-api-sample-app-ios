@@ -61,6 +61,7 @@
 		9DD53BE62D823818004957F6 /* CandidatesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD53BE52D823811004957F6 /* CandidatesViewModel.swift */; };
 		9DD60D1A2D59C539006F489F /* TVControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DD60D192D59C539006F489F /* TVControl.swift */; };
 		A6863CC5D78E92362F315B8F /* CameraTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B56CA3A811E0DD53AF23793 /* CameraTimelineView.swift */; };
+		A7A2169FA153B4D9262EF720 /* EventTriggerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB74299960ABEBDF55517E0 /* EventTriggerSettingsView.swift */; };
 		AA2A6DEBA07593B7494D2EFC /* CameraTimelinePeriod.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064C45BD970055FCF8EE62FE /* CameraTimelinePeriod.swift */; };
 		B10424912FD90E07003B930E /* UserManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10424902FD90E07003B930E /* UserManagementView.swift */; };
 		B10424932FD90E1D003B930E /* UserManagementViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10424922FD90E1D003B930E /* UserManagementViewModel.swift */; };
@@ -167,6 +168,7 @@
 		064C45BD970055FCF8EE62FE /* CameraTimelinePeriod.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelinePeriod.swift; sourceTree = "<group>"; };
 		14E771372813E2913DC7EA47 /* CameraEventType+Priority.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "CameraEventType+Priority.swift"; sourceTree = "<group>"; };
 		2383BB9545B4452E4E1B84E3 /* CameraTimelineFetcher.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineFetcher.swift; sourceTree = "<group>"; };
+		2AB74299960ABEBDF55517E0 /* EventTriggerSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventTriggerSettingsView.swift; sourceTree = "<group>"; };
 		3B56CA3A811E0DD53AF23793 /* CameraTimelineView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CameraTimelineView.swift; sourceTree = "<group>"; };
 		79B4499EEAEAF12424070666 /* HomeBriefsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeBriefsView.swift; sourceTree = "<group>"; };
 		99A8F5112E65884000DBC00D /* AppPadding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPadding.swift; sourceTree = "<group>"; };
@@ -381,6 +383,7 @@
 				D14537480B3BD3B8C0F3731F /* Timeline */,
 				B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */,
 				B11BF00F2E77B34B00839F73 /* WebRtcPlayer.swift */,
+				2AB74299960ABEBDF55517E0 /* EventTriggerSettingsView.swift */,
 			);
 			path = Camera;
 			sourceTree = "<group>";
@@ -838,6 +841,7 @@
 				B11BF0102E77B34B00839F73 /* WebRtcPlayer.swift in Sources */,
 				E6E3CB842CC07E7200E99423 /* WindowCoveringControl.swift in Sources */,
 				B10424912FD90E07003B930E /* UserManagementView.swift in Sources */,
+				A7A2169FA153B4D9262EF720 /* EventTriggerSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -957,7 +961,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.9.1;
+				MARKETING_VERSION = 1.10.0;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -989,7 +993,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.9.1;
+				MARKETING_VERSION = 1.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

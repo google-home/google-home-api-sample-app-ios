@@ -35,6 +35,7 @@ public final class AutomationsRepository: Sendable {
   typealias RvcRunModeTrait = Matter.RvcRunModeTrait
   typealias ColorControlTrait = Matter.ColorControlTrait
   typealias VideoAnalysisTrait = Google.VideoAnalysisTrait
+  typealias BrightnessTrait = Google.BrightnessTrait
 
   private let home: Home
   private let structure: Structure
@@ -96,8 +97,8 @@ public final class AutomationsRepository: Sendable {
         manualStarter()
         sequential {
           // Create the starter and condition automation DSL based on its type and trait
-          if let starterTrait = starterEntry.traitType as? OnOffTrait.Type {
-            let onOffstarter = starter(starterEntry.device, starterEntry.deviceType, starterTrait)
+          if starterEntry.traitType is OnOffTrait.Type || starterEntry.traitType is Google.SimplifiedOnOffTrait.Type {
+            let onOffstarter = starter(starterEntry.device, starterEntry.deviceType, OnOffTrait.self)
             onOffstarter
             condition {
               onOffstarter.onOff.equals(starterEntry.valueOnOff)
@@ -117,6 +118,22 @@ public final class AutomationsRepository: Sendable {
                 levelstarter.currentLevel.equals(starterEntry.levelValue)
               }
             }
+          } else if let brightnessTrait = starterEntry.traitType as? BrightnessTrait.Type {
+            // Handle percentage brightness starter for non-Matter / Cloud-to-Cloud devices.
+            let brightnessStarter = starter(starterEntry.device, starterEntry.deviceType, brightnessTrait)
+            brightnessStarter
+            condition {
+              switch starterEntry.operation {
+              case .equalsTo:
+                brightnessStarter.currentBrightnessPercent.equals(starterEntry.levelValue)
+              case .lessThan:
+                brightnessStarter.currentBrightnessPercent.lessThan(starterEntry.levelValue)
+              case .greaterThan:
+                brightnessStarter.currentBrightnessPercent.greaterThan(starterEntry.levelValue)
+              default:
+                brightnessStarter.currentBrightnessPercent.equals(starterEntry.levelValue)
+              }
+            }
           } else if let cameraEvent = starterEntry.eventType as? Google.VideoAnalysisTrait.QueryMatchedEvent.Type,
                     let queryText = starterEntry.cameraDescription {
             let videoAnalysisEvent = starter(
@@ -131,7 +148,7 @@ public final class AutomationsRepository: Sendable {
         }
       }
       // Create the action DSL based
-      if actionEntry.traitType is OnOffTrait.Type {
+      if actionEntry.traitType is OnOffTrait.Type || actionEntry.traitType is Google.SimplifiedOnOffTrait.Type {
         action(actionEntry.device, actionEntry.deviceType.self) {
           actionEntry.valueOnOff ? OnOffTrait.on() : OnOffTrait.off()
         }
@@ -179,7 +196,7 @@ public final class AutomationsRepository: Sendable {
 
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
-  /// The automation will automatically close window blinds when the temperature outside drops below
+  /// The automation will automatically turn on lights and set thermostat auto mode when the temperature outside drops below
   /// 60F and it's dark outside.
   public func windowBlindsAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation {
     let temperatureSensorDevice = devices.first {
@@ -189,12 +206,19 @@ public final class AutomationsRepository: Sendable {
       Logger().error("Unable to find temperature sensor device.")
       throw HomeError.notFound("TemperatureSensorDeviceType")
     }
-    let windowBlinds = devices.filter {
-      $0.types.contains(WindowCoveringDeviceType.self)
+    let lightDevices = devices.filter {
+      $0.types.contains(OnOffLightDeviceType.self)
     }
-    guard !windowBlinds.isEmpty else {
-      Logger().error("Unable to find window blinds device.")
-      throw HomeError.notFound("WindowCoveringDeviceType")
+    guard !lightDevices.isEmpty else {
+      Logger().error("Unable to find lights device.")
+      throw HomeError.notFound("OnOffLightDeviceType")
+    }
+    let thermostat = devices.first {
+      $0.types.contains(ThermostatDeviceType.self)
+    }
+    guard let thermostat else {
+      Logger().error("Unable to find thermostat device.")
+      throw HomeError.notFound("ThermostatDeviceType")
     }
     let temperatureMeasurement = stateReader(
       temperatureSensorDevice,
@@ -203,10 +227,10 @@ public final class AutomationsRepository: Sendable {
     )
     let time = stateReader(structure, Google.TimeTrait.self)
     return automation(
-      name: "Close Window blinds",
+      name: "Cold weather lighting and heating",
       description:
         """
-        Close window blinds when the temperature inside drops below 60F (15C) and it's dark outside.
+        Turn on lights and set thermostat to auto mode when the temperature inside drops below 68F (20C) and it's dark outside.
         """
     ) {
       select {
@@ -225,20 +249,24 @@ public final class AutomationsRepository: Sendable {
             SolarTime(type: .sunset, offset: .seconds(0))
           )
         }
+        manualStarter()
       }
       temperatureMeasurement
       time
-      // 15 degrees C ~ 60 degrees F
-      let exp1 = temperatureMeasurement.measuredValue.lessThan(1555)
+      // 20 degrees C (2000 hundredths of C) ~ 68 degrees F
+      let exp1 = temperatureMeasurement.measuredValue.lessThan(2000)
       let exp2 = time.currentTime.between(time.sunriseTime, time.sunsetTime)
       condition {
         exp1.and(exp2.not())
       }
       parallel {
-        for windowBlind in windowBlinds {
-          action(windowBlind, WindowCoveringDeviceType.self) {
-            WindowCoveringTrait.downOrClose()
+        for light in lightDevices {
+          action(light, OnOffLightDeviceType.self) {
+            OnOffTrait.on()
           }
+        }
+        action(thermostat, ThermostatDeviceType.self) {
+          Google.SimplifiedThermostatTrait.setSystemMode(systemMode: .auto)
         }
       }
     }
@@ -279,24 +307,29 @@ public final class AutomationsRepository: Sendable {
         Turn on lights or turn off thermostat eco mode when you unlock the door.
         """
     ) {
-      let doorLockTrait = starter(
-        doorLock,
-        DoorLockDeviceType.self,
-        DoorLockTrait.self
-      )
-      doorLockTrait
-      condition {
-        doorLockTrait.lockState.equals(.unlocked)
+      select {
+        sequential {
+          let doorLockTrait = starter(
+            doorLock,
+            DoorLockDeviceType.self,
+            DoorLockTrait.self
+          )
+          doorLockTrait
+          condition {
+            doorLockTrait.lockState.equals(.unlocked)
+          }
+        }
+        manualStarter()
       }
       parallel {
         for light in lightDevices {
           action(light, OnOffLightDeviceType.self) {
             OnOffTrait.on()
           }
-          // Assume the thermostat is in eco mode, set to auto.
-          action(thermostat, ThermostatDeviceType.self) {
-            Google.SimplifiedThermostatTrait.setSystemMode(systemMode: .auto)
-          }
+        }
+        // Assume the thermostat is in eco mode, set to auto.
+        action(thermostat, ThermostatDeviceType.self) {
+          Google.SimplifiedThermostatTrait.setSystemMode(systemMode: .auto)
         }
       }
     }
@@ -304,17 +337,9 @@ public final class AutomationsRepository: Sendable {
 
   /// - Parameter devices: devices in current selected structure
   /// - Returns: the automation object to be created
-  /// This automation will play ocean wave sounds, turn on the fan and onOffPlugin
-  /// when user says “Hey Google, I can’t sleep”
+  /// This automation will turn on the fan and onOffPlugin when user says “Hey Google, I can’t sleep”
   public func speakerAndFanAutomation(devices: Set<HomeDevice>) async throws -> any DraftAutomation
   {
-    let speaker = devices.first {
-      $0.types.contains(SpeakerDeviceType.self)
-    }
-    guard let speaker else {
-      Logger().error("Unable to find speaker device.")
-      throw HomeError.notFound("No devices support SpeakerDeviceType")
-    }
     let fan = devices.first {
       $0.types.contains(FanDeviceType.self)
     }
@@ -329,36 +354,23 @@ public final class AutomationsRepository: Sendable {
       Logger().error("Unable to find plug device.")
       throw HomeError.notFound("No devices support OnOffPluginUnitDeviceType")
     }
-    let shades = devices.first {
-      $0.types.contains(WindowCoveringDeviceType.self)
-    }
-    guard let shades else {
-      Logger().error("Unable to find shades device.")
-      throw HomeError.notFound("No devices support WindowCoveringDeviceType")
-    }
 
     return automation(
-      name: "Play sounds and turn on fan and plugin",
+      name: "Turn on fan and plugin when going to sleep",
       description:
         """
-        If user says “Hey Google, I can’t sleep”, play ocean wave sounds, turn on the fan and onOffPlugin.
+        If user says “Hey Google, I can’t sleep”, turn on the fan and onOffPlugin.
         """
     ) {
       starter(structure, Google.VoiceStarterTrait.OkGoogleEvent.self) {
         Google.VoiceStarterTrait.OkGoogleEvent.query("I can't sleep")
       }
       parallel {
-        action(speaker, SpeakerDeviceType.self) {
-          Google.AssistantFulfillmentTrait.okGoogle(query: "Play ocean wave sounds")
-        }
         action(fan, FanDeviceType.self) {
           OnOffTrait.on()
         }
         action(plug, OnOffPluginUnitDeviceType.self) {
           OnOffTrait.on()
-        }
-        action(shades, WindowCoveringDeviceType.self) {
-          WindowCoveringTrait.downOrClose()
         }
       }
     }

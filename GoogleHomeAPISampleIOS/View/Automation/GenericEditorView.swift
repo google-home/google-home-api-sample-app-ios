@@ -52,8 +52,6 @@ struct GenericEditorView: View {
     self.cameraOnly = cameraOnly
     self.editorTitle = editorTitle
     self._navigationPath = navigationPath
-    // Clear anything previously stored
-    candidatesViewModel.clearSelected()
   }
 
   public var body: some View {
@@ -211,12 +209,12 @@ struct GenericEditorView: View {
     Section("Starter and Condition") {
       if let device = candidatesViewModel.selectedStarters.first {
         // If there's a selected one, display it
-        if device.traitType is Matter.OnOffTrait.Type {
+        if device.traitType is Matter.OnOffTrait.Type || device.traitType is Google.SimplifiedOnOffTrait.Type {
           let valueOnOff = device.valueOnOff ? "On": "Off"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name,
                            text2: valueOnOff) {}
                 .padding(.bottom, .sm)
-        } else if device.traitType is Matter.LevelControlTrait.Type {
+        } else if device.traitType is Matter.LevelControlTrait.Type || device.traitType is Google.BrightnessTrait.Type {
           let subTitle = "\(device.operation)  \(device.levelValue)"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name,
                            text2: subTitle) {}
@@ -248,7 +246,7 @@ struct GenericEditorView: View {
     Section("Action") {
       if let device = candidatesViewModel.selectedActions.first {
         // If there's a selected one, display it
-        if device.traitType is Matter.OnOffTrait.Type {
+        if device.traitType is Matter.OnOffTrait.Type || device.traitType is Google.SimplifiedOnOffTrait.Type {
           let valueOnOff = device.valueOnOff ? "On": "Off"
           CreateButtonView(imageName: "astrophotography_mode_symbol", text1: device.device.name, text2: valueOnOff) {}
           .padding(.bottom, .sm)

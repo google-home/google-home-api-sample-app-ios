@@ -58,6 +58,9 @@ public struct CameraSettingsView<T: DeviceType>: View {
         if viewModel.displayedSettings.contains(.activityZones) {
           activityZonesSettingsSection
         }
+        if viewModel.displayedSettings.contains(.eventTriggers) {
+          eventTriggersSettingsSection
+        }
         if viewModel.displayedSettings.contains(.doorbell) {
           doorbellSettingsSection
         }
@@ -213,6 +216,30 @@ public struct CameraSettingsView<T: DeviceType>: View {
       }
     } header: {
       Text("Activity Zones")
+    }
+  }
+
+  private enum EventTriggerConstants {
+    static var rowTitle: String { "Event Triggers" }
+    static var sectionHeader: String { "Event Settings" }
+  }
+
+  private var eventTriggersSettingsSection: some View {
+    Section {
+      NavigationLink {
+        EventTriggerSettingsView(
+          eventTriggers: $viewModel.eventTriggers,
+          saveCallback: {
+            try await viewModel.setEventTriggers()
+          }
+        )
+      } label: {
+        HStack {
+          Text(EventTriggerConstants.rowTitle)
+        }
+      }
+    } header: {
+      Text(EventTriggerConstants.sectionHeader)
     }
   }
 

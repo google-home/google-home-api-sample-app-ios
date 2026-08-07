@@ -99,7 +99,8 @@ struct ActionCandidateDetailView: View {
       }
       .presentationDetents([.fraction(CGFloat(0.5))])
       .presentationCornerRadius(.lg)
-    } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self {
+    } else if trait == Matter.ColorControlTrait.self || trait == Matter.LevelControlTrait.self || trait == Google.BrightnessTrait.self {
+      // Brightness and Level Control actions are not yet implemented in this sample app.
       return VStack {
         Text("Level Control not supported as action in this sample app")
       }

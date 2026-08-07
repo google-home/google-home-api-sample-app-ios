@@ -280,6 +280,17 @@ public struct FilterCheckboxView<T: Identifiable & Hashable>: View {
             self.toggleFilter(item)
           }
         }
+        if self.selectedFilters.isEmpty {
+          HStack {
+            Spacer()
+            Text("No items selected. History list will be empty.")
+              .font(.caption)
+              .foregroundColor(.secondary)
+              .multilineTextAlignment(.center)
+            Spacer()
+          }
+          .listRowBackground(Color.clear)
+        }
       }
       .toolbar {
         ToolbarItem(placement: .navigationBarLeading) {

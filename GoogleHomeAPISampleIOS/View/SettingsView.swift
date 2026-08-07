@@ -22,10 +22,13 @@ struct SettingsView: View {
   @EnvironmentObject private var mainViewModel: MainViewModel
   private var structure: Structure
   @State private var isShowingFamiliarFaces = false
+  @State private var isShowingAreaPresence = false
   @State private var showPermissionErrorAlert = false
+  @State private var permissionAlertMessage = Constants.permissionRequiredAlertMessage
 
   private enum Constants {
     static let familiarFaceHeader = "Familiar Face"
+    static let presenceHeader = "Presence"
     static let consentStatusLabel = "Consent Status: "
     static let consentedValue = "Consented (Enabled)"
     static let notConsentedValue = "Not Consented (Disabled)"
@@ -33,10 +36,13 @@ struct SettingsView: View {
     static let unknownValue = "Unknown"
     static let fetchingValue = "Loading..."
     static let manageFacesButton = "Manage Faces"
+    static let manageAreaPresenceButton = "Manage Area Presence"
     static let revokeConsentButton = "Revoke Consent"
     static let enableFamiliarFaceButton = "Enable Familiar Face Detection"
+    static let enablePresenceSensingButton = "Enable Presence Sensing"
     static let permissionRequiredAlertTitle = "Permission Required"
     static let permissionRequiredAlertMessage = "Familiar Face Detection consent was not granted."
+    static let presencePermissionRequiredAlertMessage = "Presence Sensing consent was not granted."
     static let okButton = "OK"
     // System Icons
     static let chevronRightIcon = "chevron.right"
@@ -104,89 +110,50 @@ struct SettingsView: View {
 
   @ViewBuilder
   private var familiarFaceSection: some View {
-    Section {
-      Text(Constants.familiarFaceHeader)
-        .font(.headline)
-      HStack {
-        VStack(alignment: .leading, spacing: .xs) {
-          Text(Constants.consentStatusLabel)
-            .font(.body)
-            .foregroundColor(.primary)
-          let consentStr: String = {
-            if structureViewModel.isFetchingConsentStatus {
-              return Constants.fetchingValue
-            }
-            switch structureViewModel.faceLibraryConsentStatus {
-            case .consented:
-              return Constants.consentedValue
-            case .notConsented:
-              return Constants.notConsentedValue
-            case .unspecified:
-              return Constants.unspecifiedValue
-            @unknown default:
-              return Constants.unknownValue
-            }
-          }()
-          Text("\(consentStr)")
-            .font(.subheadline)
-            .foregroundColor(.secondary)
+    featureConsentSection(
+      header: Constants.familiarFaceHeader,
+      status: structureViewModel.faceLibraryConsentStatus,
+      isFetching: structureViewModel.isFetchingConsentStatus,
+      enableButtonTitle: Constants.enableFamiliarFaceButton,
+      consentedActions: {
+        Button(action: {
+          isShowingFamiliarFaces = true
+        }) {
+          HStack {
+            Text(Constants.manageFacesButton)
+              .font(.body)
+              .foregroundColor(.primary)
+            Spacer()
+            Image(systemName: Constants.chevronRightIcon)
+              .foregroundColor(.secondary)
+          }
         }
-        Spacer()
-      }
-      .padding(.vertical, .sm)
-      .padding(.horizontal, .md)   
-      if !structureViewModel.isFetchingConsentStatus {
-        if structureViewModel.faceLibraryConsentStatus == .consented {
-          Button(action: {
-            isShowingFamiliarFaces = true
-          }) {
-            HStack {
-              Text(Constants.manageFacesButton)
-                .font(.body)
-                .foregroundColor(.primary)
-              Spacer()
-              Image(systemName: Constants.chevronRightIcon)
-                .foregroundColor(.secondary)
-            }
+        .padding(.vertical, .sm)
+        .padding(.horizontal, .md)
+        Button(action: {
+          Task {
+            await structureViewModel.presentFaceLibraryConsentFlow()
           }
-          .padding(.vertical, .sm)
-          .padding(.horizontal, .md)
-          Button(action: {
-            Task {
-              await structureViewModel.presentFaceLibraryConsentFlow()
-            }
-          }) {
-            HStack {
-              Text(Constants.revokeConsentButton)
-                .font(.body)
-                .foregroundColor(.red)
-            }
+        }) {
+          HStack {
+            Text(Constants.revokeConsentButton)
+              .font(.body)
+              .foregroundColor(.red)
           }
-          .padding(.vertical, .sm)
-          .padding(.horizontal, .md)
-        } else {
-          Button(action: {
-            Task {
-              let granted = await structureViewModel.requestFaceLibraryConsent()
-              if !granted {
-                showPermissionErrorAlert = true
-              }
-            }
-          }) {
-            HStack {
-              Text(Constants.enableFamiliarFaceButton)
-                .font(.body)
-                .foregroundColor(.blue)
-              Spacer()
-              Image(systemName: Constants.chevronRightIcon)
-                .foregroundColor(.blue)
-            }
+        }
+        .padding(.vertical, .sm)
+        .padding(.horizontal, .md)
+      },
+      onEnable: {
+        Task {
+          let granted = await structureViewModel.requestFaceLibraryConsent()
+          if !granted {
+            permissionAlertMessage = Constants.permissionRequiredAlertMessage
+            showPermissionErrorAlert = true
           }
-          .padding(.vertical, .sm)
-          .padding(.horizontal, .md)
         }
       }
-    }
+    )
     .background(
       NavigationLink(
         destination: FamiliarFacesView(home: structureViewModel.home, structure: structure),
@@ -199,39 +166,146 @@ struct SettingsView: View {
     .alert(isPresented: $showPermissionErrorAlert) {
       Alert(
         title: Text(Constants.permissionRequiredAlertTitle),
-        message: Text(Constants.permissionRequiredAlertMessage),
+        message: Text(permissionAlertMessage),
         dismissButton: .default(Text(Constants.okButton))
       )
     }
   }
 
+  /// Renders the presence sensing configuration section.
+  ///
+  /// - Note: Demonstrates feature status display alongside conditional consent grant and revocation controls.
   @ViewBuilder
   private var presenceSection: some View {
-    Section {
-      Text("Presence")
-        .font(.headline)
+    featureConsentSection(
+      header: Constants.presenceHeader,
+      status: structureViewModel.presenceSensingConsentStatus,
+      isFetching: structureViewModel.isFetchingPresenceConsentStatus,
+      enableButtonTitle: Constants.enablePresenceSensingButton,
+      consentedActions: {
+        Button(action: {
+          isShowingAreaPresence = true
+        }) {
+          HStack {
+            Text(Constants.manageAreaPresenceButton)
+              .font(.body)
+              .foregroundColor(.primary)
+            Spacer()
+            if let presenceState = mainViewModel.areaPresenceState {
+              Text(presenceState.text ?? "")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+            Image(systemName: Constants.chevronRightIcon)
+              .foregroundColor(.secondary)
+          }
+        }
+        .padding(.vertical, .sm)
+        .padding(.horizontal, .md)
+        Button(action: {
+          Task {
+            await structureViewModel.presentPresenceSensingConsentFlow()
+          }
+        }) {
+          HStack {
+            Text(Constants.revokeConsentButton)
+              .font(.body)
+              .foregroundColor(.red)
+          }
+        }
+        .padding(.vertical, .sm)
+        .padding(.horizontal, .md)
+      },
+      onEnable: {
+        Task {
+          let granted = await structureViewModel.requestPresenceSensingConsent()
+          if !granted {
+            permissionAlertMessage = Constants.presencePermissionRequiredAlertMessage
+            showPermissionErrorAlert = true
+          }
+        }
+      }
+    )
+    .background(
       NavigationLink(
         destination: AreaPresenceStateView(
           viewModel: AreaPresenceStateViewModel(currentStructure: structure)
-        )
+        ),
+        isActive: $isShowingAreaPresence
       ) {
-        HStack {
-          Text("Area Presence")
-            .font(.body)
-            .foregroundColor(.primary)
-          Spacer()
-          if let presenceState = mainViewModel.areaPresenceState {
-            Text(presenceState.text ?? "")
-              .font(.subheadline)
-              .foregroundColor(.secondary)
+        EmptyView()
+      }
+      .hidden()
+    )
+  }
+
+  @ViewBuilder
+  private func featureConsentSection<Actions: View>(
+    header: String,
+    status: StructureScopedPermissionsController.ConsentStatus,
+    isFetching: Bool,
+    enableButtonTitle: String,
+    @ViewBuilder consentedActions: () -> Actions,
+    onEnable: @escaping () -> Void
+  ) -> some View {
+    Section {
+      Text(header)
+        .font(.headline)
+      consentStatusRow(status: status, isFetching: isFetching)
+      if !isFetching {
+        if status == .consented {
+          consentedActions()
+        } else {
+          Button(action: onEnable) {
+            HStack {
+              Text(enableButtonTitle)
+                .font(.body)
+                .foregroundColor(.blue)
+              Spacer()
+              Image(systemName: Constants.chevronRightIcon)
+                .foregroundColor(.blue)
+            }
           }
-          Image(systemName: Constants.chevronRightIcon)
-            .foregroundColor(.secondary)
+          .padding(.vertical, .sm)
+          .padding(.horizontal, .md)
         }
       }
-      .padding(.vertical, .sm)
-      .padding(.horizontal, .md)
     }
+  }
+
+  @ViewBuilder
+  private func consentStatusRow(
+    status: StructureScopedPermissionsController.ConsentStatus,
+    isFetching: Bool
+  ) -> some View {
+    HStack {
+      VStack(alignment: .leading, spacing: .xs) {
+        Text(Constants.consentStatusLabel)
+          .font(.body)
+          .foregroundColor(.primary)
+        let consentStr: String = {
+          if isFetching {
+            return Constants.fetchingValue
+          }
+          switch status {
+          case .consented:
+            return Constants.consentedValue
+          case .notConsented:
+            return Constants.notConsentedValue
+          case .unspecified:
+            return Constants.unspecifiedValue
+          @unknown default:
+            return Constants.unknownValue
+          }
+        }()
+        Text("\(consentStr)")
+          .font(.subheadline)
+          .foregroundColor(.secondary)
+      }
+      Spacer()
+    }
+    .padding(.vertical, .sm)
+    .padding(.horizontal, .md)
   }
 
   /// A reusable view component for a single row in the room list.

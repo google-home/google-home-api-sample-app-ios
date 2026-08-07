@@ -32,6 +32,10 @@ private enum BatteryUsageLabel: String {
   case custom = "CUSTOM"
 }
 
+private enum Constants {
+  static let avTraitNotAvailableError = "AV stream analysis trait not available"
+}
+
 /// A ViewModel handling the camera device settings.
 @Observable
 @MainActor
@@ -207,6 +211,30 @@ class CameraSettingsViewModel<T: DeviceType> {
   public private(set) var recordingModeController: CameraSetting<UInt8> =
     CameraSetting<UInt8>(defaultValue: 0)
 
+  /// These are the generic supported event triggers for the device that should be displayed in the
+  /// global event trigger settings.
+  private static var genericSupportedEventTriggers:
+    Set<Google.AvStreamAnalysisTrait.EventTriggerTypeEnum> {
+      [
+        .sound,
+        .personTalking,
+        .dogBark,
+        .glassBreak,
+        .smokeAlarm,
+        .coAlarm,
+        .garageDoor,
+        .videoAnalysisDescription,
+      ]
+  }
+
+  /// Struct to hold the event trigger setting values and their corresponding indices.
+  public struct EventTrigger: Equatable, Identifiable {
+    public var id: Google.AvStreamAnalysisTrait.EventTriggerTypeEnum
+    public var enabled: Bool
+  }
+  /// Setting controller for the event trigger setting.
+  public var eventTriggers: [EventTrigger] = []
+
   /// Struct to hold the doorbell chime names and ids.
   public struct DoorbellChime: Hashable, Identifiable {
     public var id: UInt8
@@ -318,6 +346,13 @@ class CameraSettingsViewModel<T: DeviceType> {
       self.updateSettingsFromEnergyPreferenceTrait()
     }
   }
+  private var avStreamAnalysisTrait: Google.AvStreamAnalysisTrait? {
+    didSet {
+      Task {
+        await self.updateSettingsFromAvStreamAnalysisTrait()
+      }
+    }
+  }
   private var extendedGeneralDiagnosticsTrait: Google.ExtendedGeneralDiagnosticsTrait? {
     didSet {
       Task {
@@ -383,6 +418,7 @@ class CameraSettingsViewModel<T: DeviceType> {
         self.energyPreferenceTrait = deviceType.traits[Google.EnergyPreferenceTrait.self]
         self.extendedBasicInformationTrait = deviceType.traits[Google.ExtendedBasicInformationTrait.self]
         self.recordingModeTrait = deviceType.traits[Google.RecordingModeTrait.self]
+        self.avStreamAnalysisTrait = deviceType.traits[Google.AvStreamAnalysisTrait.self]
 
         if deviceTypeCollection.contains(RootNodeDeviceType.self) {
           let rootNodeDeviceType = deviceTypeCollection.getAll(of: RootNodeDeviceType.self).first
@@ -415,6 +451,10 @@ class CameraSettingsViewModel<T: DeviceType> {
 
             if deviceType.traits.contains(Google.ZoneManagementTrait.self) {
               self.displayedSettings.insert(.activityZones)
+            }
+
+            if deviceType.traits.contains(Google.AvStreamAnalysisTrait.self) {
+              self.displayedSettings.insert(.eventTriggers)
             }
 
             self.displayedSettings.insert(.information)
@@ -557,6 +597,43 @@ class CameraSettingsViewModel<T: DeviceType> {
     self.batteryPercentRemaining = powerSourceTrait.attributes.batPercentRemaining
     self.descriptiveCapacityRemaining = powerSourceTrait.attributes.batChargeLevel
     self.chargingState = powerSourceTrait.attributes.batChargeState
+  }
+
+  private func updateSettingsFromAvStreamAnalysisTrait() async {
+    guard let avStreamAnalysisTrait else {
+      Logger().error("\(Constants.avTraitNotAvailableError)")
+      return
+    }
+
+    let possibleEventTriggers = avStreamAnalysisTrait.attributes.supportedEventTriggers ?? []
+    let enabledEventTriggers = avStreamAnalysisTrait.attributes.enabledEventTriggers ?? []
+    self.eventTriggers = []
+    for trigger in possibleEventTriggers {
+      if Self.genericSupportedEventTriggers.contains(trigger) {
+        self.eventTriggers.append(
+          EventTrigger(
+            id: trigger,
+            enabled: enabledEventTriggers.contains(trigger)
+          )
+        )
+      }
+    }
+  }
+
+  public func setEventTriggers() async throws {
+    guard let avStreamAnalysisTrait else {
+      throw HomeError.failedPrecondition(Constants.avTraitNotAvailableError)
+    }
+
+    let enabledEventTriggers = self.eventTriggers.map {
+      Google.AvStreamAnalysisTrait.EventTriggerEnablement(
+        eventTriggerType: $0.id,
+        enablementStatus: $0.enabled ? .enabled : .disabled
+      )
+    }
+    try await avStreamAnalysisTrait.setOrUpdateEventDetectionTriggers(
+      eventTriggerEnablements: enabledEventTriggers
+    )
   }
 
   private func updateSettingsFromEnergyPreferenceTrait() {
@@ -950,4 +1027,5 @@ struct SettingsDisplayed: OptionSet {
   public static let diagnostics = SettingsDisplayed(rawValue: 1 << 5)
   public static let recording = SettingsDisplayed(rawValue: 1 << 6)
   public static let activityZones = SettingsDisplayed(rawValue: 1 << 7)
+  public static let eventTriggers = SettingsDisplayed(rawValue: 1 << 8)
 }

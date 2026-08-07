@@ -175,8 +175,14 @@ public class CandidatesViewModel: ObservableObject {
         return TemperatureSensorDeviceType.self
       } else if device.types.contains(WindowCoveringDeviceType.self) {
         return WindowCoveringDeviceType.self
+      } else if device.types.contains(GoogleTVDeviceType.self) {
+        return GoogleTVDeviceType.self
       } else if device.types.contains(GoogleDisplayDeviceType.self) {
         return GoogleDisplayDeviceType.self
+      } else if device.types.contains(BasicVideoPlayerDeviceType.self) {
+        return BasicVideoPlayerDeviceType.self
+      } else if device.types.contains(SpeakerDeviceType.self) {
+        return SpeakerDeviceType.self
       } else if device.types.contains(GoogleCameraDeviceType.self) ||
                 device.types.contains(CameraDeviceType.self) ||
                 device.types.contains(FloodlightCameraDeviceType.self) ||
@@ -187,8 +193,6 @@ public class CandidatesViewModel: ObservableObject {
                 device.types.contains(VideoDoorbellDeviceType.self) ||
                 device.types.contains(AudioDoorbellDeviceType.self) {
         return GoogleDoorbellDeviceType.self
-      } else if device.types.contains(SpeakerDeviceType.self) {
-        return SpeakerDeviceType.self
       } else {
         return UnknownDeviceType.self
       }
@@ -220,7 +224,9 @@ public class CandidatesViewModel: ObservableObject {
         return "sensors_symbol"
       } else if device.types.contains(WindowCoveringDeviceType.self) {
         return "blinds_symbol"
-      } else if device.types.contains(GoogleDisplayDeviceType.self) {
+      } else if device.types.contains(GoogleTVDeviceType.self) ||
+                device.types.contains(BasicVideoPlayerDeviceType.self) ||
+                device.types.contains(GoogleDisplayDeviceType.self) {
         return "tv_symbol"
       } else if device.types.contains(DimmableLightDeviceType.self) {
         return "lightbulb_symbol"
@@ -268,10 +274,14 @@ public class CandidatesViewModel: ObservableObject {
         return "Temperature Sensor"
       } else if device.types.contains(WindowCoveringDeviceType.self) {
         return "Window Covering"
+      } else if device.types.contains(GoogleTVDeviceType.self) {
+        return "Google TV"
+      } else if device.types.contains(GoogleDisplayDeviceType.self) {
+        return "Smart Display"
+      } else if device.types.contains(BasicVideoPlayerDeviceType.self) {
+        return "Video Player"
       } else if device.types.contains(SpeakerDeviceType.self) {
         return "Speaker"
-      } else if device.types.contains(GoogleDisplayDeviceType.self) {
-        return "Display"
       } else if device.types.contains(AirQualitySensorDeviceType.self) {
         return "Air Quality Sensor"
       } else if device.types.contains(DimmableLightDeviceType.self) {
@@ -386,8 +396,29 @@ public class CandidatesViewModel: ObservableObject {
     /// Whether it's a supported trait in current generic editor
     public var isSupported: Bool {
       if self.node.trait == Matter.OnOffTrait.self {
+        // Matter devices use Matter.OnOffTrait. Non-Matter (Cloud-to-Cloud) devices use Google.SimplifiedOnOffTrait.
+        // Note: During Automation DSL generation, both are unified under OnOff (OnOffTrait).
+        if let device = self.node.homeObject as? HomeDevice {
+          return device.isMatterDevice
+        }
+        return true
+      } else if self.node.trait == Google.SimplifiedOnOffTrait.self {
+        // Non-Matter (Cloud-to-Cloud) devices use Google.SimplifiedOnOffTrait.
+        if let device = self.node.homeObject as? HomeDevice {
+          return !device.isMatterDevice
+        }
         return true
       } else if self.node.trait == Matter.LevelControlTrait.self {
+        // Only allow Matter LevelControlTrait for actual Matter devices to avoid unsupported trait errors.
+        if let device = self.node.homeObject as? HomeDevice {
+          return device.isMatterDevice
+        }
+        return true
+      } else if self.node.trait == Google.BrightnessTrait.self {
+        // For Cloud-to-Cloud (non-Matter) devices like Hue, use Google.BrightnessTrait instead of LevelControlTrait.
+        if let device = self.node.homeObject as? HomeDevice {
+          return !device.isMatterDevice
+        }
         return true
       } else if self.node.trait == Google.VideoAnalysisTrait.self {
         return true
