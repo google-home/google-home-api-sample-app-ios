@@ -94,6 +94,7 @@
 		B1EBB3722F34F1960086C6F4 /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EBB36E2F34F1960086C6F4 /* HistoryViewModel.swift */; };
 		B1F000012F000001 /* SearchableHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F000022F000001 /* SearchableHomeView.swift */; };
 		B1F000032F000001 /* SearchableHomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F000042F000001 /* SearchableHomeViewModel.swift */; };
+		B1F000052F000001 /* AuthenticatedAsyncImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F000062F000001 /* AuthenticatedAsyncImage.swift */; };
 		B3439F8A06DC22F493FE9623 /* CameraTimelineFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2383BB9545B4452E4E1B84E3 /* CameraTimelineFetcher.swift */; };
 		D1CCF15AAB67FD65462140A5 /* HomeBriefsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B4499EEAEAF12424070666 /* HomeBriefsView.swift */; };
 		D897011C6DB15E50A916B8B2 /* CameraTimelineScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA55E5C65389C55D349A8F74 /* CameraTimelineScreen.swift */; };
@@ -251,6 +252,7 @@
 		B1EBB36F2F34F1960086C6F4 /* WebPImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebPImageView.swift; sourceTree = "<group>"; };
 		B1F000022F000001 /* SearchableHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchableHomeView.swift; sourceTree = "<group>"; };
 		B1F000042F000001 /* SearchableHomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchableHomeViewModel.swift; sourceTree = "<group>"; };
+		B1F000062F000001 /* AuthenticatedAsyncImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedAsyncImage.swift; sourceTree = "<group>"; };
 		E60A14C82CCC7E0D0006A28B /* CommissioningManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommissioningManager.swift; sourceTree = "<group>"; };
 		E60DB6A32CC032CC009DAD9D /* GoogleHomeAPISampleIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GoogleHomeAPISampleIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6349DFE2CD2E1FA00E7451E /* MatterAddDeviceExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MatterAddDeviceExtension.entitlements; sourceTree = "<group>"; };
@@ -555,6 +557,7 @@
 				9C54B8E62E1F55BB008DE522 /* RenameView.swift */,
 				9C54B8DC2E1E66F9008DE522 /* RoomSettingsView.swift */,
 				9C54B8D82E1E0380008DE522 /* RoomsView.swift */,
+				B1F000062F000001 /* AuthenticatedAsyncImage.swift */,
 				B1F000022F000001 /* SearchableHomeView.swift */,
 				9C54B8DA2E1E5F5F008DE522 /* SettingsView.swift */,
 				E6E3CB5D2CC07E7200E99423 /* StructureView.swift */,
@@ -823,6 +826,7 @@
 				9C54B8D92E1E0383008DE522 /* RoomsView.swift in Sources */,
 				B1F000012F000001 /* SearchableHomeView.swift in Sources */,
 				B1F000032F000001 /* SearchableHomeViewModel.swift in Sources */,
+				B1F000052F000001 /* AuthenticatedAsyncImage.swift in Sources */,
 				E6E3CB6F2CC07E7200E99423 /* SelectedStructureStorage.swift in Sources */,
 				9DB83A172D13E54000F826B8 /* SensorControl.swift in Sources */,
 				9C54B8DB2E1E5FA9008DE522 /* SettingsView.swift in Sources */,
@@ -961,7 +965,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.10.0;
+				MARKETING_VERSION = 1.10.1;
 				OTHER_LDFLAGS = (
 					"-lc++",
 					"-ObjC",
@@ -993,7 +997,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.10.0;
+				MARKETING_VERSION = 1.10.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "HOME-API-TODO-ADD-EXTENSION-BUNDLE-ID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

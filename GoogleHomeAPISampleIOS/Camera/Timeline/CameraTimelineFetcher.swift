@@ -380,14 +380,24 @@ public actor CameraTimelineFetcher {
               caption: traitHistoryItem.resolvedCaption,
               thumbnailProvider: { [accessTokenProvider] in
                 guard let thumbnailURL = thumbnailURL else { return nil }
-                let token = try await accessTokenProvider()
-                var request = URLRequest(url: thumbnailURL)
-                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                let (data, response) = try await URLSession.shared.data(for: request)
-                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                do {
+                  let token = try await accessTokenProvider()
+                  var request = URLRequest(url: thumbnailURL)
+                  request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                  let (data, response) = try await URLSession.shared.data(for: request)
+                  guard let httpResponse = response as? HTTPURLResponse else {
+                    logger.error("CameraTimelineFetcher: Non-HTTP response for thumbnail: \(thumbnailURL.absoluteString, privacy: .public)")
+                    return nil
+                  }
+                  guard httpResponse.statusCode == 200 else {
+                    logger.error("CameraTimelineFetcher: Thumbnail request failed with status \(httpResponse.statusCode)")
+                    return nil
+                  }
+                  return data
+                } catch {
+                  logger.error("CameraTimelineFetcher: Failed to load thumbnail from \(thumbnailURL.absoluteString, privacy: .public): \(error.localizedDescription, privacy: .public)")
                   return nil
                 }
-                return data
               },
               historicalPlaybackURL: hlsURL,
               downloadURL: mp4URL

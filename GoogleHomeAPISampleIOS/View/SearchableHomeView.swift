@@ -35,14 +35,18 @@ enum SearchableHomeConstraints {
   static let minUserSpacer: CGFloat = 40
   static let suggestionsMaxHeight: CGFloat = 200
   static let eventInnerCornerRadiusDivisor: CGFloat = 1.5
+  static let innerEventCornerRadius: CGFloat = eventCornerRadius / eventInnerCornerRadiusDivisor
+  static let photoIcon = "photo"
 }
 
 struct SearchableHomeView: View {
   @State private var viewModel: SearchableHomeViewModel
   @FocusState private var isTextFieldFocused: Bool
+  let home: Home
 
-  init(structure: Structure) {
+  init(structure: Structure, home: Home) {
     self._viewModel = State(initialValue: SearchableHomeViewModel(structure: structure))
+    self.home = home
   }
 
   var body: some View {
@@ -161,7 +165,7 @@ struct SearchableHomeView: View {
       ScrollView {
         VStack(spacing: SearchableHomeConstraints.messageSpacing) {
           ForEach(viewModel.messages) { message in
-            MessageBubble(message: message)
+            MessageBubble(message: message, home: home)
               .id(message.id)
           }
 
@@ -217,6 +221,7 @@ struct SearchableHomeView: View {
 
 struct MessageBubble: View {
   let message: SearchMessage
+  let home: Home
 
   var body: some View {
     HStack {
@@ -231,7 +236,7 @@ struct MessageBubble: View {
         textBubble
 
         ForEach(message.cameraEvents, id: \.self) { event in
-          CameraEventCard(event: event)
+          CameraEventCard(event: event, home: home)
         }
       }
 
@@ -255,6 +260,7 @@ struct MessageBubble: View {
 
 struct CameraEventCard: View {
   let event: Google.SearchableHomeTrait.BasicCameraEventDetails
+  let home: Home
 
   var body: some View {
     VStack(alignment: .leading, spacing: SearchableHomeConstraints.eventSpacing) {
@@ -288,24 +294,26 @@ struct CameraEventCard: View {
     if let urlString = event.thumbnailUrl, !urlString.isEmpty,
       let url = URL(string: urlString)
     {
-      AsyncImage(url: url) { image in
-        image
-          .resizable()
-          .scaledToFit()
-          .frame(maxHeight: SearchableHomeConstraints.eventImageHeight)
-          // Slightly smaller corner radius for the inner image.
-          .cornerRadius(
-            SearchableHomeConstraints.eventCornerRadius
-              / SearchableHomeConstraints.eventInnerCornerRadiusDivisor
-          )
-      } placeholder: {
-        Color.gray
-          .frame(height: SearchableHomeConstraints.eventImageHeight)
-          .cornerRadius(
-            SearchableHomeConstraints.eventCornerRadius
-              / SearchableHomeConstraints.eventInnerCornerRadiusDivisor
-          )
-          .overlay(ProgressView())
+      AuthenticatedAsyncImage(url: url, home: home) { phase in
+        if let image = phase.image {
+          image
+            .resizable()
+            .scaledToFit()
+            .frame(maxHeight: SearchableHomeConstraints.eventImageHeight)
+            .cornerRadius(SearchableHomeConstraints.innerEventCornerRadius)
+        } else {
+          Color.gray
+            .frame(height: SearchableHomeConstraints.eventImageHeight)
+            .cornerRadius(SearchableHomeConstraints.innerEventCornerRadius)
+            .overlay {
+              if phase.error != nil {
+                Image(systemName: SearchableHomeConstraints.photoIcon)
+                  .foregroundColor(.white)
+              } else {
+                ProgressView()
+              }
+            }
+        }
       }
     }
   }

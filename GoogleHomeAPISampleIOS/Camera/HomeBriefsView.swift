@@ -22,6 +22,8 @@ private enum Constraints {
   static let thumbnailWidth: CGFloat = 120
   static let thumbnailHeight: CGFloat = 80
   static let thumbnailCornerRadius: CGFloat = 8
+  static let photoIcon = "photo"
+  static let videoSlashIcon = "video.slash.fill"
 }
 
 /// View for displaying Home Briefs.
@@ -77,7 +79,11 @@ public struct HomeBriefsView: View {
               Array(brief.keyCameraEvents.enumerated()),
               id: \.offset
             ) { _, event in
-              CameraEventPreviewItem(event: event, urlSession: urlSession)
+              CameraEventPreviewItem(
+                event: event,
+                urlSession: urlSession,
+                home: self.viewModel.home
+              )
             }
           }
         }
@@ -100,11 +106,12 @@ public struct HomeBriefsView: View {
 struct CameraEventPreviewItem: View {
   let event: BasicCameraEventDetails
   let urlSession: URLSession
+  let home: Home
 
   var body: some View {
     ZStack {
       if let thumbnailURL = event.thumbnailURL {
-        AsyncImage(url: thumbnailURL) { phase in
+        AuthenticatedAsyncImage(url: thumbnailURL, home: home, urlSession: urlSession) { phase in
           switch phase {
           case .empty:
             ProgressView()
@@ -116,23 +123,19 @@ struct CameraEventPreviewItem: View {
               .frame(width: Constraints.thumbnailWidth, height: Constraints.thumbnailHeight)
               .clipped()
           case .failure:
-            Image(systemName: "video.slash.fill")
-              .foregroundColor(.gray)
-              .frame(width: Constraints.thumbnailWidth, height: Constraints.thumbnailHeight)
-          @unknown default:
-            Image(systemName: "photo")
+            Image(systemName: Constraints.videoSlashIcon)
               .foregroundColor(.gray)
               .frame(width: Constraints.thumbnailWidth, height: Constraints.thumbnailHeight)
           }
         }
       } else {
-        Image(systemName: "photo")
+        Image(systemName: Constraints.photoIcon)
           .foregroundColor(.gray)
           .frame(width: Constraints.thumbnailWidth, height: Constraints.thumbnailHeight)
       }
 
       if let previewURL = event.previewURL {
-        WebPImageView(url: previewURL, urlSession: urlSession)
+        WebPImageView(url: previewURL, urlSession: urlSession, home: home)
           .frame(width: Constraints.thumbnailWidth, height: Constraints.thumbnailHeight)
       }
     }

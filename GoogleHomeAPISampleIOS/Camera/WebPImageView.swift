@@ -18,15 +18,39 @@ import GoogleHomeSDK
 import OSLog
 import SwiftUI
 
-/// A UIKit view that displays an animated WebP image.
+private let logger = Logger(
+  subsystem: "com.google.HomePlatform", category: "WebPImageView")
+
+/// A SwiftUI representable UIKit view that downloads, decodes, and animates WebP preview clips.
 ///
-/// This view will download the provided WebP image, decode it into individual frames, and display
-/// them as a UIImageView animation.
+/// In Google Home Platform (GHP), camera `preview_url` endpoints deliver animated WebP media streams
+/// requiring OAuth Bearer authorization (`Authorization: Bearer <accessToken>`).
+///
+/// **Implementation Note for Partners**:
+/// - Image decoding is offloaded from the `@MainActor` via a `nonisolated async` helper to prevent
+///   blocking the main UI thread during intensive multi-frame decompression while preserving cooperative cancellation.
+/// - The `Coordinator` maintains `loadedURL` state to avoid redundant re-downloads during view re-renders.
+/// - `dismantleUIView` cancels in-flight tasks and clears image buffers when views scroll off-screen.
 struct WebPImageView: UIViewRepresentable {
   let url: URL
   let urlSession: URLSession
+  let home: Home
 
-  /// Function called by SwiftUI to create the UIKit view.
+  func makeCoordinator() -> Coordinator {
+    Coordinator()
+  }
+
+  /// Coordinator tracking task lifecycle and URL state to prevent duplicate downloads and resource leaks.
+  class Coordinator {
+    var loadedURL: URL?
+    var task: Task<Void, Never>?
+
+    deinit {
+      task?.cancel()
+    }
+  }
+
+  /// Creates the underlying UIKit `UIImageView`.
   func makeUIView(context: Context) -> UIImageView {
     let imageView = UIImageView()
     imageView.contentMode = .scaleAspectFill
@@ -41,41 +65,93 @@ struct WebPImageView: UIViewRepresentable {
 
   /// Function called by SwiftUI to update the UIKit view.
   func updateUIView(_ uiView: UIImageView, context: Context) {
-    Task {
-      let (data, _) = try await self.urlSession.data(from: self.url)
+    if context.coordinator.loadedURL == self.url {
+      return
+    }
+    context.coordinator.loadedURL = self.url
+    context.coordinator.task?.cancel()
+    uiView.stopAnimating()
+    uiView.animationImages = nil
+    uiView.image = nil
 
-      guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
-        return
-      }
+    context.coordinator.task = Task {
+      do {
+        let auth = try await self.home.permissions.authorization()
+        guard !Task.isCancelled else { return }
 
-      let frameCount = CGImageSourceGetCount(imageSource)
+        var request = URLRequest(url: self.url)
+        request.setValue("Bearer \(auth.accessToken)", forHTTPHeaderField: "Authorization")
 
-      var images: [UIImage] = []
-      var totalDuration: TimeInterval = 0
+        let (data, response) = try await self.urlSession.data(for: request)
+        guard !Task.isCancelled else { return }
 
-      // Iterate through each frame of the animated WebP to build the animation sequence.
-      for frameIndex in 0..<frameCount {
-        guard let cgImage = CGImageSourceCreateImageAtIndex(imageSource, frameIndex, nil) else {
-          continue
+        guard let httpResponse = response as? HTTPURLResponse else {
+          logger.error("WebPImageView: Non-HTTP response received for \(self.url.absoluteString, privacy: .public)")
+          return
         }
-        images.append(UIImage(cgImage: cgImage))
 
-        // Extract metadata properties to find the specific delay time for this frame.
-        let properties =
-          CGImageSourceCopyPropertiesAtIndex(imageSource, frameIndex, nil) as? [CFString: Any]
-        let webPProperties = properties?[kCGImagePropertyWebPDictionary] as? [CFString: Any]
-        let unclampedDelayTime =
-          webPProperties?[kCGImagePropertyWebPUnclampedDelayTime] as? TimeInterval
+        guard httpResponse.statusCode == 200 else {
+          logger.error("WebPImageView: HTTP request failed with status \(httpResponse.statusCode) for \(self.url.absoluteString, privacy: .public)")
+          return
+        }
 
-        // Add this frame's delay to the total animation duration (defaulting to 0.1s).
-        totalDuration += unclampedDelayTime ?? 0.1
-      }
+        let (decodedImages, totalDuration) = await Self.decodeWebP(from: data)
+        guard let images = decodedImages else {
+          if !Task.isCancelled {
+            logger.error("WebPImageView: Failed to create image source for \(self.url.absoluteString, privacy: .public)")
+          }
+          return
+        }
 
-      Task { @MainActor in
+        guard !Task.isCancelled else { return }
+
         uiView.animationImages = images
         uiView.animationDuration = totalDuration
         uiView.startAnimating()
+      } catch {
+        if !Task.isCancelled {
+          logger.error("WebPImageView: Failed to load WebP image from \(self.url.absoluteString, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
       }
     }
+  }
+
+  /// Decodes animated WebP image data into an array of frames and calculates total animation duration.
+  /// This method is `nonisolated` to execute off the `@MainActor` without blocking the main UI thread,
+  /// while maintaining cooperative cancellation inheritance from the calling `Task`.
+  private static func decodeWebP(from data: Data) async -> ([UIImage]?, TimeInterval) {
+    guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
+      return (nil, 0)
+    }
+
+    let frameCount = CGImageSourceGetCount(imageSource)
+    var images: [UIImage] = []
+    var totalDuration: TimeInterval = 0
+
+    // Iterate through each frame of the animated WebP to build the animation sequence.
+    for frameIndex in 0..<frameCount {
+      guard !Task.isCancelled else { return (nil, 0) }
+      guard let cgImage = CGImageSourceCreateImageAtIndex(imageSource, frameIndex, nil) else {
+        continue
+      }
+      images.append(UIImage(cgImage: cgImage))
+
+      // Extract metadata properties to find the specific delay time for this frame.
+      let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, frameIndex, nil) as? [CFString: Any]
+      let webPProperties = properties?[kCGImagePropertyWebPDictionary] as? [CFString: Any]
+      let unclampedDelayTime = webPProperties?[kCGImagePropertyWebPUnclampedDelayTime] as? TimeInterval
+
+      // Add this frame's delay to the total animation duration (defaulting to 0.1s).
+      totalDuration += unclampedDelayTime ?? 0.1
+    }
+
+    return (images, totalDuration)
+  }
+
+  static func dismantleUIView(_ uiView: UIImageView, coordinator: Coordinator) {
+    coordinator.task?.cancel()
+    uiView.stopAnimating()
+    uiView.animationImages = nil
+    uiView.image = nil
   }
 }
