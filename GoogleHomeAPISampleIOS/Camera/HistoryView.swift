@@ -117,10 +117,18 @@ public struct HistoryView: View {
             NavigationLink (
               destination: HistoricalPlaybackView(url: url, home: self.home)
             ) {
-              HistoryItemView(historyItem: historyItem, urlSession: self.urlSession)
+              HistoryItemView(
+                historyItem: historyItem,
+                urlSession: self.urlSession,
+                home: self.home
+              )
             }
           } else {
-            HistoryItemView(historyItem: historyItem, urlSession: self.urlSession)
+            HistoryItemView(
+              historyItem: historyItem,
+              urlSession: self.urlSession,
+              home: self.home
+            )
           }
         }
       }
@@ -345,12 +353,16 @@ public struct HistoryItemView: View {
       .foregroundColor(.gray)
   }()
 
+  private let home: Home
+  
   /// - Parameters:
   ///   - historyItem: The ViewModel handling the data for the specific history event to display.
-  ///   - urlSession: The url used to fetch the WebP image assets.
-  public init(historyItem: HistoryItemViewModel, urlSession: URLSession) {
+  ///   - urlSession: The URLSession used to fetch the WebP image assets.
+  ///   - home: The Home instance used for token retrieval.
+  public init(historyItem: HistoryItemViewModel, urlSession: URLSession, home: Home) {
     self.historyItem = historyItem
     self.urlSession = urlSession
+    self.home = home
   }
 
   public var body: some View {
@@ -373,9 +385,11 @@ public struct HistoryItemView: View {
 
   @ViewBuilder
   private var mediaView: some View {
-    if !self.historyItem.thumbnailURL.isEmpty {
+    if !self.historyItem.thumbnailURL.isEmpty,
+      let thumbnailURL = URL(string: self.historyItem.thumbnailURL)
+    {
       ZStack {
-        AsyncImage(url: URL(string: self.historyItem.thumbnailURL)) { phase in
+        AuthenticatedAsyncImage(url: thumbnailURL, home: home, urlSession: self.urlSession) { phase in
           switch phase {
           case .empty:
             ProgressView()
@@ -388,12 +402,10 @@ public struct HistoryItemView: View {
               .clipped()
           case .failure:
             placeholderThumbnail
-          @unknown default:
-            placeholderThumbnail
           }
         }
         if let previewClipURL = self.historyItem.previewClipURL {
-          WebPImageView(url: previewClipURL, urlSession: self.urlSession)
+          WebPImageView(url: previewClipURL, urlSession: self.urlSession, home: self.home)
             .frame(width: Constraints.thumbnailSize, height: Constraints.thumbnailSize)
         }
       }

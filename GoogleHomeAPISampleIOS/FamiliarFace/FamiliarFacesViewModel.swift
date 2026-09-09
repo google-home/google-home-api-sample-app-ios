@@ -52,7 +52,7 @@ class FamiliarFacesViewModel: ObservableObject {
   @Published var isLoadingInstances = false
   @Published var isLoading = false
   @Published var errorMessage: String? = nil
-  private let home: Home
+  let home: Home
   private let structure: Structure
   private var faceLibraryTrait: GoogleHomeTypes.Google.FaceLibraryTrait? = nil
 

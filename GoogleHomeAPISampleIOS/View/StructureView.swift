@@ -121,7 +121,7 @@ struct StructureView: View {
               .font(.title)
           }
           .tag(Tab.history)
-        SearchableHomeView(structure: structure)
+        SearchableHomeView(structure: structure, home: self.viewModel.home)
           .id(structure.id)
           .tabItem {
             Label("Search", systemImage: "magnifyingglass")

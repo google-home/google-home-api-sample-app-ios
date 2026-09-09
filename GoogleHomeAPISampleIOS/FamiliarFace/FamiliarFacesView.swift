@@ -323,7 +323,8 @@ struct FamiliarFacesView: View {
   private func faceThumbnail(face: GoogleHomeTypes.Google.FaceLibraryTrait.Face) -> some View {
     FaceImageView(
       urlString: face.mostRepresentativeFaceInstance?.url,
-      size: Constants.thumbnailSize
+      size: Constants.thumbnailSize,
+      home: viewModel.home
     )
   }
 
@@ -536,7 +537,8 @@ struct KnownFaceManagementView: View {
     VStack(spacing: .sm) {
       FaceImageView(
         urlString: face.mostRepresentativeFaceInstance?.url,
-        size: ViewConstants.profileImageSize
+        size: ViewConstants.profileImageSize,
+        home: viewModel.home
       )
 
       HStack(spacing: .sm) {
@@ -575,7 +577,7 @@ struct KnownFaceManagementView: View {
            let instanceID = instance.id {
           let isSelected = selectedInstanceIDs.contains(instanceID)
           ZStack(alignment: .topLeading) {
-            AsyncImage(url: url) { phase in
+            AuthenticatedAsyncImage(url: url, home: viewModel.home) { phase in
               if let image = phase.image {
                 image.resizable().aspectRatio(contentMode: .fill)
               } else if phase.error != nil {
@@ -652,7 +654,8 @@ struct KnownFaceManagementView: View {
               HStack(spacing: .smd) {
                 FaceImageView(
                   urlString: targetFace.mostRepresentativeFaceInstance?.url,
-                  size: ViewConstants.smallProfileImageSize
+                  size: ViewConstants.smallProfileImageSize,
+                  home: viewModel.home
                 )
                 Text(targetFace.name ?? FamiliarFacesView.Constants.unnamed)
                   .foregroundColor(.primary)
@@ -697,10 +700,11 @@ struct KnownFaceManagementView: View {
 struct FaceImageView: View {
   let urlString: String?
   let size: CGFloat
+  let home: Home?
 
   var body: some View {
     if let urlString = urlString, let url = URL(string: urlString) {
-      AsyncImage(url: url) { phase in
+      AuthenticatedAsyncImage(url: url, home: home) { phase in
         if let image = phase.image {
           image
             .resizable()

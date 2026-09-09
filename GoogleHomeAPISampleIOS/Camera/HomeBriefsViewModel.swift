@@ -23,7 +23,7 @@ import Observation
 public class HomeBriefsViewModel {
 
   private let structureID: String
-  private let home: Home
+  let home: Home
   private var structure: Structure?
 
   public private(set) var hasMoreBriefs = false
