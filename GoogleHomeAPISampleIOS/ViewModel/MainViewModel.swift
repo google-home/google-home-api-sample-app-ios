@@ -38,7 +38,9 @@ class MainViewModel: ObservableObject {
       self.candidatesViewModel = nil
     }
   }
-  @Published var areaPresenceState: Google.AreaPresenceStateTrait.PresenceState?
+  // The presence state of the selected structure. `nil` unless the user currently consents to
+  // presence sensing for that structure.
+  @Published private(set) var areaPresenceState: Google.AreaPresenceStateTrait.PresenceState?
 
   private let selectedStructureStorage = SelectedStructureStorage()
 
@@ -46,6 +48,11 @@ class MainViewModel: ObservableObject {
   private var structuresCancellable: AnyCancellable?
   private var candidatesViewModel: CandidatesViewModel?
   private var areaPresenceStateCancellable: AnyCancellable?
+  private var presenceConsentTask: Task<Void, Never>?
+  // The most recent value pushed by the trait subscription, before consent gating is applied.
+  private var lastReportedPresenceState: Google.AreaPresenceStateTrait.PresenceState?
+  // Whether the user consents to presence sensing for the selected structure.
+  private var isPresenceSensingConsented = false
 
   // MARK: - Initialization
 
@@ -87,9 +94,18 @@ class MainViewModel: ObservableObject {
       .store(in: &cancellables)
   }
 
+  deinit {
+    // Prevent an idle consent stream from leaking the suspended task.
+    self.presenceConsentTask?.cancel()
+  }
+
   /// Handles resetting and re-subscribing when the selected structure changes.
   private func handleSelectedStructureChange(structureID: String?, structures: [Structure]) {
     self.areaPresenceStateCancellable?.cancel()
+    self.presenceConsentTask?.cancel()
+    self.presenceConsentTask = nil
+    self.lastReportedPresenceState = nil
+    self.isPresenceSensingConsented = false
     self.areaPresenceState = nil
 
     guard let structureID = structureID,
@@ -99,7 +115,33 @@ class MainViewModel: ObservableObject {
       return
     }
 
+    self.monitorPresenceSensingConsent(for: structure)
     self.subscribeToAreaPresence(for: structure)
+  }
+
+  /// Monitors whether the user consents to presence sensing for the given structure.
+  ///
+  /// - Parameter structure: The structure whose presence sensing consent is observed.
+  private func monitorPresenceSensingConsent(for structure: Structure) {
+    let permissions = structure.permissions
+    // The trait subscription keeps delivering presence updates for as long as the app holds the
+    // structure scope, so consent is what determines whether that state may be presented. Watching
+    // the stream lets a revocation take effect immediately instead of on the next launch.
+    self.presenceConsentTask = Task { [weak self] in
+      do {
+        let consentStates = permissions.featureConsentStateStream(features: [.presenceSensing])
+        for try await consentState in consentStates {
+          guard let self, !Task.isCancelled else { return }
+          await self.updatePresenceSensingConsent(
+            isConsented: consentState[.presenceSensing] == .consented)
+        }
+      } catch {
+        guard let self, !Task.isCancelled else { return }
+        Logger().error("Presence sensing consent stream failed: \(error)")
+        // Withhold the presence state rather than risk displaying it without valid consent.
+        await self.updatePresenceSensingConsent(isConsented: false)
+      }
+    }
   }
 
   /// Subscribes to the AreaPresenceStateTrait for the given structure.
@@ -113,11 +155,25 @@ class MainViewModel: ObservableObject {
         receiveCompletion: { [weak self] completion in
           guard case .failure(let error) = completion else { return }
           Logger().error("AreaPresenceStateTrait subscription failed: \(error)")
-          self?.areaPresenceState = nil
+          self?.lastReportedPresenceState = nil
+          self?.applyPresenceConsentGate()
         },
         receiveValue: { [weak self] trait in
-          self?.areaPresenceState = trait.attributes.presenceState
+          self?.lastReportedPresenceState = trait.attributes.presenceState
+          self?.applyPresenceConsentGate()
         })
+  }
+
+  /// Records the latest presence sensing consent status and re-applies the gate.
+  @MainActor
+  private func updatePresenceSensingConsent(isConsented: Bool) {
+    self.isPresenceSensingConsented = isConsented
+    self.applyPresenceConsentGate()
+  }
+
+  /// Publishes the reported presence state only while presence sensing consent is granted.
+  private func applyPresenceConsentGate() {
+    self.areaPresenceState = self.isPresenceSensingConsented ? self.lastReportedPresenceState : nil
   }
 
   func structure(structureID: String?) -> Structure? {

@@ -34,7 +34,9 @@ struct GoogleHomeAPISampleIOS: App {
           WindowCoveringDeviceType.self,
           GoogleTVDeviceType.self,
           GoogleCameraDeviceType.self,
-          GoogleDoorbellDeviceType.self
+          GoogleDoorbellDeviceType.self,
+          ChimeDeviceType.self,
+          SpeakerDeviceType.self,
         ],
         traits: [
           Google.TimeTrait.self,
@@ -66,6 +68,7 @@ struct GoogleHomeAPISampleIOS: App {
           Matter.Pm25ConcentrationMeasurementTrait.self,
           Matter.OvenCavityOperationalStateTrait.self,
           Matter.RvcOperationalStateTrait.self,
+          Matter.ChimeTrait.self,
         ]
       )
     }

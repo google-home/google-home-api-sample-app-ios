@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import Combine
-import Dispatch
 import Foundation
 import GoogleHomeSDK
 import GoogleHomeTypes
@@ -27,6 +26,8 @@ final class StructureViewModel: ObservableObject {
     static let unassignedRoomName = "In your home"
     static let unassignedRoomID = "unassignedDevices"
     static let emptyRoomName = "<unassigned>"
+    static let maxCommissioningRetryAttempts = 10
+    static let commissioningRetryDelayNanoseconds: UInt64 = 1_000_000_000
   }
 
   public let home: Home
@@ -46,6 +47,10 @@ final class StructureViewModel: ObservableObject {
   @Published var roomIDToBeDeleted: String?
   @Published var showNoHubFoundDialog: Bool = false
   @Published var isDiscoveringHubs = false
+  // When on, devices are queried with `enableMultipartDevices: true`. Off by default because
+  // `DeviceControlFactory` shows only the first matching control of a multipart device.
+  @Published var isMultifacetModeEnabled = false
+  private var deviceControlCache: [String: DeviceControl] = [:]
 
   var isConfirmingRoomDeletion: Bool {
     get { return roomIDToBeDeleted != nil }
@@ -61,14 +66,27 @@ final class StructureViewModel: ObservableObject {
       await self.refreshFaceLibraryConsentStatus()
       await self.refreshPresenceSensingConsentStatus()
     }
-    /// query rooms and devices and map them to current structure
-    self.home.rooms().batched()
-      .combineLatest(self.home.devices().batched())
-      .receive(on: DispatchQueue.main)
-      .catch { error in
-        Logger().error("Failed to load rooms and devices: \(error)")
-        return Just((Set<Room>(), Set<HomeDevice>()))
+    $isMultifacetModeEnabled
+      .handleEvents(receiveOutput: { [weak self] _ in
+        self?.deviceControlCache.removeAll()
+      })
+      .map { [weak self] isMultifacet -> AnyPublisher<(Set<Room>, Set<HomeDevice>), Never> in
+        guard let self = self else { return Empty().eraseToAnyPublisher() }
+        return self.home.rooms().batched()
+          .combineLatest(self.home.devices(enableMultipartDevices: isMultifacet).batched())
+          .catch { error in
+            Logger().error("Failed to load rooms and devices: \(error)")
+            return Just((Set<Room>(), Set<HomeDevice>()))
+          }
+          .eraseToAnyPublisher()
       }
+      .switchToLatest()
+      .receive(on: DispatchQueue.main)
+      .handleEvents(receiveOutput: { [weak self] _, devices in
+        guard let self = self else { return }
+        let currentDeviceIDs = Set(devices.map { $0.id })
+        self.deviceControlCache = self.deviceControlCache.filter { currentDeviceIDs.contains($0.key) }
+      })
       .map { [weak self] rooms, devices in
         guard let self = self else { return [] }
         self.hasLoaded = true
@@ -90,8 +108,14 @@ final class StructureViewModel: ObservableObject {
         var hasUnassignedDevices = false
         for device in devices where device.structureID == self.structureID {
           do {
-            let control = try DeviceControlFactory.make(device: device)
-
+            let control: DeviceControl
+            if let cachedControl = self.deviceControlCache[device.id],
+               cachedControl.device.name == device.name {
+              control = cachedControl
+            } else {
+              control = try DeviceControlFactory.make(device: device)
+              self.deviceControlCache[device.id] = control
+            }
             // Check if device belongs to a known room
             if let roomID = device.roomID, let entry = entriesByRoom[roomID] {
               entry.appendDeviceControl(control)
@@ -101,14 +125,13 @@ final class StructureViewModel: ObservableObject {
               hasUnassignedDevices = true
             }
           } catch {
-            Logger().error("Failed to create device control: \(error)")
+            Logger().error("Failed to create device control for device '\(device.id)' (\(device.name)): \(error)")
           }
         }
         return Array(entriesByRoom.values)
           .sorted { $0.roomName < $1.roomName }
         + (hasUnassignedDevices ? [unassignedEntry] : [])
       }
-      /// receive from .map and .assign() to publisher entries
       .assign(to: &self.$entries)
   }
 
@@ -128,7 +151,29 @@ final class StructureViewModel: ObservableObject {
     let deviceIDs = try await self.commissioningManager.addMatterDevice(
       to: structure, add3PFabricFirst: add3PFabricFirst, setupPayload: setupPayload
     )
-    return try await self.home.devices().list().filter { deviceIDs.contains($0.id) }
+    Logger().info("Commissioning finished. Searching for \(deviceIDs.count) device IDs in Home SDK...")
+
+    // Query with enableMultipartDevices: true regardless of isMultifacetModeEnabled so post-commissioning
+    // OTA and OOBE can resolve the Endpoint 0 RootNode/OtaRequestor container device.
+    // Multipart mode lists only the root (the other IDs are its parts), so any match is enough.
+    for attempt in 1...Constants.maxCommissioningRetryAttempts {
+      let devices = try await self.home.devices(enableMultipartDevices: true).list().filter { deviceIDs.contains($0.id) }
+      if !devices.isEmpty {
+        Logger().info("Found \(devices.count)/\(deviceIDs.count) matching devices on attempt \(attempt):")
+        for dev in devices {
+          Logger().info("  - ID: \(dev.id), Name: '\(dev.name)'")
+        }
+        return Set(devices)
+      }
+      Logger().warning("Attempt \(attempt) found \(devices.count)/\(deviceIDs.count) matching devices, retrying in \(Constants.commissioningRetryDelayNanoseconds / 1_000_000) ms...")
+      try await Task.sleep(nanoseconds: Constants.commissioningRetryDelayNanoseconds)
+    }
+
+    Logger().error("No matching devices found after \(Constants.maxCommissioningRetryAttempts) attempts for IDs: \(deviceIDs)")
+    // Diagnostic: flat mode shows which part devices did reach the app, if any.
+    let flatMatches = ((try? await self.home.devices(enableMultipartDevices: false).list()) ?? []).filter { deviceIDs.contains($0.id) }
+    Logger().error("Flat-mode matches: \(flatMatches.count)/\(deviceIDs.count) \(flatMatches.map { "\($0.id) '\($0.name)'" })")
+    return []
   }
 
   // MARK: - `StructureViewModel.StructureEntry`
@@ -154,14 +199,14 @@ final class StructureViewModel: ObservableObject {
     }
   }
 
-  // MARK: Hub Activation
+  // MARK: - Hub Activation
 
-  /// Discovey the Google Home hub under the same local network.
+  /// Discover the Google Home hub under the same local network.
   public func discoverAvailableHubs() async {
     self.isDiscoveringHubs = true
     do {
       let hubs = await self.home.discoverAvailableHubs()
-      Logger().info("hubs found: \(hubs)")
+      Logger().info("Hubs found: \(hubs)")
       if let hub = hubs.first {
         try await self.setupHub(hub)
       } else {

@@ -19,108 +19,100 @@ import GoogleHomeTypes
 import OSLog
 import Observation
 
-/// A ViewModel for the OOBE setup process, handling the transition for each step.
+/// A ViewModel for the camera OOBE setup process (OTA -> Settings -> Done).
+///
+/// The OTA step is driven by `OtaUpdateViewModel`, so cameras get the same per-phase watchdogs
+/// (300s checking, 1800s download, 900s install) as other Matter devices.
 @MainActor
 @Observable
 public class CameraOOBEViewModel<T: DeviceType> {
 
   public enum Step {
-    case otaDownload(
-      state: Matter.OtaSoftwareUpdateRequestorTrait.UpdateStateEnum, progress: Double)
+    case ota
     case settings
     case done
   }
 
   private var cancellables = Set<AnyCancellable>()
   public let home: Home
+  /// Shared OTA state machine backing the OTA step.
+  public let otaViewModel: OtaUpdateViewModel
   private var device: HomeDevice
-  public private(set) var step: Step = .otaDownload(state: .querying, progress: 0)
+  /// The current step of the setup flow.
+  public private(set) var step: Step = .ota
+  /// The latest OTA update state mirrored from `otaViewModel`.
+  public private(set) var otaUiState: OtaUiState = .loading
   public private(set) var isLoading = false
 
-  private var otaTrait: Matter.OtaSoftwareUpdateRequestorTrait? {
-    didSet {
-      dispatchPrecondition(condition: .onQueue(.main))
+  /// Whether the device is reachable; the Done step waits for it.
+  public var isOnline: Bool {
+    let state = self.device.sourceConnectivity.connectivityState
+    return state == .online || state == .partiallyOnline
+  }
 
-      guard case .otaDownload = step else {
-        Logger().debug("Not in OTA download step, ignoring OTA trait update")
-        return
-      }
-
-      guard let otaTrait else {
-        Logger().debug("OTA trait is nil, skipping OTA download step")
-        step = .settings
-        return
-      }
-
-      if otaTrait.attributes.updateState == .idle {
-        Logger().debug("OTA update is complete, advancing to settings step")
-        step = .settings
-        return
-      }
-
-      Logger().debug(
-        "OTA update is in progress, state: \(String(describing: otaTrait.attributes.updateState)), progress: \(otaTrait.attributes.updateStateProgress ?? 0)"
-      )
-
-      step = .otaDownload(
-        state: otaTrait.attributes.updateState ?? .querying,
-        progress: Double(otaTrait.attributes.updateStateProgress ?? 0) / 100.0)
+  /// Whether the user may leave the OTA step manually (the update failed or is delayed).
+  public var canSkipOta: Bool {
+    switch self.otaUiState {
+    case .failed, .delayed:
+      return true
+    case .loading, .checking, .downloading, .installing, .upToDate:
+      return false
     }
   }
 
   public init(home: Home, device: HomeDevice) {
     self.home = home
     self.device = device
+    self.otaViewModel = OtaUpdateViewModel(home: home, device: device, isOobeFlow: true)
 
-    home.device(id: device.id)
+    // Reuse the OTA ViewModel's device subscription to keep connectivity fresh.
+    self.otaViewModel.$currentDevice
+      .compactMap { $0 }
       .receive(on: DispatchQueue.main)
-      .flatMap { [weak self] device in
-        self?.device = device
-        return device.types.subscribe(OtaRequestorDeviceType.self).receive(on: DispatchQueue.main)
+      .sink { [weak self] updatedDevice in
+        self?.device = updatedDevice
       }
-      .compactMap { $0.traits[Matter.OtaSoftwareUpdateRequestorTrait.self] }
-      .removeDuplicates()
-      .timeout(.seconds(60), scheduler: DispatchQueue.main) {
-        HomeError.deadlineExceeded("OTA trait timed out waiting for updates")
-      }
-      .sink { [weak self] completion in
-        guard let self else { return }
-        Logger().debug("OTA trait subscription completed unexpectedly: \(String(describing: completion)).")
-        if case .otaDownload = self.step {
-          Logger().debug("Advancing to settings step due to OTA trait subscription completion")
-          self.step = .settings
-        }
-      } receiveValue: { [weak self] (otaTrait: Matter.OtaSoftwareUpdateRequestorTrait) in
-        guard let self else { return }
-        self.otaTrait = otaTrait
+      .store(in: &cancellables)
+
+    self.otaViewModel.$otaUiState
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] state in
+        self?.handleOtaState(state)
       }
       .store(in: &cancellables)
   }
 
   public func nextStep() {
     switch step {
+    case .ota:
+      guard canSkipOta else {
+        Logger().debug("Cannot manually advance from OTA step while the update is in progress")
+        return
+      }
+      step = .settings
     case .settings:
       step = .done
-    case .otaDownload:
-      Logger().debug("Cannot manually advance from OTA download step")
     case .done:
       Logger().debug("Already at the last step")
     }
   }
 
-  public func configurationDone() async throws {
-    guard
-      let configDoneTrait = await device.types.get(OtaRequestorDeviceType.self)?
-        .traits[Google.ConfigurationDoneTrait.self]
-    else {
-      Logger().error("Failed to get configuration done trait")
-      throw HomeError.notFound("Configuration done trait not found")
-    }
-
+  /// Marks configuration complete.
+  ///
+  /// Falls back from `OtaRequestorDeviceType` to `RootNodeDeviceType` and skips (without throwing)
+  /// when `ConfigurationDoneTrait` is missing.
+  public func configurationDone() async {
     self.isLoading = true
-    _ = try await configDoneTrait.update {
-      $0.setAppConfigurationComplete(true)
+    defer { self.isLoading = false }
+    try? await self.otaViewModel.finishConfiguration()
+  }
+
+  private func handleOtaState(_ state: OtaUiState) {
+    self.otaUiState = state
+    guard case .ota = self.step else { return }
+    if case .upToDate = state {
+      Logger().debug("OTA update is complete, advancing to settings step")
+      self.step = .settings
     }
-    self.isLoading = false
   }
 }

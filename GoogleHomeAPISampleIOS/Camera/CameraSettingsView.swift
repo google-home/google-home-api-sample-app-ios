@@ -14,6 +14,7 @@
 
 import GoogleHomeSDK
 import GoogleHomeTypes
+import OSLog
 import SwiftUI
 
 /// A view for the camera device settings, which is also shown in the OOBE process.
@@ -30,13 +31,35 @@ public struct CameraSettingsView<T: DeviceType>: View {
     case oobe
   }
 
+  @Environment(\.dismiss) private var dismiss
   @State private var viewModel: CameraSettingsViewModel<T>
+  @State private var showDecommissionAlert = false
+  @State private var isDecommissioning = false
+  @State private var decommissionErrorMessage: String?
 
-  public init(home: Home, deviceID: String, initiatingFlow: InitiatingFlow = .settings) {
+  private let initiatingFlow: InitiatingFlow
+  private let onDecommission: (() -> Void)?
+
+  /// Initializes the camera settings view.
+  ///
+  /// - Parameters:
+  ///   - home: The home instance.
+  ///   - deviceID: The unique device identifier.
+  ///   - initiatingFlow: The flow that initiated the camera settings view.
+  ///   - onDecommission: Optional callback invoked after decommissioning succeeds. When provided,
+  ///     the caller owns navigation; otherwise the view dismisses itself.
+  public init(
+    home: Home,
+    deviceID: String,
+    initiatingFlow: InitiatingFlow = .settings,
+    onDecommission: (() -> Void)? = nil
+  ) {
     self._viewModel = State(
       initialValue: CameraSettingsViewModel<T>(
         home: home, deviceID: deviceID, initiatingFlow: initiatingFlow)
     )
+    self.initiatingFlow = initiatingFlow
+    self.onDecommission = onDecommission
   }
 
   public var body: some View {
@@ -73,8 +96,76 @@ public struct CameraSettingsView<T: DeviceType>: View {
         if viewModel.displayedSettings.contains(.diagnostics) {
           diagnosticsSettingsSection
         }
+        if self.initiatingFlow == .settings {
+          Section {
+            Button(role: .destructive) {
+              self.showDecommissionAlert = true
+            } label: {
+              Text(DecommissionConstants.actionTitle)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .trailing) {
+                  if self.isDecommissioning {
+                    ProgressView()
+                  }
+                }
+            }
+            .disabled(self.isDecommissioning)
+          }
+        }
+      }
+      .alert(
+        DecommissionConstants.confirmTitle,
+        isPresented: self.$showDecommissionAlert
+      ) {
+        Button(DecommissionConstants.actionTitle, role: .destructive) {
+          Task { @MainActor in
+            self.isDecommissioning = true
+            defer { self.isDecommissioning = false }
+            do {
+              let decommissionedDeviceIDs = try await self.viewModel.decommissionDevice()
+              Logger().info("Decommissioned devices: \(decommissionedDeviceIDs)")
+              if let onDecommission = self.onDecommission {
+                onDecommission()
+              } else {
+                self.dismiss()
+              }
+            } catch {
+              Logger().error("Failed to decommission device: \(error.localizedDescription)")
+              self.decommissionErrorMessage = error.localizedDescription
+            }
+          }
+        }
+        Button(DecommissionConstants.cancelTitle, role: .cancel) {}
+      } message: {
+        Text(DecommissionConstants.confirmMessage)
+      }
+      .alert(
+        DecommissionConstants.failureTitle,
+        isPresented: Binding(
+          get: { self.decommissionErrorMessage != nil },
+          set: { if !$0 { self.decommissionErrorMessage = nil } }
+        )
+      ) {
+        Button(DecommissionConstants.okTitle, role: .cancel) {
+          self.decommissionErrorMessage = nil
+        }
+      } message: {
+        if let decommissionErrorMessage = self.decommissionErrorMessage {
+          Text(decommissionErrorMessage)
+        }
       }
     )
+  }
+
+  private enum DecommissionConstants {
+    static var actionTitle: String { "Decommission" }
+    static var confirmTitle: String { "Decommission device?" }
+    static var confirmMessage: String {
+      "Are you sure you want to decommission this device? This action cannot be undone."
+    }
+    static var cancelTitle: String { "Cancel" }
+    static var failureTitle: String { "Failed to Decommission" }
+    static var okTitle: String { "OK" }
   }
 
   // MARK: - Section Views
@@ -365,6 +456,14 @@ public struct CameraSettingsView<T: DeviceType>: View {
         Spacer()
         Text("\(viewModel.softwareVersionString ?? "N/A")")
           .foregroundColor(.gray)
+      }
+      if let otaStatusString = viewModel.otaStatusString {
+        HStack {
+          Text("OTA Status")
+          Spacer()
+          Text(otaStatusString)
+            .foregroundColor(.gray)
+        }
       }
       HStack {
         Text("Serial Number")

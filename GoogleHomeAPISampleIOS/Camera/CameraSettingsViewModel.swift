@@ -306,6 +306,8 @@ class CameraSettingsViewModel<T: DeviceType> {
   public private(set) var productName: String?
   /// Software version string for the device from the Matter basicInformationTrait.
   public private(set) var softwareVersionString: String?
+  /// Human-readable OTA software update status string from the Matter OtaSoftwareUpdateRequestorTrait.
+  public private(set) var otaStatusString: String?
 
   /// Serial number for the device from the Matter ExtendedBasicInformationTrait.
   public private(set) var serialNumber: String?
@@ -427,6 +429,18 @@ class CameraSettingsViewModel<T: DeviceType> {
             self.productName = basicInformationTrait.attributes.productName
             self.softwareVersionString = basicInformationTrait.attributes.softwareVersionString
           }
+        }
+
+        if let otaTrait = deviceTypeCollection.getAll(of: OtaRequestorDeviceType.self).first?
+          .traits[Matter.OtaSoftwareUpdateRequestorTrait.self] {
+          let uiState = mapUpdateStateToUiState(
+            updateState: otaTrait.attributes.updateState,
+            progress: otaTrait.attributes.updateStateProgress,
+            versionString: self.softwareVersionString
+          )
+          self.otaStatusString = uiState.displayStatusText
+        } else {
+          self.otaStatusString = nil
         }
 
         if !self.settingsInitialized {
@@ -1012,6 +1026,23 @@ class CameraSettingsViewModel<T: DeviceType> {
     )
   }
 
+  /// Decommissions the camera or doorbell device from the fabric and structure.
+  ///
+  /// - Returns: The IDs of every decommissioned device. This can include more than this
+  ///   device, for example other logical devices of the same physical device.
+  /// - Throws: An error if the device cannot be found or if decommissioning fails.
+  func decommissionDevice() async throws -> Set<String> {
+    let targetDevice: HomeDevice?
+    if let cachedDevice = self.device {
+      targetDevice = cachedDevice
+    } else {
+      targetDevice = try await self.home.devices().list().first { $0.id == self.deviceID }
+    }
+    guard let device = targetDevice else {
+      throw HomeError.notFound("Device not found.")
+    }
+    return try await device.decommission()
+  }
 }
 
 // Settings displayed in the UI.

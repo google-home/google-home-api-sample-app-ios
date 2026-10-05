@@ -24,11 +24,37 @@ import WebRTC
 @Observable
 @MainActor
 class CameraLiveViewModel: CameraTimelineDelegate {
+  private enum Constants {
+    static let defaultPlaybackDuration: TimeInterval = 1800  // 30 minutes
+
+    // Query parameter names accepted by the Google Camera Manifest Service.
+    enum HLSQueryParam {
+      static let startTime = "start_time"
+      static let endTime = "end_time"
+      static let includeInitSegment = "include_init_segment"
+      static let mediaTypes = "types"
+    }
+
+    // Media stream types defined by the Google Camera Manifest Service.
+    enum HLSMediaType: String {
+      // Primary recorded video stream.
+      case video = "1"
+      // Primary recorded audio stream.
+      case audio = "2"
+    }
+
+    enum PlaybackErrorReason {
+      static let noRecordingAvailable = "No recording available at this time."
+      static let timelineURLNotAvailable = "Timeline URL template not available."
+      static let playbackURLBuildFailed = "Unable to build the historical playback URL."
+      static let authorizationFailed = "Unable to authorize video playback. Please try again."
+    }
+  }
+
   private static let supportedDeviceTypes: [any DeviceType.Type] = [
     GoogleCameraDeviceType.self,
     GoogleDoorbellDeviceType.self,
   ]
-  private static let defaultPlaybackDuration: TimeInterval = 1800 // 30 minutes
   private let home: Home
   private var player: WebRtcPlayer?
   private var renderer: RTCVideoRenderer
@@ -36,7 +62,6 @@ class CameraLiveViewModel: CameraTimelineDelegate {
   private var liveViewTrait: Google.WebRtcLiveViewTrait?
   private var pushAvStreamTransportTrait: Google.PushAvStreamTransportTrait?
   private var cameraTimelineTrait: Google.CameraTimelineTrait?
-  private var cameraHistoryTrait: Google.CameraHistoryTrait?
 
   // MARK: - CameraTimelineDelegate Properties
   public private(set) var timelinePeriods: CameraTimelinePeriodList = CameraTimelinePeriodList()
@@ -115,7 +140,6 @@ class CameraLiveViewModel: CameraTimelineDelegate {
             self.pushAvStreamTransportTrait = pushAvStreamTransportTrait
 
             self.cameraTimelineTrait = deviceType.traits[Google.CameraTimelineTrait.self]
-            self.cameraHistoryTrait = deviceType.traits[Google.CameraHistoryTrait.self]
 
             if self.cameraTimelineTrait != nil, self.cameraTimelineFetcher == nil {
               self.cameraTimelineFetcher = CameraTimelineFetcher(
@@ -335,33 +359,48 @@ class CameraLiveViewModel: CameraTimelineDelegate {
       ).recording
 
       guard !intersectingRecording.isEmpty else {
-        self.playerState = .noVideo(reason: "No recording available at this time.")
+        self.playerState = .noVideo(reason: Constants.PlaybackErrorReason.noRecordingAvailable)
         return
       }
 
       guard
-        let cameraHistoryTrait = self.cameraHistoryTrait,
-        let urlTemplateString = cameraHistoryTrait.attributes.hlsMasterPlaylistUrlTemplate,
-        let url = buildHistoricalPlaybackURL(
+        let urlTemplateString = self.cameraTimelineTrait?.attributes.hlsMasterPlaylistUrlTemplate,
+        !urlTemplateString.isEmpty
+      else {
+        Logger().error("No HLS playlist template available on CameraTimelineTrait.")
+        self.playerState = .noVideo(reason: Constants.PlaybackErrorReason.timelineURLNotAvailable)
+        return
+      }
+
+      guard
+        let url = self.buildHistoricalPlaybackURL(
           template: urlTemplateString,
           startTime: currentTimelineDate,
-          duration: Self.defaultPlaybackDuration
+          duration: Constants.defaultPlaybackDuration
         )
       else {
-        self.playerState = .noVideo(reason: "History URL template not available.")
+        Logger().error("Failed to build a historical playback URL from the timeline template.")
+        self.playerState = .noVideo(reason: Constants.PlaybackErrorReason.playbackURLBuildFailed)
         return
       }
 
       self.playbackStartTime = currentTimelineDate
 
-      Task {
+      // The delegate callback is synchronous but the token fetch is not, so it runs in an
+      // unstructured Task, which inherits this type's @MainActor isolation.
+      Task { [weak self] in
+        guard let self else { return }
         do {
           let (accessToken, _) = try await self.home.permissions.authorization()
+          guard self.playbackStartTime == currentTimelineDate else { return }
           let headers = ["Authorization": "Bearer \(accessToken)"]
           self.player = nil
           self.playerState = .historicalPlayback(playbackURL: url, headers: headers)
         } catch {
-          self.playerState = .noVideo(reason: "Failed to authorize: \(error)")
+          guard self.playbackStartTime == currentTimelineDate else { return }
+          Logger().error("Failed to authorize historical playback: \(error)")
+          self.playbackStartTime = nil
+          self.playerState = .noVideo(reason: Constants.PlaybackErrorReason.authorizationFailed)
         }
       }
     }
@@ -380,22 +419,41 @@ class CameraLiveViewModel: CameraTimelineDelegate {
   ) -> URL? {
     guard var components = URLComponents(string: template) else { return nil }
 
+    let endTime = min(startTime.addingTimeInterval(duration), Date())
+    guard endTime > startTime else {
+      Logger().error("Historical playback window is invalid or in the future.")
+      return nil
+    }
+
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
     components.queryItems =
       (components.queryItems ?? [])
       + [
-        URLQueryItem(name: "start_time", value: formatter.string(from: startTime)),
         URLQueryItem(
-          name: "end_time",
-          value: formatter.string(
-            from: min(startTime.addingTimeInterval(duration), Date())
-          )
+          name: Constants.HLSQueryParam.startTime,
+          value: formatter.string(from: startTime)
         ),
-        URLQueryItem(name: "include_init_segment", value: "true"),
+        URLQueryItem(
+          name: Constants.HLSQueryParam.endTime,
+          value: formatter.string(from: endTime)
+        ),
+        URLQueryItem(name: Constants.HLSQueryParam.includeInitSegment, value: "true"),
+        // `types` is intentionally repeated: the manifest service treats each occurrence as one
+        // requested stream, so video and audio must be listed separately.
+        URLQueryItem(
+          name: Constants.HLSQueryParam.mediaTypes,
+          value: Constants.HLSMediaType.video.rawValue
+        ),
+        URLQueryItem(
+          name: Constants.HLSQueryParam.mediaTypes,
+          value: Constants.HLSMediaType.audio.rawValue
+        ),
       ]
 
+    // Deliberately unlogged: the path carries a stable device identifier and the query string
+    // carries the recording window. A nil result is reported by the caller.
     return components.url
   }
 

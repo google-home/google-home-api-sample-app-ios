@@ -18,7 +18,7 @@ import GoogleHomeTypes
 import OSLog
 import SwiftUI
 
-/// A view of the OOBE setup process (OTA Download -> Settings -> Done).
+/// A view of the camera OOBE setup process (OTA -> Settings -> Done).
 public struct CameraOOBEView<T: DeviceType>: View {
   private let device: HomeDevice
   @State private var viewModel: CameraOOBEViewModel<T>
@@ -31,8 +31,17 @@ public struct CameraOOBEView<T: DeviceType>: View {
   public var body: some View {
     VStack {
       switch viewModel.step {
-      case .otaDownload(let state, let progress):
-        OtaDownloadView(state: state, progress: progress)
+      case .ota:
+        OtaStepView(state: viewModel.otaUiState)
+          .toolbar {
+            if viewModel.canSkipOta {
+              ToolbarItem(placement: .primaryAction) {
+                Button("Next") {
+                  self.viewModel.nextStep()
+                }
+              }
+            }
+          }
       case .settings:
         CameraSettingsView<T>(
           home: self.viewModel.home, deviceID: self.device.id, initiatingFlow: .oobe
@@ -51,18 +60,38 @@ public struct CameraOOBEView<T: DeviceType>: View {
     }
     .navigationTitle(device.name)
     .navigationBarTitleDisplayMode(.inline)
+    .onDisappear {
+      // Mark configuration done on exit (e.g. swipe-dismiss while waiting for the device to come
+      // back online). Skipped in the settings step because its NavigationLink pushes also trigger
+      // onDisappear, so a swipe-dismiss during Settings does not write ConfigurationDone.
+      // finishConfiguration() is a no-op once it has succeeded.
+      guard self.viewModel.step != .settings else { return }
+      Task { await self.viewModel.configurationDone() }
+    }
   }
 
-  private struct OtaDownloadView: View {
-    let state: Matter.OtaSoftwareUpdateRequestorTrait.UpdateStateEnum
-    let progress: Double
+  private struct OtaStepView: View {
+    let state: OtaUiState
 
     var body: some View {
       VStack {
-        Text("Downloading software update...")
-        Text("State: \(state.description)")
-        ProgressView(value: progress) { Text("Progress: \(progress.formatted(.percent))") }
+        Text("Software update")
+          .font(.headline)
+        Text(state.displayStatusText)
+        progressIndicator
           .padding()
+      }
+    }
+
+    @ViewBuilder
+    private var progressIndicator: some View {
+      switch state {
+      case .downloading(let percent?, _):
+        ProgressView(value: Double(percent), total: 100) { Text("Progress: \(percent)%") }
+      case .loading, .checking, .downloading, .installing:
+        ProgressView()
+      case .delayed, .failed, .upToDate:
+        EmptyView()
       }
     }
   }
@@ -77,58 +106,31 @@ public struct CameraOOBEView<T: DeviceType>: View {
 
     var body: some View {
       VStack {
-        Image(systemName: "checkmark.circle")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 80, height: 80)
-          .foregroundColor(.blue)
-          .padding(.bottom, 10)
-        Text("Setup complete!")
-          .font(.title2)
-          .fontWeight(.bold)
+        if viewModel.isOnline {
+          Image(systemName: "checkmark.circle")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 80, height: 80)
+            .foregroundColor(.blue)
+            .padding(.bottom, 10)
+          Text("Setup complete!")
+            .font(.title2)
+            .fontWeight(.bold)
+        } else {
+          ProgressView()
+          Text("Waiting for device to be online...")
+        }
       }.toolbar {
         ToolbarItem(placement: .primaryAction) {
           Button("Done") {
             Task { @MainActor in
-              do {
-                try await self.viewModel.configurationDone()
-              } catch {
-                Logger().error("Failed to mark configuration done: \(error)")
-              }
+              await self.viewModel.configurationDone()
               self.dismiss()
             }
           }
+          .disabled(!viewModel.isOnline || viewModel.isLoading)
         }
       }
-    }
-  }
-}
-
-extension Matter.OtaSoftwareUpdateRequestorTrait.UpdateStateEnum {
-  public var description: String {
-    switch self {
-    case .unknown:
-      return "Unknown"
-    case .idle:
-      return "Idle"
-    case .querying:
-      return "Querying"
-    case .delayedOnQuery:
-      return "Delayed on query"
-    case .downloading:
-      return "Downloading"
-    case .applying:
-      return "Applying"
-    case .delayedOnApply:
-      return "Delayed on apply"
-    case .rollingBack:
-      return "Rolling back"
-    case .delayedOnUserConsent:
-      return "Delayed on user consent"
-    case .unrecognized_:
-      return "Unrecognized"
-    @unknown default:
-      return "Unknown"
     }
   }
 }

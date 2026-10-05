@@ -19,14 +19,18 @@ import GoogleHomeTypes
 
 @MainActor
 public class CandidatesViewModel: ObservableObject {
+  /// Preset activity phrases offered for a camera `QueryMatchedEvent` starter.
   public static let queryOptions = [
-    "a familiar person shows up",
-    "a person shows up",
-    "a package shows up",
-    "a vehicle shows up",
-    "an animal shows up",
-    "custom text"
+    "familiar person shows up",
+    "person shows up",
+    "package shows up",
+    "vehicle shows up",
+    "animal shows up",
+    customQueryOption
   ]
+
+  /// Option in `queryOptions` that lets the user enter a custom activity phrase.
+  public static let customQueryOption = "custom text"
 
   private let home: Home
   public let structure: Structure
@@ -512,6 +516,23 @@ public struct SelectedEntry: Identifiable {
     self.operation = operation
     self.levelValue = levelValue
     self.cameraDescription = cameraDescription
+  }
+
+  /// Returns a copy of this entry with the given camera activity query.
+  ///
+  /// - Parameter cameraDescription: The updated camera activity query string.
+  /// - Returns: A new `SelectedEntry` with the updated camera description.
+  public func withCameraDescription(_ cameraDescription: String) -> SelectedEntry {
+    SelectedEntry(
+      device: device,
+      deviceType: deviceType,
+      traitType: traitType,
+      eventType: eventType,
+      valueOnOff: valueOnOff,
+      operation: operation,
+      levelValue: levelValue,
+      cameraDescription: cameraDescription
+    )
   }
 }
 

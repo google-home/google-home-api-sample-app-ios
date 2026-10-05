@@ -38,6 +38,14 @@ struct AboutView: View {
           Spacer()
           Text("\(String(describing: Home.version))")
         }
+        HStack {
+          Text("Bundle ID")
+          Spacer()
+          Text(bundleIDString())
+            .font(.footnote)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(.trailing)
+        }
       }
 
       Section {
@@ -75,12 +83,16 @@ struct AboutView: View {
   /// This function retrieves the `CFBundleShortVersionString` from the app's main bundle `Info.plist`.
   /// If the version string cannot be found, it defaults to "Unknown".
   /// - Returns: A string formatted as "App Version: [marketingVersion]" or "App Version: Unknown".
-
   private func appVersionString() -> String {
     let marketingVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
       ?? "Unknown"
     return marketingVersion
+  }
+
+  /// Retrieves the application bundle identifier from the main bundle.
+  private func bundleIDString() -> String {
+    Bundle.main.bundleIdentifier ?? "Unknown"
   }
 
   /// Retrieves the Google Cloud Project Number from the app's `Info.plist`.
