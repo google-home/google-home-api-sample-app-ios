@@ -19,6 +19,50 @@ import OSLog
 import SwiftUI
 
 struct DeviceDetailView: View {
+  private enum Constants {
+    static let generalSectionHeader = "General"
+    static let decommissionSectionHeader = "Decommission"
+    static let enterPinTitle = "Enter PIN"
+    static let pinCodePlaceholder = "PIN Code"
+    static let submitButtonTitle = "Submit"
+    static let cancelButtonTitle = "Cancel"
+    static let pinRequiredMessage = "PIN is required to operate this lock."
+    static let decommissionConfirmationMessage =
+      "Are you sure you want to decommission this device? This action cannot be undone."
+    static let decommissionButtonTitle = "Decommission"
+    static let locationLabel = "Location"
+    static let softwareUpdateTitle = "Software Update"
+    static let currentVersionLabel = "Current Version:"
+    static let statusLabel = "Status:"
+    static let versionNotAvailable = "N/A"
+    static let cannotDecommissionText = "This device cannot be decommissioned."
+    static let notAuthorizedText = "You are not authorized to decommission this device."
+    static let nonMatterDeviceText = "This is not a Matter device."
+    static let bridgedDeviceText =
+      "This device is bridged, follow the bridge manufacturer's instructions to remove this device."
+    static let multiSourceDeviceText =
+      "The device is connected through multiple sources, to decommission the device, it needs to be disconnected from all non-matter sources."
+    static let bridgeSideEffectsText =
+      "This device is a bridge, decommissioning it will also decommission the following bridged devices:"
+    static let multipleSideEffectsText =
+      "Multiple devices will be decommissioned by decommissioning this device."
+    static let unknownText = "Unknown"
+    static let unknownReasonText = "Unknown reason."
+    static let unknownSideEffectsText = "Unknown side effects."
+    static let unknownEligibilityText = "Unknown decommission eligibility."
+    static let reasonPrefix = "Reason: "
+
+    static let editIcon = "pencil.circle.fill"
+    static let warningIcon = "exclamationmark.triangle"
+
+    static let progressPercentDivisor = 100.0
+    static let progressBarTopPadding: CGFloat = 2
+
+    static func versionDisplay(_ version: String) -> String {
+      "v\(version)"
+    }
+  }
+
   @ObservedObject private var deviceControl: DeviceControl
   @ObservedObject private var structureViewModel: StructureViewModel
   @StateObject private var viewModel: DeviceDetailViewModel
@@ -38,66 +82,58 @@ struct DeviceDetailView: View {
     structureViewModel: StructureViewModel,
     entry: StructureViewModel.StructureEntry
   ) {
-    let viewModel = DeviceDetailViewModel(
-      home: home, device: deviceControl.device)
-
     self.deviceControl = deviceControl
     self.structure = structure
     self._viewModel = StateObject(
-      wrappedValue: viewModel)
+      wrappedValue: DeviceDetailViewModel(home: home, device: deviceControl.device))
     self.structureViewModel = structureViewModel
     self.entry = entry
   }
 
   var body: some View {
-    // The main container for the entire screen.
     ScrollView {
       VStack(alignment: .leading, spacing: .md) {
-
         self.titleSection
-
-          VStack(alignment: .leading, spacing: .xl) {
-          Text("General")
+        VStack(alignment: .leading, spacing: .xl) {
+          Text(Constants.generalSectionHeader)
             .font(.headline)
-
           self.controlSection
           self.attributeSection
           self.locationSection
+          if self.viewModel.hasOtaSupport {
+            self.otaSection
+          }
         }
         .padding(.top)
-
-        Section("Decommission") {
+        Section(Constants.decommissionSectionHeader) {
           self.decommissionSection
         }
-
-        // Pushes all the content to the top of the screen.
         Spacer()
       }
-      // Adds padding around the entire screen content.
       .padding()
-      .alert("Enter PIN", isPresented: $showingPinEntry) {
-        SecureField("PIN Code", text: $pinCode)
+      .alert(Constants.enterPinTitle, isPresented: $showingPinEntry) {
+        SecureField(Constants.pinCodePlaceholder, text: $pinCode)
           .keyboardType(.numberPad)
-        Button("Submit") {
+        Button(Constants.submitButtonTitle) {
           self.deviceControl.setPINCode(self.pinCode)
           self.deviceControl.toggleControl?.action()
           self.pinCode = ""
         }
-        Button("Cancel", role: .cancel) {
+        Button(Constants.cancelButtonTitle, role: .cancel) {
           self.pinCode = ""
         }
       } message: {
-        Text("PIN is required to operate this lock.")
+        Text(Constants.pinRequiredMessage)
       }
       .confirmationDialog(
-        "Are you sure you want to decommission this device? This action cannot be undone.",
+        Constants.decommissionConfirmationMessage,
         isPresented: self.$isShowingDecommissionConfirmation,
         titleVisibility: .visible
       ) {
-        Button("Decommission", role: .destructive) {
+        Button(Constants.decommissionButtonTitle, role: .destructive) {
           self.decommissionDevice()
         }
-        Button("Cancel", role: .cancel) {}
+        Button(Constants.cancelButtonTitle, role: .cancel) {}
       }
     }
   }
@@ -106,12 +142,10 @@ struct DeviceDetailView: View {
   @ViewBuilder
   var titleSection: some View {
     HStack(alignment: .center) {
-      // Device name
       Text(self.deviceControl.tileInfo.title)
         .font(.title)
         .fontWeight(.bold)
       Spacer()
-      // Edit button
       NavigationLink(
         destination: RenameView(
           viewModel: RenameViewModel(
@@ -121,7 +155,7 @@ struct DeviceDetailView: View {
           )
         )
       ) {
-        Image(systemName: "pencil.circle.fill")
+        Image(systemName: Constants.editIcon)
           .font(.title)
           .foregroundStyle(.gray, Color(.systemGray5))
       }
@@ -131,68 +165,65 @@ struct DeviceDetailView: View {
       viewModel.checkDecommissionEligibility()
     }
     Divider()
-          .padding(.bottom, .smd)
+      .padding(.bottom, .smd)
   }
 
   /// Display controls of device.
   @ViewBuilder
   var controlSection: some View {
-    // Toggle Control
-    if let toggleControl = self.deviceControl.toggleControl {
-      Toggle(
-        isOn: Binding(
-          get: { toggleControl.isOn },
-          set: {
-            _ in
-            if self.deviceControl.requiresPINCode {
-              self.showingPinEntry = true
-            } else {
-              toggleControl.action()
+    Group {
+      // Toggle Control
+      if let toggleControl = self.deviceControl.toggleControl {
+        Toggle(
+          isOn: Binding(
+            get: { toggleControl.isOn },
+            set: {
+              _ in
+              if self.deviceControl.requiresPINCode {
+                self.showingPinEntry = true
+              } else {
+                toggleControl.action()
+              }
             }
-          }
-        )
-      ) {
+          )
+        ) {
           VStack(alignment: .leading, spacing: .xs) {
-          Text(toggleControl.label)
-            .font(.body)
-          Text(toggleControl.description)
-            .font(.subheadline)
-            .foregroundColor(.gray)
+            Text(toggleControl.label)
+              .font(.body)
+            Text(toggleControl.description)
+              .font(.subheadline)
+              .foregroundColor(.gray)
+          }
         }
+        .toggleStyle(SwitchToggleStyle(tint: .blue))
       }
-      .disabled(self.deviceControl.tileInfo.isBusy)
-      .toggleStyle(SwitchToggleStyle(tint: .blue))
-    }
 
-    // Dropdown Control
-    if let dropdownControl = deviceControl.dropdownControl {
-      DropdownView(dropdownControl: dropdownControl)
-        .disabled(self.deviceControl.tileInfo.isBusy)
-    }
+      // Dropdown Control
+      if let dropdownControl = deviceControl.dropdownControl {
+        DropdownView(dropdownControl: dropdownControl)
+      }
 
-    // Range Control
-    if let rangeControl = deviceControl.rangeControl {
-      RangeSlider(rangeControl: rangeControl)
-        .disabled(self.deviceControl.tileInfo.isBusy)
-    }
+      // Range Control
+      if let rangeControl = deviceControl.rangeControl {
+        RangeSlider(rangeControl: rangeControl)
+      }
 
-    // Cool Range Control
-    if let rangeControl = deviceControl.coolRangeControl {
-      RangeSlider(rangeControl: rangeControl)
-        .disabled(self.deviceControl.tileInfo.isBusy)
-    }
+      // Cool Range Control
+      if let rangeControl = deviceControl.coolRangeControl {
+        RangeSlider(rangeControl: rangeControl)
+      }
 
-    // Heat Range Control
-    if let rangeControl = deviceControl.heatRangeControl {
-      RangeSlider(rangeControl: rangeControl)
-        .disabled(self.deviceControl.tileInfo.isBusy)
-    }
+      // Heat Range Control
+      if let rangeControl = deviceControl.heatRangeControl {
+        RangeSlider(rangeControl: rangeControl)
+      }
 
-    // Button Group Control
-    if let buttonGroupControl = deviceControl.buttonGroupControl {
-      ButtonGroupView(buttonGroupControl: buttonGroupControl)
-        .disabled(self.deviceControl.tileInfo.isBusy)
+      // Button Group Control
+      if let buttonGroupControl = deviceControl.buttonGroupControl {
+        ButtonGroupView(buttonGroupControl: buttonGroupControl)
+      }
     }
+    .disabled(self.deviceControl.tileInfo.isBusy)
   }
 
   /// Display attributes' name and value.
@@ -215,7 +246,6 @@ struct DeviceDetailView: View {
   /// Display which room the device located and entry of moving to other room.
   @ViewBuilder
   var locationSection: some View {
-
     let currentEntry = self.structureViewModel.entries.first {
       $0.deviceControls.contains {
         $0.device.id == self.deviceControl.device.id
@@ -231,13 +261,64 @@ struct DeviceDetailView: View {
       )
     ) {
       VStack(alignment: .leading, spacing: .xs) {
-        Text("Location")
+        Text(Constants.locationLabel)
           .font(.body)
           .foregroundColor(.black)
         // Display the dynamically found name
         Text(currentEntry?.roomName ?? self.entry.roomName)
           .font(.subheadline)
           .foregroundColor(.gray)
+      }
+    }
+  }
+
+  /// Display software version and OTA update status.
+  @ViewBuilder
+  var otaSection: some View {
+    VStack(alignment: .leading, spacing: .xs) {
+      Text(Constants.softwareUpdateTitle)
+        .font(.body)
+
+      // 1. Current Version
+      HStack {
+        Text(Constants.currentVersionLabel)
+          .font(.subheadline)
+          .foregroundColor(.gray)
+        Text(self.viewModel.softwareVersion.map(Constants.versionDisplay) ?? Constants.versionNotAvailable)
+          .font(.subheadline)
+      }
+
+      // 2. Status & Progress Description
+      HStack {
+        Text(Constants.statusLabel)
+          .font(.subheadline)
+          .foregroundColor(.gray)
+
+        let text = self.viewModel.otaUiState.displayStatusText
+        switch self.viewModel.otaUiState {
+        case .loading, .checking, .upToDate:
+          Text(text)
+            .font(.subheadline)
+            .foregroundColor(.gray)
+        case .downloading, .installing:
+          Text(text)
+            .font(.subheadline)
+            .foregroundColor(.blue)
+        case .delayed:
+          Text(text)
+            .font(.subheadline)
+            .foregroundColor(.orange)
+        case .failed:
+          Text(text)
+            .font(.subheadline)
+            .foregroundColor(.red)
+        }
+      }
+
+      // 3. Linear Progress Bar during downloading
+      if case .downloading(let percent, _) = self.viewModel.otaUiState, let percent {
+        ProgressView(value: Double(percent) / Constants.progressPercentDivisor)
+          .padding(.top, Constants.progressBarTopPadding)
       }
     }
   }
@@ -250,56 +331,48 @@ struct DeviceDetailView: View {
   private var decommissionSection: some View {
     switch self.viewModel.decommissionEligibility {
     case .ineligible(let reason):
-      Text("This device cannot be decommissioned.")
+      Text(Constants.cannotDecommissionText)
       switch reason {
       case .notAuthorized:
-        Text("You are not authorized to decommission this device.")
+        Text(Constants.notAuthorizedText)
       case .nonMatterDevice:
-        Text("This is not a Matter device.")
+        Text(Constants.nonMatterDeviceText)
       case .bridgedDevice:
-        Text(
-          "This device is bridged, follow the bridge manufacturer's instructions to remove this device."
-        )
+        Text(Constants.bridgedDeviceText)
       case .other(let message):
-        Text("Reason: \(message ?? "Unknown")")
+        Text("\(Constants.reasonPrefix)\(message ?? Constants.unknownText)")
       case .multiSourceDevice:
-        Text(
-          "The device is connected through multiple sources, to decommission the device, it needs to be disconnected from all non-matter sources."
-        )
+        Text(Constants.multiSourceDeviceText)
       @unknown default:
-        Text("Unknown reason.")
+        Text(Constants.unknownReasonText)
       }
     case .eligible:
       self.decommissionButton
     case .eligibleWithSideEffects(let sideEffects):
       HStack {
-        Image(systemName: "exclamationmark.triangle")
+        Image(systemName: Constants.warningIcon)
         switch sideEffects {
         case .bridge(let bridgedDeviceIDs):
           VStack(alignment: .leading) {
-            Text(
-              "This device is a bridge, decommissioning it will also decommission the following bridged devices:"
-            )
+            Text(Constants.bridgeSideEffectsText)
             ForEach(Array(bridgedDeviceIDs), id: \.self) {
               Text("• \($0)").font(.caption)
             }
           }
         case .multipleAffectedDevices(let affectedDeviceIDs):
           VStack(alignment: .leading) {
-            Text(
-              "Multiple devices will be decommissioned by decommissioning this device."
-            )
+            Text(Constants.multipleSideEffectsText)
             ForEach(Array(affectedDeviceIDs), id: \.self) {
               Text("• \($0)").font(.caption)
             }
           }
         @unknown default:
-          Text("Unknown side effects.")
+          Text(Constants.unknownSideEffectsText)
         }
       }
       self.decommissionButton
     @unknown default:
-      Text("Unknown decommission eligibility.")
+      Text(Constants.unknownEligibilityText)
     }
   }
 
@@ -311,7 +384,7 @@ struct DeviceDetailView: View {
     } label: {
       HStack {
         Spacer()
-        Text("Decommission")
+        Text(Constants.decommissionButtonTitle)
         Spacer()
       }
     }
@@ -350,7 +423,8 @@ private struct DropdownView: View {
   }
 }
 
-private struct RangeSlider: View {
+// A labeled level slider bound to a `RangeControl`.
+struct RangeSlider: View {
   @ObservedObject var rangeControl: RangeControl
   @State private var sliderValue: Float
   @State private var isEditing = false
@@ -401,20 +475,24 @@ private struct RangeSlider: View {
 }
 
 private struct ButtonGroupView: View {
+  private enum Constants {
+    static let columnCount = 2
+  }
+
   @ObservedObject var buttonGroupControl: ButtonGroupControl
 
   var body: some View {
     let displayedButtons = buttonGroupControl.buttons.filter({ $0.isDisplayed })
-    let columnCount = 2
+    let columnCount = Constants.columnCount
     let rowCount = (displayedButtons.count + columnCount - 1) / columnCount
     VStack {
       ForEach(0..<rowCount, id: \.self) { rowIndex in
         HStack {
           ForEach(0..<columnCount, id: \.self) { colIndex in
-            if colIndex == 1 {
+            if colIndex > 0 {
               Spacer()
             }
-            let buttonIndex = rowIndex * 2 + colIndex
+            let buttonIndex = rowIndex * Constants.columnCount + colIndex
             if buttonIndex < displayedButtons.count {
               let button = displayedButtons[buttonIndex]
               Button(action: button.action) {

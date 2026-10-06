@@ -174,7 +174,7 @@ struct StarterConstraintSheetView: View {
           .padding(.top, .md)
           .padding(.bottom, Dimensions.CameraPicker.bottomPadding)
 
-          if selectedQueryOption == "custom text" {
+          if selectedQueryOption == CandidatesViewModel.customQueryOption {
             TextField("Enter description...", text: $cameraDescriptionText)
               .textFieldStyle(.roundedBorder)
               .padding(.vertical, .sm)
@@ -184,7 +184,9 @@ struct StarterConstraintSheetView: View {
 
           Spacer()
 
-          let finalDescription = (selectedQueryOption == "custom text") ? cameraDescriptionText : selectedQueryOption
+          let finalDescription =
+            (selectedQueryOption == CandidatesViewModel.customQueryOption)
+            ? cameraDescriptionText : selectedQueryOption
           doneButtonView(cameraDescription: finalDescription)
         }
         .padding(.horizontal, .xl)

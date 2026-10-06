@@ -31,7 +31,20 @@ struct GenericEditorView: View {
   @State private var editedCameraDescription = ""
   @State private var selectedQueryOption = CandidatesViewModel.queryOptions.first ?? ""
 
-  private static let sheetHeightFraction = 0.65
+  // Set when the backend refused the camera query but offered a wording it would accept.
+  @State private var pendingCameraQueryCorrection: CameraQueryCorrection?
+
+  private enum Constants {
+    static let sheetHeightFraction = 0.65
+    static let rewordAlertTitle = "Try a different wording?"
+    static let rewordConfirmButtonTitle = "Use this wording"
+    static let rewordCancelButtonTitle = "Keep editing"
+
+    static func rewordAlertMessage(for correction: CameraQueryCorrection) -> String {
+      "\"\(correction.rejectedQuery)\" was not accepted. "
+        + "Try \"\(correction.suggestedQuery)\" instead."
+    }
+  }
 
   @FocusState private var isSheetCameraDescriptionFocused: Bool
 
@@ -86,9 +99,34 @@ struct GenericEditorView: View {
     ) {
       viewModel.error = nil
     }
+    .alert(
+      Constants.rewordAlertTitle,
+      isPresented: Binding(
+        get: { pendingCameraQueryCorrection != nil },
+        set: { isPresented in
+          if !isPresented { pendingCameraQueryCorrection = nil }
+        }
+      ),
+      presenting: pendingCameraQueryCorrection
+    ) { correction in
+      Button(Constants.rewordConfirmButtonTitle) {
+        applyCameraQueryCorrection(correction)
+      }
+      Button(Constants.rewordCancelButtonTitle, role: .cancel) {
+        pendingCameraQueryCorrection = nil
+      }
+    } message: { correction in
+      Text(Constants.rewordAlertMessage(for: correction))
+    }
     .sheet(isPresented: $isShowingCameraEditSheet) {
       cameraEditSheetView
     }
+  }
+
+  // The phrase the camera sheet will save: the picked preset, or the typed custom text.
+  private var effectiveCameraDescription: String {
+    selectedQueryOption == CandidatesViewModel.customQueryOption
+      ? editedCameraDescription : selectedQueryOption
   }
 
   @ViewBuilder
@@ -113,7 +151,7 @@ struct GenericEditorView: View {
       .padding(.top, .md)
       .padding(.bottom, Dimensions.CameraPicker.bottomPadding)
 
-      if selectedQueryOption == "custom text" {
+      if selectedQueryOption == CandidatesViewModel.customQueryOption {
         TextField("Enter description...", text: $editedCameraDescription)
           .focused($isSheetCameraDescriptionFocused)
           .textFieldStyle(.roundedBorder)
@@ -127,23 +165,14 @@ struct GenericEditorView: View {
       HStack {
         Spacer()
         Button(action: {
-          let description = (selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption
           if let starter = candidatesViewModel.selectedStarters.first {
-            candidatesViewModel.selectedStarters[0] = SelectedEntry(
-              device: starter.device,
-              deviceType: starter.deviceType,
-              traitType: starter.traitType,
-              eventType: starter.eventType,
-              valueOnOff: starter.valueOnOff,
-              operation: starter.operation,
-              levelValue: starter.levelValue,
-              cameraDescription: description
-            )
+            candidatesViewModel.selectedStarters[0] =
+              starter.withCameraDescription(effectiveCameraDescription)
           }
           isShowingCameraEditSheet = false
         }) {
-          let finalDescription = (selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption
-          let isDisabled = finalDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          let isDisabled = effectiveCameraDescription
+            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
           Text("Done")
             .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
             .background(isDisabled ? Color.gray : Color.blue)
@@ -153,8 +182,7 @@ struct GenericEditorView: View {
             .padding(.trailing, .smd)
         }
         .disabled(
-          ((selectedQueryOption == "custom text") ? editedCameraDescription : selectedQueryOption)
-            .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          effectiveCameraDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         )
       }
     }
@@ -163,15 +191,11 @@ struct GenericEditorView: View {
     .onTapGesture {
       UIApplication.shared.endEditing()
     }
-    .presentationDetents([.fraction(Self.sheetHeightFraction)])
+    .presentationDetents([.fraction(Constants.sheetHeightFraction)])
     .presentationCornerRadius(.lg)
-    .contentShape(Rectangle())
-    .onTapGesture {
-      UIApplication.shared.endEditing()
-    }
     .onAppear {
       if !CandidatesViewModel.queryOptions.contains(editedCameraDescription) {
-        selectedQueryOption = "custom text"
+        selectedQueryOption = CandidatesViewModel.customQueryOption
       } else {
         selectedQueryOption = editedCameraDescription
       }
@@ -266,30 +290,7 @@ struct GenericEditorView: View {
     HStack {
       Spacer()
       Button(action: {
-        isShowingProgressView = true
-        Task {
-          do {
-            // Create a DraftAutomation object
-            let draftAutomation = try await automationRepository.genericAutomation(
-              name: viewModel.name,
-              description: viewModel.description,
-              starters: candidatesViewModel.selectedStarters,
-              actions: candidatesViewModel.selectedActions
-            )
-
-            // Create the automation
-            try await viewModel.createAutomation(draftAutomation: draftAutomation)
-
-            // Clear selected starter and action
-            candidatesViewModel.clearSelected()
-            // Redirect back to AutomationsView
-            navigationPath.removeLast(navigationPath.count)
-            self.isShowingProgressView = false
-          } catch {
-            self.isShowingErrorAlert = true
-            self.isShowingProgressView = false
-          }
-        }
+        Task { await saveAutomation() }
       }) {
         Text("Save")
           .frame(width: Dimensions.buttonWidth, height: Dimensions.buttonHeight)
@@ -303,6 +304,52 @@ struct GenericEditorView: View {
       .alignmentGuide(.bottom) { $0[.bottom] }
       .background(Color.clear)
     }
+  }
+
+  /// Builds the draft automation from the current selection and creates it.
+  @MainActor
+  private func saveAutomation() async {
+    isShowingProgressView = true
+    defer { isShowingProgressView = false }
+    do {
+      // Create a DraftAutomation object
+      let draftAutomation = try await automationRepository.genericAutomation(
+        name: viewModel.name,
+        description: viewModel.description,
+        starters: candidatesViewModel.selectedStarters,
+        actions: candidatesViewModel.selectedActions
+      )
+
+      // Create the automation
+      try await viewModel.createAutomation(draftAutomation: draftAutomation)
+
+      // Clear selected starter and action
+      candidatesViewModel.clearSelected()
+      // Redirect back to AutomationsView
+      navigationPath.removeLast(navigationPath.count)
+    } catch AutomationListError.cameraQueryNeedsRewording(let correction) {
+      // The backend told us what it would accept, so offer that instead of a dead-end error.
+      viewModel.error = nil
+      pendingCameraQueryCorrection = correction
+    } catch {
+      viewModel.error = error
+      isShowingErrorAlert = true
+    }
+  }
+
+  /// Replaces the starter's camera query with the suggested wording and saves again.
+  ///
+  /// - Parameter correction: The rejected camera query and the backend's suggested replacement.
+  @MainActor
+  private func applyCameraQueryCorrection(_ correction: CameraQueryCorrection) {
+    pendingCameraQueryCorrection = nil
+    // Only rewrite the starter the backend rejected; the selection may have changed since.
+    guard let starter = candidatesViewModel.selectedStarters.first,
+      starter.cameraDescription == correction.rejectedQuery
+    else { return }
+    candidatesViewModel.selectedStarters[0] =
+      starter.withCameraDescription(correction.suggestedQuery)
+    Task { await saveAutomation() }
   }
 }
 

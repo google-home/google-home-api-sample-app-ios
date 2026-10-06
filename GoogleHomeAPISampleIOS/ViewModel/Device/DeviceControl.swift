@@ -18,6 +18,7 @@ import Foundation
 import GoogleHomeSDK
 import OSLog
 
+@MainActor
 class DeviceControl: ObservableObject, Identifiable {
   /// Unique identifier to tag the device in collection views
   let id: String

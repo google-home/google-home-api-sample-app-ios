@@ -20,6 +20,11 @@ import WebRTC
 
 /// A view of the camera, its controls, and settings options.
 public struct CameraDetailView<T: DeviceType>: View {
+  private enum Constants {
+    static var settingsLabel: String { "Settings" }
+  }
+
+  @Environment(\.dismiss) private var dismiss
   @ObservedObject private var deviceControl: DeviceControl
   private let home: Home
 
@@ -43,9 +48,11 @@ public struct CameraDetailView<T: DeviceType>: View {
       Spacer()
 
       NavigationLink(
-        destination: CameraSettingsView<T>(home: self.home, deviceID: self.deviceControl.id)
+        destination: CameraSettingsView<T>(home: self.home, deviceID: self.deviceControl.id) {
+          self.dismiss()
+        }
       ) {
-        Text("Settings")
+        Text(Constants.settingsLabel)
           .font(.subheadline.bold())
           .foregroundColor(.blue)
           .padding(.vertical, .sm)
@@ -66,12 +73,16 @@ public struct CameraLiveView: View {
     static let micButtonPadding: CGFloat = 12.0
     static let micButtonBackgroundOpacity: CGFloat = 0.12
     static let offButtonBackgroundOpacity: CGFloat = 0.85
+    static let micFillIcon = "mic.fill"
+    static let micSlashFillIcon = "mic.slash.fill"
+    static let turnOffButtonLabel = "Turn Camera OFF"
+    static let turnOnButtonLabel = "Turn Camera ON"
   }
 
   @State private var viewModel: CameraLiveViewModel?
   @State private var videoRenderer: RTCMTLVideoView?
   private let home: Home
-  private let deviceControl: DeviceControl
+  @ObservedObject private var deviceControl: DeviceControl
 
   init(home: Home, deviceControl: DeviceControl) {
     self.home = home
@@ -86,6 +97,8 @@ public struct CameraLiveView: View {
           .padding(.horizontal)
 
         controlButtonsView
+
+        subEndpointControlsView
 
         Divider()
           .padding(.horizontal)
@@ -193,6 +206,31 @@ public struct CameraLiveView: View {
     }
   }
 
+  // Controls for any secondary controllable endpoint on the camera device.
+  @ViewBuilder
+  private var subEndpointControlsView: some View {
+    if self.deviceControl.toggleControl != nil || self.deviceControl.rangeControl != nil {
+      VStack(alignment: .leading, spacing: .sm) {
+        if let toggleControl = self.deviceControl.toggleControl {
+          Toggle(
+            toggleControl.label,
+            isOn: Binding(
+              get: { toggleControl.isOn },
+              set: { _ in toggleControl.action() }
+            )
+          )
+          .disabled(self.deviceControl.tileInfo.isBusy)
+          .toggleStyle(SwitchToggleStyle(tint: .blue))
+        }
+        if let rangeControl = self.deviceControl.rangeControl {
+          RangeSlider(rangeControl: rangeControl)
+            .disabled(self.deviceControl.tileInfo.isBusy)
+        }
+      }
+      .padding(.horizontal)
+    }
+  }
+
   @ViewBuilder
   private var controlButtonsView: some View {
     if let viewModel = self.viewModel {
@@ -201,7 +239,7 @@ public struct CameraLiveView: View {
           Button(action: {
             viewModel.toggleTwoWayTalk(isOn: !viewModel.isTwoWayTalkOn)
           }) {
-            Image(systemName: viewModel.isTwoWayTalkOn ? "mic.fill" : "mic.slash.fill")
+            Image(systemName: viewModel.isTwoWayTalkOn ? Constraints.micFillIcon : Constraints.micSlashFillIcon)
               .font(.title3)
               .padding(Constraints.micButtonPadding)
               .background(Circle().fill(Color.gray.opacity(Constraints.micButtonBackgroundOpacity)))
@@ -211,7 +249,7 @@ public struct CameraLiveView: View {
           Button(action: {
             viewModel.toggleIsRecording(isOn: false)
           }) {
-            Text("Turn Camera OFF")
+            Text(Constraints.turnOffButtonLabel)
               .font(.subheadline.bold())
               .foregroundColor(.white)
               .padding(.horizontal, .md)
@@ -222,7 +260,7 @@ public struct CameraLiveView: View {
           Button(action: {
             viewModel.toggleIsRecording(isOn: true)
           }) {
-            Text("Turn Camera ON")
+            Text(Constraints.turnOnButtonLabel)
               .font(.subheadline.bold())
               .foregroundColor(.white)
               .padding(.horizontal, .lg)

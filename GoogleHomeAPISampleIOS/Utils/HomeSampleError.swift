@@ -25,6 +25,7 @@ enum HomeSampleError: Error {
   case errorSavingAutomation(error: String)
   case unableToLinkCloudAccount(error: String)
   case unableToSyncLinkedDevices(error: String)
+  case noDeviceFoundAfterCommissioning
 
   var title: String {
     alertInfo.title
@@ -46,6 +47,10 @@ enum HomeSampleError: Error {
       return ("Link Cloud Account Error", "Unable to link cloud account: \(error)")
     case .unableToSyncLinkedDevices(let error):
       return ("Sync Linked Devices Error", "Unable to sync linked devices: \(error)")
+    case .noDeviceFoundAfterCommissioning:
+      return (
+        "Device Not Found",
+        "The device was added but hasn't appeared yet. Wait a moment for it to appear, or try adding it again.")
     }
   }
 }

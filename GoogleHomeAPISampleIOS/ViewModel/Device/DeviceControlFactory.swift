@@ -16,10 +16,15 @@ import GoogleHomeSDK
 import GoogleHomeTypes
 
 // Factory that creates the corresponding device control for a `HomeDevice`.
+@MainActor
 struct DeviceControlFactory {
   /// List of supported device types. Order matters because some types can overlap, like
   /// `OnOffLightDeviceType` and `DimmableLightDeviceType`.
   private static let supportedDeviceTypes: [any DeviceType.Type] = [
+    GoogleDoorbellDeviceType.self,
+    GoogleCameraDeviceType.self,
+    ChimeDeviceType.self,
+    SpeakerDeviceType.self,
     ExtendedColorLightDeviceType.self,
     ColorTemperatureLightDeviceType.self,
     DimmableLightDeviceType.self,
@@ -34,11 +39,10 @@ struct DeviceControlFactory {
     GoogleTVDeviceType.self,
     BasicVideoPlayerDeviceType.self,
     GoogleDisplayDeviceType.self,
-    GoogleCameraDeviceType.self,
-    GoogleDoorbellDeviceType.self,
+    RootNodeDeviceType.self,
   ]
 
-  private static let deviceControlBuilders: [String: (HomeDevice) throws -> DeviceControl] = [
+  private static let deviceControlBuilders: [String: @MainActor (HomeDevice) throws -> DeviceControl] = [
     ExtendedColorLightDeviceType.identifier: LightControl<ExtendedColorLightDeviceType>.init,
     ColorTemperatureLightDeviceType.identifier: LightControl<ColorTemperatureLightDeviceType>.init,
     DimmableLightDeviceType.identifier: LightControl<DimmableLightDeviceType>.init,
@@ -55,6 +59,9 @@ struct DeviceControlFactory {
     GoogleDisplayDeviceType.identifier: TVControl.init,
     GoogleCameraDeviceType.identifier: CameraControl.init,
     GoogleDoorbellDeviceType.identifier: DoorbellControl.init,
+    ChimeDeviceType.identifier: ChimeControl.init,
+    SpeakerDeviceType.identifier: SpeakerControl.init,
+    RootNodeDeviceType.identifier: RootNodeControl.init,
   ]
 
   /// Factory method that builds a `DeviceControl` based on the supported `DeviceType` of a

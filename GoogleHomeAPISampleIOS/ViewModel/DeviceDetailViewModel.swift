@@ -13,14 +13,36 @@
 // limitations under the License.
 
 import Combine
+import Foundation
 import GoogleHomeSDK
+import GoogleHomeTypes
 import OSLog
 
+/// A ViewModel handling device details, decommission eligibility, and live Matter OTA status.
+///
+/// In multi-endpoint devices, only endpoints with OTA support (Endpoint 0 Root Node or devices with
+/// `OtaRequestorDeviceType` and a valid firmware version) will expose `hasOtaSupport == true`.
 @MainActor
-/// The viewModel handling device operations.
 final class DeviceDetailViewModel: ObservableObject {
+  private enum Constants {
+    static let notLoadedReason = "Not loaded"
+    static let notSupportedReason = "Not supported for this device entity"
+    static let deviceNotFoundError = "Device not found during decommissioning."
+  }
+
   @Published public private(set) var decommissionEligibility =
-    HomeDevice.DecommissionEligibility.ineligible(reason: .other("Not loaded"))
+    HomeDevice.DecommissionEligibility.ineligible(reason: .other(Constants.notLoadedReason))
+  @Published public private(set) var otaUiState: OtaUiState = .loading
+  @Published public private(set) var softwareVersion: String?
+
+  /// Whether this device has a Root Node or OTA Requestor type and reports a software version.
+  public var hasOtaSupport: Bool {
+    guard let device = self.device else { return false }
+    // Only Root Node (Endpoint 0) or devices with OTA Requestor and a valid software version
+    // support OTA display
+    return (device.types.contains(OtaRequestorDeviceType.self) || device.types.contains(RootNodeDeviceType.self))
+      && self.softwareVersion != nil
+  }
 
   private var home: Home
   public private(set) var device: HomeDevice?
@@ -32,24 +54,63 @@ final class DeviceDetailViewModel: ObservableObject {
   ///
   /// - Parameters:
   ///   - home: The home object that the device belongs to.
-  ///   - deviceID: The ID of the device to observe.
+  ///   - device: The device to observe.
   init(home: Home, device: HomeDevice) {
     self.home = home
     self.device = device
+    self.observeOtaUpdates()
+  }
+
+  private func observeOtaUpdates() {
+    guard let initialDevice = device else { return }
+
+    home.device(id: initialDevice.id, enableMultipartDevices: initialDevice.enableMultipartDevices)
+      .removeDuplicates()
+      .receive(on: DispatchQueue.main)
+      .handleEvents(receiveOutput: { [weak self] device in
+        self?.device = device
+      })
+      .map { device -> AnyPublisher<(OtaUiState, String?), Never> in
+        OtaUpdateViewModel.otaStatePublisher(
+          for: device,
+          treatMissingRequestorAsUpToDate: true
+        )
+      }
+      .switchToLatest()
+      .receive(on: DispatchQueue.main)
+      .sink(
+        receiveCompletion: { [weak self] completion in
+          if case .failure(let error) = completion {
+            Logger().error("Device detail OTA subscription failed: \(error)")
+            self?.otaUiState = OtaUiState.failed(
+              error: error.localizedDescription,
+              currentVersionString: self?.softwareVersion
+            )
+          }
+        },
+        receiveValue: { [weak self] state, version in
+          guard let self else { return }
+          if let version, !version.isEmpty {
+            self.softwareVersion = version
+          }
+          self.otaUiState = state
+        }
+      )
+      .store(in: &cancellables)
   }
 
   public func checkDecommissionEligibility() {
-    Task { @MainActor in
+    Task { @MainActor [weak self] in
+      guard let self = self, let device = self.device else { return }
       do {
-        guard let device = self.device else { return }
         self.decommissionEligibility =
           try await device.decommissionEligibility
       } catch {
-        Logger().error("Failed to get decommission eligibility: \(error)")
+        Logger().warning("Decommission eligibility not available for this endpoint/device: \(error)")
         self.decommissionEligibility =
           HomeDevice.DecommissionEligibility.ineligible(
             reason: .other(
-              "Failed to get decommission eligibility: \(error.localizedDescription)"
+              Constants.notSupportedReason
             ))
       }
     }
@@ -57,7 +118,7 @@ final class DeviceDetailViewModel: ObservableObject {
 
   public func decommissionDevice() async throws -> Set<String> {
     guard let device = self.device else {
-      throw HomeError.internal("Device not found during decommissioning.")
+      throw HomeError.internal(Constants.deviceNotFoundError)
     }
     return try await device.decommission()
   }

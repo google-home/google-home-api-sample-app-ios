@@ -27,6 +27,10 @@ struct SettingsView: View {
   @State private var permissionAlertMessage = Constants.permissionRequiredAlertMessage
 
   private enum Constants {
+    static let settingsTitle = "Settings"
+    static let roomsHeader = "Rooms"
+    static let advancedHeader = "Advanced"
+    static let multifacetModeToggle = "Multifacet Mode"
     static let familiarFaceHeader = "Familiar Face"
     static let presenceHeader = "Presence"
     static let consentStatusLabel = "Consent Status: "
@@ -55,18 +59,23 @@ struct SettingsView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: .md) {
-      titleSection
-      roomsSection
-      Divider()
-        .padding(.vertical, .sm)
-      familiarFaceSection
-      Divider()
-        .padding(.vertical, .sm)
-      presenceSection
-      Spacer()
+    ScrollView {
+      VStack(alignment: .leading, spacing: .md) {
+        titleSection
+        roomsSection
+        Divider()
+          .padding(.vertical, .sm)
+        familiarFaceSection
+        Divider()
+          .padding(.vertical, .sm)
+        presenceSection
+        Divider()
+          .padding(.vertical, .sm)
+        multifacetSection
+        Spacer()
+      }
+      .padding()
     }
-    .padding()
     .onAppear {
       Task {
         await structureViewModel.refreshFaceLibraryConsentStatus()
@@ -76,7 +85,7 @@ struct SettingsView: View {
 
   @ViewBuilder
   private var titleSection: some View {
-    Text("Settings")
+    Text(Constants.settingsTitle)
       .font(.title)
       .fontWeight(.bold)
     Divider()
@@ -84,24 +93,38 @@ struct SettingsView: View {
   }
 
   @ViewBuilder
+  private var multifacetSection: some View {
+    Section {
+      Text(Constants.advancedHeader)
+        .font(.headline)
+      Toggle(Constants.multifacetModeToggle, isOn: $structureViewModel.isMultifacetModeEnabled)
+        .padding(.vertical, .sm)
+        .padding(.horizontal, .md)
+    }
+  }
+
+  /// Renders the list of rooms in the structure.
+  ///
+  /// - Note: The enclosing view already scrolls, so this list must not introduce a nested
+  ///   `ScrollView`. A nested vertical scroll view has no intrinsic height along its scroll
+  ///   axis and collapses when sibling sections expand.
+  @ViewBuilder
   private var roomsSection: some View {
     Section {
-      Text("Rooms")
+      Text(Constants.roomsHeader)
         .font(.headline)
-      ScrollView {
-        LazyVStack {
-          ForEach(structureViewModel.entries) { entry in
-            NavigationLink(
-              destination: RoomSettingsView(
-                entry: entry,
-                structure: structure
-              )
-            ) {
-              RoomRow(
-                roomName: entry.roomName,
-                deviceCount: entry.deviceControls.count
-              )
-            }
+      LazyVStack {
+        ForEach(structureViewModel.entries) { entry in
+          NavigationLink(
+            destination: RoomSettingsView(
+              entry: entry,
+              structure: structure
+            )
+          ) {
+            RoomRow(
+              roomName: entry.roomName,
+              deviceCount: entry.deviceControls.count
+            )
           }
         }
       }

@@ -27,6 +27,46 @@ struct StructureView: View {
     case settings
   }
 
+  private enum Constants {
+    static let devicesTabTitle = "Devices"
+    static let automationsTabTitle = "Automations"
+    static let historyTabTitle = "History"
+    static let searchTabTitle = "Search"
+    static let settingsTabTitle = "Settings"
+
+    static let devicesIconName = "devices_other_symbol"
+    static let automationsIconName = "astrophotography_mode_symbol"
+    static let historyIconName = "clock.arrow.trianglehead.counterclockwise.rotate.90"
+    static let searchIconName = "magnifyingglass"
+    static let settingsIconName = "gearshape"
+    static let plusIconName = "plus"
+
+    static let discoveringHubsText = "Discovering hubs..."
+    static let addDeviceGoogleFabric = "Add Device to Google Fabric"
+    static let addDeviceGoogleAnd3PFabric = "Add Device to Google & 3P Fabric"
+    static let addRoomButtonTitle = "Add Room"
+    static let setupHubButtonTitle = "Setup Hub"
+    static let linkCloudAccountButtonTitle = "Link Cloud Account"
+    static let syncCloudLinkedDevicesButtonTitle = "Sync Cloud Linked Devices"
+
+    static let enterRoomNameAlertTitle = "Enter Room Name"
+    static let roomNamePlaceholder = "Room Name..."
+    static let cancelButtonTitle = "Cancel"
+    static let createRoomButtonTitle = "Create Room"
+    static let enterAuthCodeAlertTitle = "Enter Authorization Code"
+    static let authCodePlaceholder = "Authorization Code"
+    static let linkButtonTitle = "Link"
+
+    static let loadingAutomationsText = "Loading Automations..."
+    static let noDevicesInRoomText = "No devices in this room"
+    static func noDevicesInStructureText(name: String) -> String {
+      "No devices in '\(name)'"
+    }
+    static let structureNotFoundText = "Structure not found."
+    static let homeObjectMissingText = "Home object is missing. Please try again later."
+    static let fontColorName = "fontColor"
+  }
+
   static let columns = [
     GridItem(.flexible(), alignment: .leading)
   ]
@@ -76,14 +116,14 @@ struct StructureView: View {
         .sheet(item: $oobeDevice) { device in
           if device.types.contains(GoogleCameraDeviceType.self) {
             NavigationStack {
-              CameraOOBEView<GoogleCameraDeviceType>(
-                home: self.viewModel.home, device: device)
+              CameraOOBEView<GoogleCameraDeviceType>(home: self.viewModel.home, device: device)
             }
           } else if device.types.contains(GoogleDoorbellDeviceType.self) {
             NavigationStack {
-              CameraOOBEView<GoogleDoorbellDeviceType>(
-                home: self.viewModel.home, device: device)
+              CameraOOBEView<GoogleDoorbellDeviceType>(home: self.viewModel.home, device: device)
             }
+          } else {
+            OtaUpdateScreenView(home: self.viewModel.home, device: device)
           }
         }
         .sheet(isPresented: self.$isShowingCodeScanner) {
@@ -96,7 +136,7 @@ struct StructureView: View {
           }
         }
     } else {
-      Text("Structure not found.")
+      Text(Constants.structureNotFoundText)
     }
   }
 
@@ -105,32 +145,32 @@ struct StructureView: View {
       TabView(selection: $selectedTab) {
         deviceGrid(structure: structure)
           .tabItem {
-            Label("Devices", image: "devices_other_symbol")
+            Label(Constants.devicesTabTitle, image: Constants.devicesIconName)
               .font(.title)
           }
           .tag(Tab.devices)
         automationsTabContent(structure: structure)
           .tabItem {
-            Label("Automations", image: "astrophotography_mode_symbol")
+            Label(Constants.automationsTabTitle, image: Constants.automationsIconName)
           }
           .tag(Tab.automations)
         HistoryView(home: self.viewModel.home, structureID: self.structureID)
           .id(self.structureID)
           .tabItem {
-            Label("History", systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+            Label(Constants.historyTabTitle, systemImage: Constants.historyIconName)
               .font(.title)
           }
           .tag(Tab.history)
         SearchableHomeView(structure: structure, home: self.viewModel.home)
           .id(structure.id)
           .tabItem {
-            Label("Search", systemImage: "magnifyingglass")
+            Label(Constants.searchTabTitle, systemImage: Constants.searchIconName)
           }
           .tag(Tab.search)
         SettingsView(structure: structure)
           .environmentObject(viewModel)
           .tabItem {
-            Label("Settings", systemImage: "gearshape")
+            Label(Constants.settingsTabTitle, systemImage: Constants.settingsIconName)
               // make the icon un-filled
               .environment(\.symbolVariants, .none)
           }
@@ -139,7 +179,7 @@ struct StructureView: View {
       if self.viewModel.isDiscoveringHubs {
         Color.black.opacity(0.4)
           .ignoresSafeArea()
-        ProgressView("Discovering hubs...")
+        ProgressView(Constants.discoveringHubsText)
           .progressViewStyle(CircularProgressViewStyle())
           .foregroundColor(.white)
       }
@@ -148,37 +188,37 @@ struct StructureView: View {
       ToolbarItemGroup(placement: .navigationBarLeading) {
         if self.selectedTab == .devices {
           Menu {
-            Button("Add Device to Google Fabric") {
+            Button(Constants.addDeviceGoogleFabric) {
               self.scannerAdd3PFabricFirst = false
               self.isShowingCodeScanner = true
             }
-            Button("Add Device to Google & 3P Fabric") {
+            Button(Constants.addDeviceGoogleAnd3PFabric) {
               self.scannerAdd3PFabricFirst = true
               self.isShowingCodeScanner = true
             }
-            Button("Add Room") { self.viewModel.showRoomNameInput = true }
-            Button("Setup Hub") {
+            Button(Constants.addRoomButtonTitle) { self.viewModel.showRoomNameInput = true }
+            Button(Constants.setupHubButtonTitle) {
               Task {
                 await self.viewModel.discoverAvailableHubs()
               }
             }
-            Button("Link Cloud Account") {
+            Button(Constants.linkCloudAccountButtonTitle) {
               self.authorizationCodeInput = ""
               self.showAuthorizationCodeInput = true
             }
-            Button("Sync Cloud Linked Devices") {
+            Button(Constants.syncCloudLinkedDevicesButtonTitle) {
               self.syncCloudLinkedDevices()
             }
           } label: {
-            Image(systemName: "plus")
+            Image(systemName: Constants.plusIconName)
           }
         }
       }
     }
-    .alert("Enter Room Name", isPresented: self.$viewModel.showRoomNameInput) {
-      TextField("Room Name...", text: self.$viewModel.roomNameInput)
-      Button("Cancel", role: .cancel) {}
-      Button("Create Room") {
+    .alert(Constants.enterRoomNameAlertTitle, isPresented: self.$viewModel.showRoomNameInput) {
+      TextField(Constants.roomNamePlaceholder, text: self.$viewModel.roomNameInput)
+      Button(Constants.cancelButtonTitle, role: .cancel) {}
+      Button(Constants.createRoomButtonTitle) {
         guard !self.viewModel.roomNameInput.isEmpty else {
           return
         }
@@ -188,12 +228,12 @@ struct StructureView: View {
       }
     }
     .errorAlert(isPresented: self.$viewModel.showNoHubFoundDialog, error: .noHubFound)
-    .alert("Enter Authorization Code", isPresented: self.$showAuthorizationCodeInput) {
-      TextField("Authorization Code", text: self.$authorizationCodeInput)
+    .alert(Constants.enterAuthCodeAlertTitle, isPresented: self.$showAuthorizationCodeInput) {
+      TextField(Constants.authCodePlaceholder, text: self.$authorizationCodeInput)
         .textInputAutocapitalization(.never)
         .autocorrectionDisabled()
-      Button("Cancel", role: .cancel) {}
-      Button("Link") {
+      Button(Constants.cancelButtonTitle, role: .cancel) {}
+      Button(Constants.linkButtonTitle) {
         guard !self.authorizationCodeInput.isEmpty else { return }
         self.linkCloudAccount(
           structure: structure, authorizationCode: self.authorizationCodeInput)
@@ -213,7 +253,7 @@ struct StructureView: View {
       // Shown initially until the automations tab is selected for the first time
       // and the viewModel.automationList is created.
       VStack {
-        Text("Loading Automations...")
+        Text(Constants.loadingAutomationsText)
         ProgressView()
       }
     }
@@ -222,7 +262,7 @@ struct StructureView: View {
   private func deviceGrid(structure: Structure) -> some View {
     ScrollView {
       if self.viewModel.hasLoaded && self.viewModel.entries.isEmpty {
-        Text("No devices in '\(structure.name)'")
+        Text(Constants.noDevicesInStructureText(name: structure.name))
           .font(.caption)
           .padding()
       } else if self.viewModel.hasLoaded {
@@ -231,7 +271,7 @@ struct StructureView: View {
             Section {
               // Devices
               if entry.deviceControls.isEmpty {
-                Text("No devices in this room")
+                Text(Constants.noDevicesInRoomText)
                   .font(.caption)
                   .padding(.vertical)
               } else {
@@ -257,7 +297,7 @@ struct StructureView: View {
                         )
                       }
                     } else {
-                      Text("Home object is missing. Please try again later.")
+                      Text(Constants.homeObjectMissingText)
                     }
                   }) {
                     DeviceRow(
@@ -270,7 +310,7 @@ struct StructureView: View {
             } header: {
               HStack {
                 Text(entry.roomName)
-                  .foregroundColor(Color("fontColor"))
+                  .foregroundColor(Color(Constants.fontColorName))
                   .font(.headline)
                 Spacer()
               }
@@ -297,10 +337,8 @@ struct StructureView: View {
     structure: Structure, add3PFabricFirst: Bool, setupPayload: String? = nil
   ) {
     #if targetEnvironment(simulator)
-      Logger().error("Cannot add device on simulator.")
-      return
-    #endif
-
+    Logger().error("Cannot add device on simulator.")
+    #else
     if add3PFabricFirst {
       guard #available(iOS 17.6, *) else {
         Logger().error("iOS 17.6+ required to add 3P Fabric.")
@@ -311,25 +349,48 @@ struct StructureView: View {
       do {
         let devices = try await self.viewModel.addMatterDevice(
           to: structure, add3PFabricFirst: add3PFabricFirst, setupPayload: setupPayload)
-        self.showCameraOOBEIfNeeded(devices: devices)
+        self.handlePostCommissioning(devices: devices)
       } catch {
         Logger().error("Failed to add Matter device: \(error)")
       }
     }
+    #endif
   }
 
-  /// Shows the Camera OOBE flow if the device is a camera / doorbell.
+  /// Handles post-commissioning workflow (Matter OTA update check and OOBE).
   ///
-  /// - Parameters:
-  ///   - devices: The devices that were just commissioned.
-  private func showCameraOOBEIfNeeded(devices: Set<HomeDevice>) {
-    guard devices.count == 1, let device = devices.first else {
-      Logger().debug("Camera OOBE is only available when a single device is commissioned.")
+  /// - A single camera / doorbell opens `CameraOOBEView` (OTA -> Settings -> Done).
+  /// - Any other Matter device opens `OtaUpdateScreenView`, which waits for the OTA trait
+  ///   to arrive.
+  /// - If no devices are found, an error alert is shown.
+  ///
+  /// - Parameter devices: The devices that were just commissioned.
+  private func handlePostCommissioning(devices: Set<HomeDevice>) {
+    guard let primaryDevice = devices.first else {
+      Logger().warning("No device returned after commissioning.")
+      self.sampleError = .noDeviceFoundAfterCommissioning
+      self.isShowingErrorAlert = true
       return
     }
-    if device.types.contains(GoogleCameraDeviceType.self) ||
-       device.types.contains(GoogleDoorbellDeviceType.self) {
-        self.oobeDevice = device
+
+    // Match on "exactly one camera / doorbell" rather than "exactly one device", so extra
+    // endpoints returned by commissioning do not silently skip the camera OOBE.
+    let cameraDevices = devices.filter {
+      $0.types.contains(GoogleCameraDeviceType.self) || $0.types.contains(GoogleDoorbellDeviceType.self)
+    }
+    if cameraDevices.count == 1, let cameraDevice = cameraDevices.first {
+      Logger().info("Post-commissioning selected camera device '\(cameraDevice.id)' (\(cameraDevice.name))")
+      self.oobeDevice = cameraDevice
+      return
+    }
+    let targetDevice = devices.first(where: { $0.types.contains(OtaRequestorDeviceType.self) })
+      ?? devices.first(where: { $0.types.contains(RootNodeDeviceType.self) })
+      ?? primaryDevice
+
+    Logger().info("Post-commissioning selected target device '\(targetDevice.id)' (\(targetDevice.name))")
+
+    if targetDevice.isMatterDevice {
+      self.oobeDevice = targetDevice
     }
   }
 

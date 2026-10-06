@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Combine
+import Foundation
 import GoogleHomeSDK
 import GoogleHomeTypes
 import OSLog
@@ -107,7 +108,10 @@ public class AutomationList: ObservableObject {
     }
   }
 
-  /// Create automation command.
+  /// Creates an automation on the structure and rolls it back if validation fails.
+  ///
+  /// - Parameter draftAutomation: The draft automation to create.
+  /// - Throws: `AutomationListError` if validation fails, or an underlying SDK error.
   public func createAutomation(_ draftAutomation: any DraftAutomation) async throws {
     do {
       let newAutomation = try await structure.createAutomation(draftAutomation)
@@ -119,12 +123,10 @@ public class AutomationList: ObservableObject {
         } catch {
           Logger().error("Failed to delete invalid automation during rollback: \(error)")
         }
-        let issueDescriptions = newAutomation.validationIssues
-          .map { self.description(for: $0) }
-          .joined(separator: "; ")
-        throw HomeError.invalidArgument(
-          "Automation has validation issues: \(issueDescriptions)"
-        )
+        if let correction = Self.rewordableCameraQuery(in: newAutomation.validationIssues) {
+          throw AutomationListError.cameraQueryNeedsRewording(correction)
+        }
+        throw AutomationListError.validationFailed(newAutomation.validationIssues)
       }
     } catch {
       Logger().error("CreateCommand error: \(error)")
@@ -146,7 +148,7 @@ public class AutomationList: ObservableObject {
         }
       }
 
-      throw HomeError.notFound("Automation not found with \(automationID)")
+      throw AutomationListError.automationNotFound(automationID)
     } catch {
       Logger().error("Fetch error \(error)")
       throw error
@@ -207,10 +209,89 @@ public class AutomationList: ObservableObject {
     }
   }
 
-  private func description(for issue: AutomationValidationIssue) -> String {
-    if case .invalidCustomCameraEventQuery(let query, let reason, let suggestions, _) = issue.issueType {
+  /// Extracts a camera query correction when it is the only blocking validation issue.
+  ///
+  /// - Parameter issues: The validation issues returned for the automation.
+  /// - Returns: The rejected and suggested queries, or `nil` if not rewordable.
+  private static func rewordableCameraQuery(
+    in issues: [AutomationValidationIssue]
+  ) -> CameraQueryCorrection? {
+    let blockingIssues = issues.filter { $0.severity != .warning }
+    guard
+      blockingIssues.count == 1,
+      let issue = blockingIssues.first,
+      case .invalidCustomCameraEventQuery(let query, let reason, let suggestions, _) =
+        issue.issueType,
+      reason == .hasCorrectionSuggestion,
+      let suggestion = suggestions.first(where: {
+        let trimmed = $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && trimmed != query.trimmingCharacters(in: .whitespacesAndNewlines)
+      })
+    else {
+      return nil
+    }
+    return CameraQueryCorrection(rejectedQuery: query, suggestedQuery: suggestion)
+  }
+}
+
+/// A camera activity query the backend refused, paired with the wording it offered instead.
+public struct CameraQueryCorrection: Equatable, Sendable {
+  /// The query as the user submitted it.
+  public let rejectedQuery: String
+  /// The wording the backend indicated it would accept.
+  public let suggestedQuery: String
+
+  /// Creates a camera query correction pair.
+  ///
+  /// - Parameters:
+  ///   - rejectedQuery: The query as the user submitted it.
+  ///   - suggestedQuery: The replacement wording offered by the backend.
+  public init(rejectedQuery: String, suggestedQuery: String) {
+    self.rejectedQuery = rejectedQuery
+    self.suggestedQuery = suggestedQuery
+  }
+}
+
+/// Errors thrown by `AutomationList` operations.
+public enum AutomationListError: LocalizedError {
+  /// The save failed only because of the camera query, and a replacement wording is available.
+  ///
+  /// - Parameter correction: The rejected camera query and its suggested replacement.
+  case cameraQueryNeedsRewording(CameraQueryCorrection)
+  /// The created automation failed validation and was deleted.
+  ///
+  /// - Parameter issues: The validation issues returned for the automation.
+  case validationFailed([AutomationValidationIssue])
+  /// No automation matched the given identifier.
+  ///
+  /// - Parameter automationID: The identifier of the missing automation.
+  case automationNotFound(String)
+
+  /// A localized message describing what error occurred.
+  public var errorDescription: String? {
+    switch self {
+    case .cameraQueryNeedsRewording(let correction):
+      return "Invalid camera query '\(correction.rejectedQuery)'. "
+        + "Try '\(correction.suggestedQuery)' instead."
+    case .validationFailed(let issues):
+      let issueDescriptions = issues.map(Self.description(for:)).joined(separator: "; ")
+      return "Automation has validation issues: \(issueDescriptions)"
+    case .automationNotFound(let automationID):
+      return "Automation not found with \(automationID)"
+    }
+  }
+
+  /// Formats a single validation issue into a human-readable summary.
+  ///
+  /// - Parameter issue: The validation issue to format.
+  /// - Returns: A formatted description of the validation issue.
+  private static func description(for issue: AutomationValidationIssue) -> String {
+    if case .invalidCustomCameraEventQuery(let query, let reason, let suggestions, _) =
+      issue.issueType
+    {
       let detailsSuffix = issue.details.isEmpty ? "" : " (\(issue.details))"
-      let suggestionsSuffix = suggestions.isEmpty ? "" : " (Suggestions: \(suggestions.joined(separator: ", ")))"
+      let suggestionsSuffix =
+        suggestions.isEmpty ? "" : " (Suggestions: \(suggestions.joined(separator: ", ")))"
       return "Invalid camera query '\(query)': \(reason)\(detailsSuffix)\(suggestionsSuffix)"
     }
     return issue.details.isEmpty ? String(describing: issue.issueType) : issue.details
