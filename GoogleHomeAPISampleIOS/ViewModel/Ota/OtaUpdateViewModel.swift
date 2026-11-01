@@ -137,8 +137,8 @@ public func mapUpdateStateToUiState(
       currentVersionString: versionString
     )
   // UNKNOWN means the device has not determined its OTA state yet (e.g. right after commissioning).
-  // It and unrecognized values show as checking. In the OOBE flow, if the state is still checking
-  // when the watchdog (OtaUpdateViewModel `checkingTimeout`) fires, it becomes `.failed`.
+  // It and unrecognized values show as checking. In the OOBE flow, `OtaUpdateViewModel` shows
+  // them as `.upToDate` after its grace period, until the device reports OTA progress.
   case .unknown, .unrecognized_:
     return .checking
   @unknown default:
@@ -161,6 +161,7 @@ public final class OtaUpdateViewModel: ObservableObject {
     static let checkingTimeout: Duration = .seconds(300)
     static let downloadTimeout: Duration = .seconds(1800)
     static let installTimeout: Duration = .seconds(900)
+    static let otaStateGracePeriod: Duration = .seconds(20)
     static let checkingTimedOutError = "Timed out checking for updates. The device may still be updating."
     static let downloadTimedOutError = "Download timed out"
     static let installTimedOutError = "Installation timed out"
@@ -188,6 +189,9 @@ public final class OtaUpdateViewModel: ObservableObject {
   private var checkingTimerTask: Task<Void, Never>?
   private var downloadTimerTask: Task<Void, Never>?
   private var installTimerTask: Task<Void, Never>?
+  private var otaStateGraceTask: Task<Void, Never>?
+  // True from the end of the OOBE grace period until OTA progress or failure.
+  private let otaStateGraceElapsed = CurrentValueSubject<Bool, Never>(false)
   private var cancellables = Set<AnyCancellable>()
 
   /// Initializes the OTA ViewModel with an existing `HomeDevice` instance.
@@ -195,9 +199,9 @@ public final class OtaUpdateViewModel: ObservableObject {
   /// - Parameters:
   ///   - home: The `Home` instance owning `device`.
   ///   - device: The device to observe.
-  ///   - isOobeFlow: Whether this is the post-commissioning setup flow. If true, the checking
-  ///     watchdog runs, and a Root Node without an OTA Requestor shows `.checking` instead of
-  ///     `.upToDate`.
+  ///   - isOobeFlow: Whether this is the post-commissioning setup flow, which runs the checking
+  ///     watchdog and shows an undetermined OTA state as `.upToDate` after a grace period, until
+  ///     the device reports OTA progress.
   public init(home: Home, device: HomeDevice, isOobeFlow: Bool = false) {
     self.home = home
     self.deviceID = device.id
@@ -212,6 +216,7 @@ public final class OtaUpdateViewModel: ObservableObject {
     checkingTimerTask?.cancel()
     downloadTimerTask?.cancel()
     installTimerTask?.cancel()
+    otaStateGraceTask?.cancel()
   }
 
   /// Builds a reusable publisher emitting `(OtaUiState, currentVersion)` for a `HomeDevice`.
@@ -225,11 +230,16 @@ public final class OtaUpdateViewModel: ObservableObject {
   ///     `RootNodeDeviceType` but no `OtaRequestorDeviceType` reports `.upToDate` (true) or
   ///     `.checking` (false). Non-Matter devices, and Matter devices with neither type, always
   ///     report `.upToDate`.
+  ///   - treatUndeterminedStateAsUpToDate: Whether an `OtaRequestorDeviceType` with no determined
+  ///     OTA state reports `.upToDate` (true). If false, a nil, unknown, or unrecognized
+  ///     `updateState` reports `.checking`, and a missing `OtaSoftwareUpdateRequestorTrait`
+  ///     reports nothing.
   /// - Returns: A publisher of `(OtaUiState, currentVersion)` that never fails; an OTA trait
   ///   subscription error is reported as `.failed`.
   public static func otaStatePublisher(
     for device: HomeDevice,
-    treatMissingRequestorAsUpToDate: Bool = false
+    treatMissingRequestorAsUpToDate: Bool = false,
+    treatUndeterminedStateAsUpToDate: Bool = false
   ) -> AnyPublisher<(OtaUiState, String?), Never> {
     let versionPublisher = device.types.subscribe(RootNodeDeviceType.self)
       .map { $0.traits[Matter.BasicInformationTrait.self]?.attributes.softwareVersionString }
@@ -260,17 +270,31 @@ public final class OtaUpdateViewModel: ObservableObject {
     }
 
     let otaPublisher = device.types.subscribe(OtaRequestorDeviceType.self)
-      .compactMap { $0.traits[Matter.OtaSoftwareUpdateRequestorTrait.self] }
+      .map { $0.traits[Matter.OtaSoftwareUpdateRequestorTrait.self] }
       .receive(on: DispatchQueue.main)
 
     return Publishers.CombineLatest(otaPublisher, versionPublisher.setFailureType(to: HomeError.self))
       .removeDuplicates { prev, curr in
-        prev.0.attributes == curr.0.attributes && prev.1 == curr.1
+        prev.0?.attributes == curr.0?.attributes && prev.1 == curr.1
       }
-      .map { otaTrait, version -> (OtaUiState, String?) in
+      .compactMap { otaTrait, version -> (OtaUiState, String?)? in
+        let undeterminedState: OtaUiState = treatUndeterminedStateAsUpToDate
+          ? .upToDate(currentVersionString: version)
+          : .checking
+        // Without an OTA trait there is nothing to follow, so emit only once undetermined states
+        // count as up to date.
+        guard let attributes = otaTrait?.attributes else {
+          return treatUndeterminedStateAsUpToDate ? (undeterminedState, version) : nil
+        }
+        // The device has not determined its OTA state yet.
+        guard let updateState = attributes.updateState,
+              updateState != .unknown, updateState != .unrecognized_
+        else {
+          return (undeterminedState, version)
+        }
         let state = mapUpdateStateToUiState(
-          updateState: otaTrait.attributes.updateState,
-          progress: otaTrait.attributes.updateStateProgress,
+          updateState: updateState,
+          progress: attributes.updateStateProgress,
           versionString: version
         )
         return (state, version)
@@ -289,10 +313,11 @@ public final class OtaUpdateViewModel: ObservableObject {
 
     if self.isOobeFlow {
       self.startCheckingTimer(versionString: nil)
+      self.startOtaStateGraceTimer()
     }
 
     let useMultipart = self.currentDevice?.enableMultipartDevices ?? true
-    let treatMissingAsUpToDate = !self.isOobeFlow
+    let isOobeFlow = self.isOobeFlow
 
     home.device(id: deviceID, enableMultipartDevices: useMultipart)
       .removeDuplicates()
@@ -302,8 +327,16 @@ public final class OtaUpdateViewModel: ObservableObject {
         self.currentDevice = device
         self.deviceName = device.name
       })
-      .map { device -> AnyPublisher<(OtaUiState, String?), Never> in
-        Self.otaStatePublisher(for: device, treatMissingRequestorAsUpToDate: treatMissingAsUpToDate)
+      // Re-evaluates when the grace flag changes, in case the device does not re-emit.
+      .combineLatest(
+        self.otaStateGraceElapsed.removeDuplicates().setFailureType(to: HomeError.self)
+      )
+      .map { device, graceElapsed -> AnyPublisher<(OtaUiState, String?), Never> in
+        Self.otaStatePublisher(
+          for: device,
+          treatMissingRequestorAsUpToDate: !isOobeFlow || graceElapsed,
+          treatUndeterminedStateAsUpToDate: graceElapsed
+        )
       }
       .switchToLatest()
       .receive(on: DispatchQueue.main)
@@ -340,10 +373,13 @@ public final class OtaUpdateViewModel: ObservableObject {
     // `ConfigurationDoneTrait` is written only when the user leaves the OOBE (Done / dismiss),
     // not automatically on a terminal OTA state.
     switch state {
-    case .downloading, .installing, .loading, .checking:
+    case .loading, .checking:
       break
+    case .downloading, .installing:
+      self.endOtaStateGrace()
     case .delayed(let reason, _):
       Logger().warning("Device '\(self.deviceName)' OTA delayed: \(reason)")
+      self.endOtaStateGrace()
     case .upToDate(let ver):
       self.cancelAllWatchdogTimers()
       if let ver {
@@ -351,6 +387,8 @@ public final class OtaUpdateViewModel: ObservableObject {
       }
     case .failed:
       self.cancelAllWatchdogTimers()
+      // Reset grace so a later undetermined state maps to `.checking` and stays `.failed`.
+      self.endOtaStateGrace()
     }
 
     Logger().info(
@@ -456,6 +494,34 @@ public final class OtaUpdateViewModel: ObservableObject {
       }
       self.installTimerTask = nil
     }
+  }
+
+  // Devices without OTA support or still in an undetermined state after commissioning should not
+  // wait for the 300s checking watchdog; show `.upToDate` after a grace period for late reports.
+  private func startOtaStateGraceTimer() {
+    self.otaStateGraceTask = Task { @MainActor [weak self] in
+      try? await Task.sleep(for: Constants.otaStateGracePeriod)
+      guard let self = self, !Task.isCancelled else { return }
+      if self.otaUiState == .loading || self.otaUiState == .checking {
+        Logger().info(
+          """
+          OTA grace period ended in state \
+          \(String(describing: self.otaUiState), privacy: .public), OTA Requestor present: \
+          \(self.currentDevice?.types.contains(OtaRequestorDeviceType.self) == true)
+          """
+        )
+      }
+      self.otaStateGraceElapsed.send(true)
+      self.otaStateGraceTask = nil
+    }
+  }
+
+  // A device that reports OTA progress supports OTA, so a later undetermined state (e.g. the
+  // reboot after applying) shows as checking. Not for `.upToDate`, which the grace period produces.
+  private func endOtaStateGrace() {
+    self.otaStateGraceTask?.cancel()
+    self.otaStateGraceTask = nil
+    self.otaStateGraceElapsed.send(false)
   }
 
   private func cancelAllWatchdogTimers() {

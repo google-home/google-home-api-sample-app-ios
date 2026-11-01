@@ -210,6 +210,36 @@ class MainViewModel: ObservableObject {
       .update(structureID: selectedStructureID, identifier: self.home?.identifier)
   }
 
+  /// Requests a diagnostic structure snapshot for the currently selected structure.
+  ///
+  /// - Returns: The UUID sent with the snapshot request, or `nil` if no structure is selected,
+  ///   the structure does not support `UserFeedbackTrait`, or the command fails.
+  @MainActor
+  func sendStructureSnapshot() async -> String? {
+    guard let selectedStructure = self.selectedStructure else {
+      Logger().error("Failed to request structure snapshot: No selected structure.")
+      return nil
+    }
+    // Pass a client-generated UUID to `UserFeedbackTrait` as the snapshot's initiator ID so the
+    // uploaded snapshot can be looked up later.
+    let uuid = UUID().uuidString
+    guard let userFeedbackTrait = await selectedStructure.traits.get(Google.UserFeedbackTrait.self)
+    else {
+      Logger().error(
+        "Failed to request structure snapshot: UserFeedbackTrait unavailable on structure \(selectedStructure.id)."
+      )
+      return nil
+    }
+    do {
+      try await userFeedbackTrait.userFeedback(uuid: uuid)
+      Logger().info("Structure snapshot requested with UUID: \(uuid)")
+      return uuid
+    } catch {
+      Logger().error("Failed to request structure snapshot: \(error)")
+      return nil
+    }
+  }
+
   // MARK: - Private
 
   /// Fetches the structures for the current home.

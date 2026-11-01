@@ -20,6 +20,7 @@ struct AboutView: View {
   /// The view model for account-related data.
   @ObservedObject private var accountViewModel: AccountViewModel
   @Environment(\.openURL) var openURL
+  @AppStorage("useCustomCodeReader") private var useCustomCodeReader = true
 
   init(accountViewModel: AccountViewModel) {
     self.accountViewModel = accountViewModel
@@ -74,6 +75,10 @@ struct AboutView: View {
               .foregroundColor(.secondary)
           }
         }
+      }
+
+      Section {
+        Toggle("Custom code reader", isOn: $useCustomCodeReader)
       }
     }
   }

@@ -71,6 +71,7 @@ struct StructureView: View {
     GridItem(.flexible(), alignment: .leading)
   ]
 
+  @AppStorage("useCustomCodeReader") private var useCustomCodeReader = true
   @EnvironmentObject private var mainViewModel: MainViewModel
   @ObservedObject private var viewModel: StructureViewModel
   @State private var selectedTab: Tab = .devices
@@ -189,12 +190,20 @@ struct StructureView: View {
         if self.selectedTab == .devices {
           Menu {
             Button(Constants.addDeviceGoogleFabric) {
-              self.scannerAdd3PFabricFirst = false
-              self.isShowingCodeScanner = true
+              if self.useCustomCodeReader {
+                self.scannerAdd3PFabricFirst = false
+                self.isShowingCodeScanner = true
+              } else {
+                self.addDevice(structure: structure, add3PFabricFirst: false)
+              }
             }
             Button(Constants.addDeviceGoogleAnd3PFabric) {
-              self.scannerAdd3PFabricFirst = true
-              self.isShowingCodeScanner = true
+              if self.useCustomCodeReader {
+                self.scannerAdd3PFabricFirst = true
+                self.isShowingCodeScanner = true
+              } else {
+                self.addDevice(structure: structure, add3PFabricFirst: true)
+              }
             }
             Button(Constants.addRoomButtonTitle) { self.viewModel.showRoomNameInput = true }
             Button(Constants.setupHubButtonTitle) {
