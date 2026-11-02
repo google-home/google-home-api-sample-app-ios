@@ -28,6 +28,7 @@ final class StructureViewModel: ObservableObject {
     static let emptyRoomName = "<unassigned>"
     static let maxCommissioningRetryAttempts = 10
     static let commissioningRetryDelayNanoseconds: UInt64 = 1_000_000_000
+    static let multifacetModeEnabledKey = "isMultifacetModeEnabled"
   }
 
   public let home: Home
@@ -49,7 +50,15 @@ final class StructureViewModel: ObservableObject {
   @Published var isDiscoveringHubs = false
   // When on, devices are queried with `enableMultipartDevices: true`. Off by default because
   // `DeviceControlFactory` shows only the first matching control of a multipart device.
-  @Published var isMultifacetModeEnabled = false
+  // Saved in `UserDefaults` so the choice survives app relaunches and view model re-creation.
+  // `bool(forKey:)` returns `false` for an unset key, so the mode stays off until turned on.
+  @Published var isMultifacetModeEnabled = UserDefaults.standard.bool(
+    forKey: Constants.multifacetModeEnabledKey
+  ) {
+    didSet {
+      UserDefaults.standard.set(isMultifacetModeEnabled, forKey: Constants.multifacetModeEnabledKey)
+    }
+  }
   private var deviceControlCache: [String: DeviceControl] = [:]
 
   var isConfirmingRoomDeletion: Bool {
